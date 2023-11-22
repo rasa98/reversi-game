@@ -21,10 +21,12 @@ def count_chips(board: np.ndarray, f=lambda x: (x // 10) + 1):
     return factor * (white_count - black_count)
 
 
-def count_borders(board: np.ndarray, factor):
+def count_corners(board: np.ndarray, f=lambda x: ((60 - x) // 10) ** 2):
     # who has more => better
     c = corners(board)
     white, black = count_white_black(c)
+    turn = white + black - 4  # 60 turns to play
+    factor = f(turn)
     return factor * (white - black)
 
 
@@ -49,7 +51,7 @@ def count_safer(board: np.ndarray, ):
 def heuristic(game: Othello):
     board = game.board
     res = (count_chips(board) +
-           count_borders(board, 50) +
+           # count_corners(board) +
            count_danger_early_game(board))
     return res
 
@@ -57,6 +59,6 @@ def heuristic(game: Othello):
 def heuristic2(game: Othello):
     board = game.board
     res = (count_chips(board, lambda x: (x // 5) + 1) +
-           count_borders(board, 10) +
+           count_corners(board) +
            count_danger_early_game(board, lambda x: (65 - x) // 5))
     return res
