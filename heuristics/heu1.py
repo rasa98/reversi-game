@@ -21,7 +21,7 @@ def count_chips(board: np.ndarray, f=lambda x: (x // 10) + 1):
     return factor * (white_count - black_count)
 
 
-def count_corners(board: np.ndarray, f=lambda x: ((60 - x) // 10) ** 2):
+def count_corners(board: np.ndarray, f=lambda x: ((60 - x) // 8) ** 2):
     # who has more => better
     c = corners(board)
     white, black = count_white_black(c)

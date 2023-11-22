@@ -41,8 +41,14 @@ class Othello:
         return set(self.valid_moves_to_reverse.keys())
 
     def valid_moves_sorted(self):
+        def sort_f(key_field):
+            res = 0
+            if key_field in {(0, 0), (7, 7), (0, 7), (7, 0)}:
+                res += 4
+            return res + len(self.valid_moves_to_reverse[key_field])
+
         return sorted(self.valid_moves_to_reverse,
-                      key=lambda k: len(self.valid_moves_to_reverse[k]),
+                      key=sort_f,
                       reverse=True)
 
     def _calculate_next_valid_moves(self):

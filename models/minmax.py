@@ -1,9 +1,23 @@
+import numpy as np
+
 from game_logic import Othello
 
 
+def depth_f_default(turn):
+    if turn <= 5:
+        return int(-0.7 * (turn - 4) + 4)
+    elif turn <= 45:
+        return 3
+    elif turn <= 50:
+        return int(0.7 * (turn - 45) + 3)
+    else:
+        return 10
+
+
 class Minimax:
-    def __init__(self, depth, heu):
-        self.depth = depth
+    def __init__(self, depth_f, heu):
+        self.depth = None
+        self.depth_f = depth_f
         # self.maximizing_player = maximizing_player
         self.heu = heu
         self.best_fields = []
@@ -12,6 +26,7 @@ class Minimax:
     def get_fields_and_estimate(self, game):
         self.best_fields.clear()
         self.all_moves.clear()
+        self.depth = self.depth_f(60 - np.count_nonzero(game.board == 0))
         best_estimate = self._main(self.depth, float('-inf'), float('inf'), game)
         # print(f'All moves: {self.all_moves}')
         return tuple(self.best_fields), best_estimate
@@ -82,3 +97,7 @@ class Minimax:
                 break
 
         return min_eval
+
+
+if __name__ == '__main__':
+    print([depth_f_default(x) for x in range(61)])
