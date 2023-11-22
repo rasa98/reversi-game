@@ -1,4 +1,8 @@
+import time
 from game_logic import Othello
+import random
+
+random.seed(time.time())
 
 
 def player_vs_player_cli(name1, name2):
@@ -54,17 +58,22 @@ def ai_vs_ai_cli(ai1: dict, ai2: dict):
     players = (ai1_name, ai2_name)
 
     game = Othello(players=players)
-    while not game.get_winner():
+    while game.get_winner() is None:
         if game.player_turn == ai1_turn:
             # print("Ai1 turn\n")
-            ai_move_choice = f1(game.get_snapshot())
+            ai_moves, estimate = f1(game.get_snapshot())
+            # print('Same estimate moves: ', ai_moves)
+            ai_move_choice = random.choice(ai_moves)
+            # print(f'{ai1_name} chose field {ai_move_choice} with estimate: {estimate}')
             game.play_move(ai_move_choice)
         else:
             # print("Ai2 turn\n")
-            ai_move_choice = f2(game.get_snapshot())
+            ai_moves, estimate = f2(game.get_snapshot())
+
+            ai_move_choice = random.choice(ai_moves)
+            # print(f'{ai2_name} chose field {ai_move_choice} with estimate: {estimate}')
             game.play_move(ai_move_choice)
-
-
+    game.get_winner_and_print()
 
 
 if __name__ == '__main__':

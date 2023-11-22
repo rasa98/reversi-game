@@ -11,7 +11,7 @@ class Othello:
         self.player_turn = first_move
         self.valid_moves_to_reverse = None
         self.winner = None
-        if board:
+        if board is not None:
             self.board = np.array(board)
         else:
             self._set_default_board()
@@ -31,6 +31,9 @@ class Othello:
 
     def valid_moves(self):
         return set(self.valid_moves_to_reverse.keys())
+
+    def valid_moves_sorted(self):
+        return sorted(self.valid_moves_to_reverse, key=lambda k: len(self.valid_moves_to_reverse[k]), reverse=True)
 
     def _calculate_next_valid_moves(self):
         moves_to_reverse = {}
@@ -69,7 +72,7 @@ class Othello:
         return s
 
     def _get_edge_fields(self):
-        player_positions = np.where(self.board == 3 - self.player_turn)  # Get positions of the specified player's moves
+        player_positions = np.where(self.board == 3 - self.player_turn)  # Get positions of opponents chips
 
         empty_adjacent = set()
 
@@ -106,12 +109,7 @@ class Othello:
         if not self.valid_moves_to_reverse:
             self._update_state()
             if not self.valid_moves_to_reverse:
-                winner, amount, loser_amount = self.count_winner()
-                if winner == "draw":
-                    print(f"Its a draw - {amount} : {loser_amount}")
-                else:
-                    print(f"{winner} won: {amount} : {loser_amount}")
-                self.winner = winner
+                self.winner, _, _ = self.count_winner()
 
     def count_winner(self):
         white_chips = np.count_nonzero(self.board == 1)
@@ -125,6 +123,18 @@ class Othello:
 
     def get_winner(self):
         return self.winner
+
+    def get_winner_and_print(self):
+        winner, amount, loser_amount = self.count_winner()
+        match winner:
+            case 0:
+                print(f"Its a draw - {amount} : {loser_amount}")
+            case 1:
+                print(f"{self.white} won: {amount} : {loser_amount}")
+            case 2:
+                print(f"{self.black} won: {amount} : {loser_amount}")
+            case _:
+                print("Game is still playing!")
 
     def __repr__(self):
         temp_board = np.copy(self.board)
