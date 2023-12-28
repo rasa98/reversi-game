@@ -1,5 +1,5 @@
 import numpy as np
-
+from models.model_interface import ModelInterface
 from game_logic import Othello
 
 
@@ -14,7 +14,7 @@ def depth_f_default(turn):
         return 10
 
 
-class Minimax:
+class Minimax(ModelInterface):
     def __init__(self, depth_f, heu):
         self.depth = None
         self.depth_f = depth_f
@@ -23,11 +23,14 @@ class Minimax:
         self.best_fields = []
         self.all_moves = []
 
-    def get_fields_and_estimate(self, game):
+    def predict_best_move(self, game):
         self.best_fields.clear()
         self.all_moves.clear()
-        self.depth = self.depth_f(60 - np.count_nonzero(game.board == 0))
-        best_estimate = self._main(self.depth, float('-inf'), float('inf'), game)
+        turn = np.count_nonzero(game.board) - 3
+        self.depth = self.depth_f(turn)
+        best_estimate = self._main(self.depth, float('-inf'), float('inf'), game.get_snapshot())
+        print(f'turn: {turn}, --- choose depth: {self.depth} --- estimate: {best_estimate}, All moves: {self.all_moves}')
+
         # print(f'All moves: {self.all_moves}')
         return tuple(self.best_fields), best_estimate
 
@@ -56,18 +59,18 @@ class Minimax:
             game_copy.play_move(field)
 
             eval = self._main(depth - 1, a, b, game_copy)
-            new_max_eval = max(max_eval, eval)
+            biggest_max_eval_yet = max(max_eval, eval)
             a = max(a, eval)
 
             if depth == self.depth:
                 self.all_moves.append((field, eval))
-                if eval == new_max_eval and eval == max_eval:
+                if eval == biggest_max_eval_yet and eval == max_eval:
                     self.best_fields.append(field)
                 elif max_eval < eval:
                     self.best_fields = [field]
                 else:
                     pass
-            max_eval = new_max_eval
+            max_eval = biggest_max_eval_yet
             if b <= a:
                 break
 

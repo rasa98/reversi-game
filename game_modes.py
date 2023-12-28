@@ -73,9 +73,9 @@ def ai_vs_ai_cli(ai1: dict, ai2: dict):
             ai_move_choice = random.choice(ai_moves)
             # print(f'{ai2_name} chose field {ai_move_choice} with estimate: {estimate}')
             game.play_move(ai_move_choice)
-    print(game)
-    return game.get_winner_and_print()
-
+    # print(game)
+    # return game.get_winner_and_print()
+    return game.get_winner()
 
 
 if __name__ == '__main__':

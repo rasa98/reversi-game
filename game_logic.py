@@ -1,16 +1,21 @@
 import numpy as np
 
-directions = {(-1, -1), (-1, 0), (-1, 1),
-              (0, -1), (0, 1),
-              (1, -1), (1, 0), (1, 1)}
-
 
 class Othello:
-    def __init__(self, players=("w", "b"), board=None, first_move=1, edge_fields=None):
+    DIRECTIONS = {(-1, -1), (-1, 0), (-1, 1),
+                  (0, -1), (0, 1),
+                  (1, -1), (1, 0), (1, 1)}
+
+    CORNERS = {(0, 0), (7, 7), (0, 7), (7, 0)}
+
+    def __init__(self, players=("w", "b"), turn=1, board=None,
+                 first_move=1, edge_fields=None, chips=(2, 2)):
         self.white, self.black = players
-        self.player_turn = first_move
+        self.player_turn = first_move  # possible turns {1, 2}, white is 1
         self.valid_moves_to_reverse = None
         self.winner = None
+        self.turn = turn
+        self.chips = chips
         if board is not None:
             self.board = np.array(board)
         else:
@@ -26,8 +31,10 @@ class Othello:
     def get_snapshot(self):
         return Othello(players=(self.white, self.black),
                        board=np.copy(self.board),
+                       turn=self.turn,
                        first_move=self.player_turn,
-                       edge_fields=self.edge_fields.copy())
+                       edge_fields=self.edge_fields.copy(),
+                       chips=self.chips)
 
     def _swap_player_turn(self):
         self.player_turn = 3 - self.player_turn
@@ -41,9 +48,15 @@ class Othello:
         return set(self.valid_moves_to_reverse.keys())
 
     def valid_moves_sorted(self):
+        """
+        valid moves/fields gets sorted by moves that turns the most chips
+        and if it is a corner.
+        Useful for a b pruning in minmax.
+        """
+
         def sort_f(key_field):
             res = 0
-            if key_field in {(0, 0), (7, 7), (0, 7), (7, 0)}:
+            if key_field in Othello.CORNERS:
                 res += 4
             return res + len(self.valid_moves_to_reverse[key_field])
 
@@ -51,40 +64,53 @@ class Othello:
                       key=sort_f,
                       reverse=True)
 
+    def update_chips(self, turned: int):
+        #  every turn: 1 new, turned >= 1
+
+        to_add = 1 + turned
+        x = self.chips[self.player_turn - 1] + to_add
+        y = self.chips[2 - self.player_turn] - turned
+        if self.player_turn == 1:
+            self.chips = (x, y)
+        else:
+            self.chips = (y, x)
+
+
+
     def _calculate_next_valid_moves(self):
         moves_to_reverse = {}
-        for field in self.edge_fields: #... in self._get_edge_fields():
+        for field in self.edge_fields:  # ... in self._get_edge_fields():
             if to_reverse := self._get_reversed_fields(field):
                 moves_to_reverse[field] = to_reverse
         self.valid_moves_to_reverse = moves_to_reverse
 
-    def _get_reversed_fields(self, field):
+    def _get_reversed_fields(self, field):  # slowest part of the code
         s = set()
         maybe_s = set()
         row, col = field
 
-        for x, y in directions:
+        for x, y in Othello.DIRECTIONS:
             for times in range(1, 8):
                 new_row = row + x * times
                 new_col = col + y * times
 
-                try:
-                    match self.board[new_row, new_col]:
-                        case 0:
-                            break
-                        case self.player_turn:
-                            if times == 1:
-                                break
-                            else:
-                                s = s.union(maybe_s)
-                        case _:  # opponent case
-                            maybe_s.add((new_row, new_col))
-                except IndexError:
+                if not (0 <= new_row <= 7 and 0 <= new_col <= 7):
                     break
-            maybe_s.clear()
 
-        if not len(s):
-            return None
+                match self.board[new_row, new_col]:
+                    case 0:
+                        break
+                    case self.player_turn:
+                        if times == 1:
+                            break
+                        else:
+                            s = s.union(maybe_s)
+                            # s.update(maybe_s)
+                    case _:  # opponent case
+                        maybe_s.add((new_row, new_col))
+            # maybe_s.clear()
+            maybe_s = set()
+
         return s
 
     def _get_edge_fields(self):
@@ -109,14 +135,18 @@ class Othello:
 
             if field in self.valid_moves():
                 to_reverse = list(self.valid_moves_to_reverse[field])
+                len_to_reverse = len(to_reverse)
                 to_reverse.append(field)
                 xs = np.array([x[0] for x in to_reverse], dtype=int)
                 ys = np.array([x[1] for x in to_reverse], dtype=int)
 
                 self.board[xs, ys] = np.array([swap_value] * len(to_reverse), dtype=int)
                 self.update_edge_fields(field)
+                self.turn += 1
+                self.update_chips(len_to_reverse)
                 self._update_state()
                 self._check_correctness()
+                return self.chips
 
     def _update_state(self):
         self._swap_player_turn()

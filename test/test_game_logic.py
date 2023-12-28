@@ -1,9 +1,7 @@
 import unittest
-
 import numpy as np
-
 from some_boards import board1, next_white_moves_board1, next_black_moves_board1, edge1_white, edge1_black
-from game_logic import Othello
+from src.game_logic import Othello
 
 
 class MyTestCase(unittest.TestCase):
