@@ -67,7 +67,7 @@ class MaskedPPOWrapper2(ModelInterface):
         flattened_obs = np.append(flattened_board, game.player_turn)
 
         action, _ = self.model.predict(flattened_obs,
-                                       action_masks=self.action_masks(game),
+                                       action_masks=action_masks(game),
                                        deterministic=False)
 
         action_game = (action // 8, action % 8)

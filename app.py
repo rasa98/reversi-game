@@ -2,6 +2,7 @@ import random
 
 from models.minmax import Minimax, depth_f_default
 from heuristics.heu1 import heuristic, heuristic2
+from heuristics.heu2 import create_heuristic
 from game_modes import ai_vs_ai_cli
 from collections import Counter
 import timeit
@@ -77,20 +78,44 @@ def bench_64_64_1():
 
 
 if __name__ == '__main__':
-    mm1 = Minimax(lambda _: 3, heuristic)
+    mm1 = Minimax(lambda _: 1, heuristic)
     # mm2 = Minimax(lambda _: 4, heuristic2)
-    mm2 = Minimax(depth_f_default, heuristic2)
+
+    # depth_f = depth_f_default
+    depth_f = lambda _: 1
+    mm2 = Minimax(depth_f, heuristic2)
 
     ai1 = {"name": "Fixed depth=3", "first_turn": True, "f": mm1.predict_best_move}
     ai2 = {"name": "dynamic d", "first_turn": True, "f": mm2.predict_best_move}
 
     file = '/home/rasa/Desktop/jupyter/rl demo/Othello_try_1/ppo_masked_selfplay/history_00000385.zip'
-    ai385 = {"name": 'ppo_masked_385', "first_turn": True, 'f': load_model(file).predict_best_move}
+    ai385 = {"name": 'ppo_masked_385',  'f': load_model(file).predict_best_move}
 
-    file2 = 'training/Dict_obs_space/ppo_masked_selfplay_3/history_0433'
-    ai_other = {"name": 'ppo_masked_3_433', "first_turn": True, 'f': load_model_2(file2).predict_best_move}
+    file2 = 'training/Dict_obs_space/mppo-1-then-2/history_' + str(354).zfill(8)
+    ai_other = {"name": 'ppo_masked_64_64_1_354', 'f': load_model_64_64_1(file2).predict_best_move}
+
 
     ai_random = {"name": 'random_model', "first_turn": True, 'f': lambda x: (list(x.valid_moves()), None)}
+
+    # heu_params = 19.70822410606773, 1.3048221582220656, 2.9128158081863784, 1.351857641596074
+    heu_params = 19.71396080843101, 1.1239482682808002, 2.4049454912356936, 1.1732313053633865
+    mm_no_depth = Minimax(lambda _: 1, create_heuristic(*heu_params))
+    ai_0 = {"name": "depth 1 MinMax", "first_turn": True, "f": mm_no_depth.predict_best_move}
+
+    time_amount = timeit.timeit(lambda: both_sides(ai_0, ai_other, times=100), number=1)
+    print(f'time needed {time_amount}')
+
+
+
+
+
+
+
+
+
+
+
+
     # ai_vs_ai_cli(ai1, ai2)
 
     # execution_time = timeit.timeit(lambda: ai_vs_ai_cli(ai1, ai2), number=200)  # Number of executions
@@ -122,7 +147,6 @@ if __name__ == '__main__':
     #     except FileNotFoundError:
     #         break
 
-    bench_64_64_1()
 
     # test_models()
 
@@ -132,7 +156,7 @@ if __name__ == '__main__':
 
     # with Profile() as profile:
     #
-    #     print(f"{benchmark(ai1, ai2, times=100)}")
+    #     print(f"{both_sides(ai_random, ai_0, times=100)}")
     #     (
     #         Stats(profile).
     #         strip_dirs().

@@ -50,10 +50,10 @@ def player_vs_ai_cli(player_name, ai: dict):
 
 
 def ai_vs_ai_cli(ai1: dict, ai2: dict):
-    ai1_name, ai1_first_turn, f1 = ai1['name'], ai1['first_turn'], ai1['f']
-    ai2_name, ai2_first_turn, f2 = ai2['name'], ai2['first_turn'], ai2['f']
+    ai1_name, f1 = ai1['name'], ai1['f']
+    ai2_name, f2 = ai2['name'], ai2['f']
 
-    ai1_turn = 1 if ai1_first_turn else 2
+    ai1_turn = 1
 
     players = (ai1_name, ai2_name)
 
@@ -61,14 +61,13 @@ def ai_vs_ai_cli(ai1: dict, ai2: dict):
     while game.get_winner() is None:
         if game.player_turn == ai1_turn:
             # print("Ai1 turn\n")
-            ai_moves, estimate = f1(game.get_snapshot())
-            # print('Same estimate moves: ', ai_moves)
+            ai_moves, estimate = f1(game)
             ai_move_choice = random.choice(ai_moves)
             # print(f'{ai1_name} chose field {ai_move_choice} with estimate: {estimate}')
             game.play_move(ai_move_choice)
         else:
             # print("Ai2 turn\n")
-            ai_moves, estimate = f2(game.get_snapshot())
+            ai_moves, estimate = f2(game)
 
             ai_move_choice = random.choice(ai_moves)
             # print(f'{ai2_name} chose field {ai_move_choice} with estimate: {estimate}')

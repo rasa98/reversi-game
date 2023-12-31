@@ -29,7 +29,7 @@ class Minimax(ModelInterface):
         turn = np.count_nonzero(game.board) - 3
         self.depth = self.depth_f(turn)
         best_estimate = self._main(self.depth, float('-inf'), float('inf'), game.get_snapshot())
-        print(f'turn: {turn}, --- choose depth: {self.depth} --- estimate: {best_estimate}, All moves: {self.all_moves}')
+        # print(f'turn: {turn}, --- choose depth: {self.depth} --- estimate: {best_estimate}, All moves: {self.all_moves}')
 
         # print(f'All moves: {self.all_moves}')
         return tuple(self.best_fields), best_estimate
