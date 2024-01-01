@@ -1,6 +1,5 @@
 import sys
-
-sys.path.append('/home/rasa/PycharmProjects/reversiProject/')  # TODO fix this hack
+sys.path.append('/home/user/PycharmProjects/reversi-game/')  # TODO fix this hack
 from heuristics.heu2 import HeuristicChromosome
 from models.minmax import Minimax
 from game_modes import ai_vs_ai_cli
@@ -10,11 +9,12 @@ import concurrent.futures
 from collections import defaultdict
 
 random_seed = time.time()
-population_size = 50
+population_size = 150
 TOURNAMENTS = 100
-ROUNDS = 20
+ROUNDS = 7
 CORES = 4
-SAVE_FREQ = 10
+SAVE_FREQ = 3
+SEL_CROSSOVER = (0.3, 0.4)
 
 
 def flatmap(func, *iterable):
@@ -92,10 +92,9 @@ def parallel_process_list(players, func, num_processes=1):
 
 
 def save_current_list(player_list, id_to_score, times):
-
     sorted_list = sorted(player_list, key=lambda obj: (id_to_score[obj.id], obj.gen), reverse=True)
 
-    with open(f'dump_ga_models_bigger2/current_list_{times}.txt', 'w') as f:
+    with open(f'del_ga/current_list_{times}.txt', 'w') as f:
         for el in sorted_list:
             f.write(f'gen alive: {el.gen}, params: {el.params}, id: {el.id}, score: {id_to_score[el.id]}\n')
 
@@ -103,33 +102,53 @@ def save_current_list(player_list, id_to_score, times):
 def save_start_list(player_list):
     sorted_list = sorted(player_list, key=lambda obj: obj.params, reverse=True)
 
-    with open(f'dump_ga_models_bigger2/start_list.txt', 'w') as f:
+    with open(f'del_ga/start_list.txt', 'w') as f:
         for el in sorted_list:
             f.write(f'gen alive: {el.gen}, params: {el.params}, id: {el.id}\n')
 
 
-random.seed(random_seed)
-players = [HeuristicChromosome.create() for _ in range(population_size)]
-inner_players = players
-save_counter = 0
-save_start_list(players)
-for tour_num in range(1, TOURNAMENTS+1):
-    id_to_score_desc = parallel_process_list(inner_players, simulate_tournament, num_processes=CORES)
+def run_ga():
+    random.seed(random_seed)
+    players = [HeuristicChromosome.create() for _ in range(population_size)]
+    inner_players = players
+    save_counter = 0
+    save_start_list(players)
+    for tour_num in range(1, TOURNAMENTS + 1):
+        id_to_score_desc = parallel_process_list(inner_players, simulate_tournament, num_processes=CORES)
+
+        if tour_num % SAVE_FREQ == 0:
+            save_counter += 1
+            save_current_list(inner_players, id_to_score_desc, save_counter)
+
+        inner_players = HeuristicChromosome.selection(inner_players, id_to_score_desc, rates=SEL_CROSSOVER)
+
+        if tour_num % SAVE_FREQ == 0:
+            print(f'Done {int(tour_num / TOURNAMENTS * 100)}%')
+
+
+run_ga()
+
+# random.seed(random_seed)
+# players = [HeuristicChromosome.create() for _ in range(population_size)]
+# inner_players = players
+# save_counter = 0
+# save_start_list(players)
+# for tour_num in range(1, TOURNAMENTS + 1):
+#     id_to_score_desc = parallel_process_list(inner_players, simulate_tournament, num_processes=CORES)
 
     # clone = [p.id for p in inner_players]
     # print(f'No duplicates in list -> {len(set(clone)) == len(clone)}')
 
     # print(sorted(id_to_score_desc.values(), key=lambda x: x, reverse=True))
     # print()
-    if tour_num % SAVE_FREQ == 0:
-        save_counter += 1
-        save_current_list(inner_players, id_to_score_desc, save_counter)
-    inner_players = HeuristicChromosome.selection(inner_players, id_to_score_desc, rates=(0.4, 0.2))
-    if tour_num % SAVE_FREQ == 0:
-        print(f'Done {int(tour_num / TOURNAMENTS * 100)}%')
+    # if tour_num % SAVE_FREQ == 0:
+    #     save_counter += 1
+    #     save_current_list(inner_players, id_to_score_desc, save_counter)
+    # inner_players = HeuristicChromosome.selection(inner_players, id_to_score_desc, rates=(0.5, 0.4))
+    # if tour_num % SAVE_FREQ == 0:
+    #     print(f'Done {int(tour_num / TOURNAMENTS * 100)}%')
 
-
-
+# --------------------------------------------------------------------------------------------------------------
 
 # executed_time = timeit.timeit(lambda: parallel_process_list(players,
 #                                                             simulate_tournament,

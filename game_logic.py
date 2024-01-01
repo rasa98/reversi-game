@@ -9,9 +9,10 @@ class Othello:
     CORNERS = {(0, 0), (7, 7), (0, 7), (7, 0)}
 
     def __init__(self, players=("w", "b"), turn=1, board=None,
-                 first_move=1, edge_fields=None, chips=(2, 2)):
+                 first_move=1, last_move=None, edge_fields=None, chips=(2, 2)):
         self.white, self.black = players
         self.player_turn = first_move  # possible turns {1, 2}, white is 1
+        self.last_turn = last_move
         self.valid_moves_to_reverse = None
         self.winner = None
         self.turn = turn
@@ -33,6 +34,7 @@ class Othello:
                        board=np.copy(self.board),
                        turn=self.turn,
                        first_move=self.player_turn,
+                       last_move=self.last_turn,
                        edge_fields=self.edge_fields.copy(),
                        chips=self.chips)
 
@@ -74,8 +76,6 @@ class Othello:
             self.chips = (x, y)
         else:
             self.chips = (y, x)
-
-
 
     def _calculate_next_valid_moves(self):
         moves_to_reverse = {}
@@ -142,6 +142,7 @@ class Othello:
 
                 self.board[xs, ys] = np.array([swap_value] * len(to_reverse), dtype=int)
                 self.update_edge_fields(field)
+                self.last_turn = self.player_turn
                 self.turn += 1
                 self.update_chips(len_to_reverse)
                 self._update_state()

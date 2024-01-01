@@ -55,7 +55,13 @@ def count_safer(stats, f=lambda x: (65 - x) // 10):
     return factor * (white - black)
 
 
-#   todo finish this method
+def minimize_opponent_moves(game: Othello, max_score):
+    factor = -1 if game.last_turn == 2 else 1  # if minimizer -> -1, maximizer -> 1
+    opponent_num_of_moves = 0
+    if game.player_turn != game.last_turn:  # if they are equal, means opponent didnt have any move.
+        opponent_num_of_moves = len(game.valid_moves())
+    score = max_score * (1 / ((opponent_num_of_moves + 1) ** 1.5))
+    return factor * score
 
 
 def heuristic(game: Othello):
@@ -100,7 +106,6 @@ def create_heuristic2(chip_divisor, corner_divisor, corner_exponent, danger_divi
                count_corners(stats, lambda x: ((60 - x) // corner_divisor) ** corner_exponent) +
                count_danger_early_game(stats, lambda turn: (65 - turn) // danger_divisor))
         return res
-
 
     return heu
 

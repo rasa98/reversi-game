@@ -26,8 +26,8 @@ class Minimax(ModelInterface):
     def predict_best_move(self, game):
         self.best_fields.clear()
         self.all_moves.clear()
-        turn = np.count_nonzero(game.board) - 3
-        self.depth = self.depth_f(turn)
+
+        self.depth = self.depth_f(game.turn)  # depth >= 1
         best_estimate = self._main(self.depth, float('-inf'), float('inf'), game.get_snapshot())
         # print(f'turn: {turn}, --- choose depth: {self.depth} --- estimate: {best_estimate}, All moves: {self.all_moves}')
 
@@ -46,6 +46,12 @@ class Minimax(ModelInterface):
                 pass
         if depth == 0:
             return self.heu(game)
+            # ggg = self.heu(game)
+            # if isinstance(ggg, complex):
+            #     pass
+            #     pass
+            #     pass
+            # return ggg
 
         if game.player_turn == 1:  # Player 1 maximizes
             return self.maximize(depth, a, b, game)
@@ -83,7 +89,11 @@ class Minimax(ModelInterface):
             game_copy.play_move(field)
 
             eval = self._main(depth - 1, a, b, game_copy)
-            new_min_eval = min(min_eval, eval)
+            try:
+                new_min_eval = min(min_eval, eval)
+            except TypeError:
+                print(f'min_eval = {min_eval}, eval = {eval}')
+                raise TypeError()
             b = min(b, eval)
 
             if depth == self.depth:
