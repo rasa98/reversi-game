@@ -10,14 +10,15 @@ from cProfile import Profile
 from pstats import SortKey, Stats
 
 from models.ppo_masked_model import (load_model, load_model_2,
-                                     load_model_66, load_model_64_64_1)
+                                     load_model_66, load_model_64_64_1,
+                                     load_model_64_2_1)
 
 
 def both_sides(ai1, ai2, times=200):
     d1 = benchmark(ai1, ai2, times=times)
     d2 = benchmark(ai2, ai1, times=times)
-    d = {ai1['name']: ([1, d1[1]], [2, d2[2]]),
-         ai2['name']: ([2, d1[2]], [1, d2[1]]),
+    d = {ai1['name']: ([1, d1.get(1, 0)], [2, d2.get(2, 0)]),
+         ai2['name']: ([2, d1.get(2, 0)], [1, d2.get(1, 0)]),
          'zeros': ([0, d1.get(0, 0)], [0, d2.get(0, 0)])}
     print(d)
     return d
@@ -72,9 +73,20 @@ def bench_64_64_1():
             print(f'{i} - ', end=' ')
             d_logs = both_sides(ai385, ai_other, times=200)
             with open(logs, mode='a') as log_file:
-                log_file.write(str(d_logs)+'\n')
+                log_file.write(str(d_logs) + '\n')
         except FileNotFoundError:
             break
+
+
+def bench_64_2_1():
+    model_path = 'training/Dict_obs_space/mppo_num_chips/models/history_00000414'
+
+    model = {"name": f'ppo_masked_414',
+             "first_turn": True,
+             'f': load_model_64_2_1(model_path).predict_best_move}
+
+    both_sides(model, ai_0, times=100)
+
 
 
 if __name__ == '__main__':
@@ -88,33 +100,24 @@ if __name__ == '__main__':
     ai1 = {"name": "Fixed depth=3", "first_turn": True, "f": mm1.predict_best_move}
     ai2 = {"name": "dynamic d", "first_turn": True, "f": mm2.predict_best_move}
 
-    file = '/home/rasa/Desktop/jupyter/rl demo/Othello_try_1/ppo_masked_selfplay/history_00000385.zip'
-    ai385 = {"name": 'ppo_masked_385',  'f': load_model(file).predict_best_move}
+    # file = '/home/rasa/Desktop/jupyter/rl demo/Othello_try_1/ppo_masked_selfplay/history_00000385.zip'
+    # ai385 = {"name": 'ppo_masked_385',  'f': load_model(file).predict_best_move}
 
-    file2 = 'training/Dict_obs_space/mppo-1-then-2/history_' + str(354).zfill(8)
-    ai_other = {"name": 'ppo_masked_64_64_1_354', 'f': load_model_64_64_1(file2).predict_best_move}
-
+    # file2 = 'training/Dict_obs_space/mppo-1-then-2/history_' + str(354).zfill(8)
+    # ai_other = {"name": 'ppo_masked_64_64_1_354', 'f': load_model_64_64_1(file2).predict_best_move}
 
     ai_random = {"name": 'random_model', "first_turn": True, 'f': lambda x: (list(x.valid_moves()), None)}
 
     # heu_params = 19.70822410606773, 1.3048221582220656, 2.9128158081863784, 1.351857641596074
-    heu_params = 19.71396080843101, 1.1239482682808002, 2.4049454912356936, 1.1732313053633865
+    # heu_params = 19.71396080843101, 1.1239482682808002, 2.4049454912356936, 1.1732313053633865
+    heu_params = 14.110659370384004, 1.6725387766365891, 2.7262102930984993, 1.0988509935146311, 946.9075924700552
+
     mm_no_depth = Minimax(lambda _: 1, create_heuristic(*heu_params))
-    ai_0 = {"name": "depth 1 MinMax", "first_turn": True, "f": mm_no_depth.predict_best_move}
+    ai_0 = {"name": "depth 1 GA", "first_turn": True, "f": mm_no_depth.predict_best_move}
 
-    time_amount = timeit.timeit(lambda: both_sides(ai_0, ai_other, times=100), number=1)
-    print(f'time needed {time_amount}')
-
-
-
-
-
-
-
-
-
-
-
+    bench_64_2_1()
+    # time_amount = timeit.timeit(lambda: both_sides(ai_0, ai_random, times=100), number=1)
+    # print(f'time needed {time_amount}')
 
     # ai_vs_ai_cli(ai1, ai2)
 
@@ -146,7 +149,6 @@ if __name__ == '__main__':
     #                                        number=1)
     #     except FileNotFoundError:
     #         break
-
 
     # test_models()
 

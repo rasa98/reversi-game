@@ -46,12 +46,6 @@ class Minimax(ModelInterface):
                 pass
         if depth == 0:
             return self.heu(game)
-            # ggg = self.heu(game)
-            # if isinstance(ggg, complex):
-            #     pass
-            #     pass
-            #     pass
-            # return ggg
 
         if game.player_turn == 1:  # Player 1 maximizes
             return self.maximize(depth, a, b, game)

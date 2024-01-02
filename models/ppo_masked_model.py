@@ -3,7 +3,7 @@ from models.model_interface import ModelInterface
 from game_logic import Othello
 import numpy as np
 import gymnasium.spaces as spaces
-from gymnasium.spaces import Discrete, Box, Dict
+from gymnasium.spaces import Discrete, Box, Dict, MultiDiscrete
 
 from collections import OrderedDict
 
@@ -153,6 +153,32 @@ class MaskedPPOWrapper129(ModelInterface):
         return (action_game,), None
 
 
+class MaskedPPOWrapper64_2_1(ModelInterface):
+    def __init__(self, model):
+        self.model: MaskablePPO = model
+        self.obs_space = Dict({
+            'board': Box(0, 2, shape=(8, 8), dtype=int),
+            'chips': MultiDiscrete([65, 65]),
+            'player': Discrete(2, start=1)
+        })
+
+    def predict_best_move(self, game: Othello):
+        obs = OrderedDict({
+            'board': game.board,
+            'chips': np.array(game.chips),
+            'player': game.player_turn
+        })
+        flattened_obs = spaces.flatten(self.obs_space, obs)
+
+        action, _ = self.model.predict(flattened_obs,
+                                       action_masks=action_masks(game),
+                                       deterministic=False)
+
+        action_game = (action // 8, action % 8)
+        # print(f'action : {action}, - {action_game}')
+        return (action_game,), None
+
+
 def load_model(file):
     model = MaskablePPO.load(file)
     return MaskedPPOWrapper(model)
@@ -171,3 +197,8 @@ def load_model_66(file):
 def load_model_64_64_1(file):
     model = MaskablePPO.load(file)
     return MaskedPPOWrapper129(model)
+
+
+def load_model_64_2_1(filepath):
+    model = MaskablePPO.load(filepath)
+    return MaskedPPOWrapper64_2_1(model)
