@@ -1,8 +1,12 @@
 import random
+import time
 
 from models.minmax import Minimax, depth_f_default
 from heuristics.heu1 import heuristic, heuristic2
 from heuristics.heu2 import create_heuristic
+
+from heuristics.ga.heu_ga import create_heuristic as create_heuristic2
+
 from game_modes import ai_vs_ai_cli
 from collections import Counter
 import timeit
@@ -100,8 +104,8 @@ if __name__ == '__main__':
     ai1 = {"name": "Fixed depth=3", "first_turn": True, "f": mm1.predict_best_move}
     ai2 = {"name": "dynamic d", "first_turn": True, "f": mm2.predict_best_move}
 
-    # file = '/home/rasa/Desktop/jupyter/rl demo/Othello_try_1/ppo_masked_selfplay/history_00000385.zip'
-    # ai385 = {"name": 'ppo_masked_385',  'f': load_model(file).predict_best_move}
+    file = '/home/rasa/Desktop/jupyter/rl demo/Othello_try_1/ppo_masked_selfplay/history_00000385.zip'
+    ai385 = {"name": 'ppo_masked_385',  'f': load_model(file).predict_best_move}
 
     # file2 = 'training/Dict_obs_space/mppo-1-then-2/history_' + str(354).zfill(8)
     # ai_other = {"name": 'ppo_masked_64_64_1_354', 'f': load_model_64_64_1(file2).predict_best_move}
@@ -115,7 +119,29 @@ if __name__ == '__main__':
     mm_no_depth = Minimax(lambda _: 1, create_heuristic(*heu_params))
     ai_0 = {"name": "depth 1 GA", "first_turn": True, "f": mm_no_depth.predict_best_move}
 
-    bench_64_2_1()
+    # corner divisor: 1.141624324278253, corner exponent: 2.2005380364531657,
+    # danger divisor: 1.5537486913611744,
+    # min opp score: 202.78118735939893
+    from heuristics.ga.heu_func import (CountChips, CountDangerEarlyGame, CountCorners,
+                                        MinimizeOpponentMoves)
+
+    custom_heu = {CountCorners: CountCorners(1.141624324278253, 2.2005380364531657),
+                  CountDangerEarlyGame: CountDangerEarlyGame(1.5537486913611744),
+                  MinimizeOpponentMoves: MinimizeOpponentMoves(202.78118735939893)}
+    ga_custom_heu = {"name": "depth 1 GA-custom heu",
+                     "first_turn": True,
+                     "f": Minimax(depth_f_default, create_heuristic2(custom_heu)).predict_best_move}
+
+    # both_sides(ai385, ga_custom_heu, times=100)
+
+    start = time.perf_counter()
+    both_sides(ai_random, ai_random, times=400)
+    end = time.perf_counter()
+    print(f'time needed {end - start}')
+
+    # bench_64_2_1()
+
+
     # time_amount = timeit.timeit(lambda: both_sides(ai_0, ai_random, times=100), number=1)
     # print(f'time needed {time_amount}')
 

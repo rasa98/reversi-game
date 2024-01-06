@@ -80,34 +80,34 @@ def heuristic2(game: Othello):
     return res
 
 
-def create_heuristic(chip_divisor, corner_divisor, corner_exponent, danger_divisor):
-    # chip_divisor      - [1, 2, 3..., 20]
-    # corner_divisor    - [1, 2, 3..., 20]
-    # corner_exponent   - range [1.0 - 3.0]
-    # danger_divisor    - [1, 2, 3..., 20]
-    def heu(game: Othello):
-        stats = (game.chips, game.turn, game.board)
-        res = (count_chips(stats, lambda turn: (turn // chip_divisor) + 1) +
-               count_corners(stats, lambda x: ((60 - x) // corner_divisor) ** corner_exponent) +
-               count_danger_early_game(stats, lambda turn: (65 - turn) // danger_divisor))
-        return res
-
-    return heu
-
-
-def create_heuristic2(chip_divisor, corner_divisor, corner_exponent, danger_divisor):
-    # chip_divisor      - [1, 2, 3..., 20]
-    # corner_divisor    - [1, 2, 3..., 20]
-    # corner_exponent   - range [1.0 - 3.0]
-    # danger_divisor    - [1, 2, 3..., 20]
-    def heu(game: Othello):
-        stats = (game.chips, game.turn, game.board)
-        res = (count_chips(stats, lambda turn: (turn // chip_divisor) + 1) +
-               count_corners(stats, lambda x: ((60 - x) // corner_divisor) ** corner_exponent) +
-               count_danger_early_game(stats, lambda turn: (65 - turn) // danger_divisor))
-        return res
-
-    return heu
+# def create_heuristic(chip_divisor, corner_divisor, corner_exponent, danger_divisor):
+#     # chip_divisor      - [1, 2, 3..., 20]
+#     # corner_divisor    - [1, 2, 3..., 20]
+#     # corner_exponent   - range [1.0 - 3.0]
+#     # danger_divisor    - [1, 2, 3..., 20]
+#     def heu(game: Othello):
+#         stats = (game.chips, game.turn, game.board)
+#         res = (count_chips(stats, lambda turn: (turn // chip_divisor) + 1) +
+#                count_corners(stats, lambda x: ((60 - x) // corner_divisor) ** corner_exponent) +
+#                count_danger_early_game(stats, lambda turn: (65 - turn) // danger_divisor))
+#         return res
+#
+#     return heu
+#
+#
+# def create_heuristic2(chip_divisor, corner_divisor, corner_exponent, danger_divisor):
+#     # chip_divisor      - [1, 2, 3..., 20]
+#     # corner_divisor    - [1, 2, 3..., 20]
+#     # corner_exponent   - range [1.0 - 3.0]
+#     # danger_divisor    - [1, 2, 3..., 20]
+#     def heu(game: Othello):
+#         stats = (game.chips, game.turn, game.board)
+#         res = (count_chips(stats, lambda turn: (turn // chip_divisor) + 1) +
+#                count_corners(stats, lambda x: ((60 - x) // corner_divisor) ** corner_exponent) +
+#                count_danger_early_game(stats, lambda turn: (65 - turn) // danger_divisor))
+#         return res
+#
+#     return heu
 
 
 if __name__ == '__main__':
