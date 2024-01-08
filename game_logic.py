@@ -1,4 +1,48 @@
 import numpy as np
+import numba
+from numba import types, njit
+from numba.experimental import jitclass
+
+my_return_set = types.Set(types.Tuple([types.int64, types.int64]))
+my_set = types.Set(types.Tuple([types.int64, types.int64]))
+
+my_board = types.Array(types.int64, 2, 'C')
+
+
+@njit
+def create_empty_list_int64():
+    alist = [1, 2]
+    alist.clear()
+    return alist
+
+
+@njit
+def njit_get_reversed_fields(board, player_turn, field):  # slowest part of the code
+    res = create_empty_list_int64()
+
+    row, col = field
+    directions = [(-1, -1), (-1, 0), (-1, 1),
+                  (0, -1), (0, 1),
+                  (1, -1), (1, 0), (1, 1)]
+
+    for x, y in directions:
+        for times in range(1, 8):
+            new_row = row + x * times
+            new_col = col + y * times
+
+            if not (0 <= new_row <= 7 and 0 <= new_col <= 7):
+                break
+
+            value = board[new_row, new_col]
+            if value == 0:
+                break
+            elif value == player_turn:
+                if times != 1:
+                    for i in range(1, times):
+                        res.append(row + x * i)
+                        res.append(col + y * i)
+                break
+    return res
 
 
 class Othello:
@@ -85,6 +129,15 @@ class Othello:
         self.valid_moves_to_reverse = moves_to_reverse
 
     def _get_reversed_fields(self, field):  # slowest part of the code
+        res = njit_get_reversed_fields(self.board, self.player_turn, field)
+        # print(res)
+        res = set((res[idx], res[idx + 1]) for idx in range(0, len(res), 2))
+        old = self.old_get_reversed_fields(field)
+        if res != old:
+            print(f'res = {res}\nold = {old}\n')
+        return res
+
+    def old_get_reversed_fields(self, field):  # slowest part of the code
         s = set()
         maybe_s = set()
         row, col = field
@@ -105,6 +158,7 @@ class Othello:
                             break
                         else:
                             s = s.union(maybe_s)
+                            break
                             # s.update(maybe_s)
                     case _:  # opponent case
                         maybe_s.add((new_row, new_col))

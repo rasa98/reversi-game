@@ -26,6 +26,16 @@ class MyTestCase(unittest.TestCase):
         self.assertEqual(self.b1_white.valid_moves(), next_white_moves_board1)
         self.assertEqual(self.b1_black.valid_moves(), next_black_moves_board1)
 
+    # TODO: test this
+    # def _get_reversed_fields(self, field):  # slowest part of the code
+    #     res = njit_get_reversed_fields(self.board, self.player_turn, field)
+    #     # print(res)
+    #     res = set((res[idx], res[idx + 1]) for idx in range(0, len(res), 2))
+    #     old = self.old_get_reversed_fields(field)
+    #     if res != old:
+    #         print(f'res = {res}\nold = {old}\n')
+    #     return res
+
 
 if __name__ == '__main__':
     unittest.main()
