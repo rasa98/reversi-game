@@ -11,7 +11,7 @@ my_board = types.Array(types.int64, 2, 'C')
 
 @njit
 def create_empty_list_int64():
-    alist = [1, 2]
+    alist = [(1, 2)]
     alist.clear()
     return alist
 
@@ -39,9 +39,47 @@ def njit_get_reversed_fields(board, player_turn, field):  # slowest part of the 
             elif value == player_turn:
                 if times != 1:
                     for i in range(1, times):
-                        res.append(row + x * i)
-                        res.append(col + y * i)
+                        res.append((row + x * i, col + y * i))
+                        # res.append(row + x * i)
+                        # res.append(col + y * i)
                 break
+    return res
+
+
+@njit
+def njit_get_all_reversed_fields(board, player_turn, fields):  # TODO: maybe make multiple smaller njit functions
+    res = create_empty_list_int64()
+    sub_res = create_empty_list_int64()
+
+    directions = [(-1, -1), (-1, 0), (-1, 1),
+                  (0, -1), (0, 1),
+                  (1, -1), (1, 0), (1, 1)]
+
+    for field in fields:
+        row, col = field
+        for x, y in directions:
+            for times in range(1, 8):
+                new_row = row + x * times
+                new_col = col + y * times
+
+                if not (0 <= new_row <= 7 and 0 <= new_col <= 7):
+                    break
+
+                value = board[new_row, new_col]
+                if value == 0:
+                    break
+                elif value == player_turn:
+                    if times != 1:
+                        for i in range(1, times):
+                            sub_res.append((row + x * i, col + y * i))
+                            # res.append(row + x * i)
+                            # res.append(col + y * i)
+                    break
+        if len(sub_res):
+            res.append((-1, -1))
+            res.append((row, col))
+            res.extend(sub_res)
+            sub_res.clear()
     return res
 
 
@@ -121,7 +159,38 @@ class Othello:
         else:
             self.chips = (y, x)
 
-    def _calculate_next_valid_moves(self):
+    def _calculate_next_valid_moves(self):  # TODO make test to confirm old and new give same results
+        moves_to_reverse = {}
+        flattened_list = []
+        if len(self.edge_fields):
+            edge_fields = np.array(list(self.edge_fields))
+            flattened_list: [] = njit_get_all_reversed_fields(self.board,
+                                                              self.player_turn,
+                                                              edge_fields)
+
+        idx = 1  # 0 is (-1, -1) if its not empty
+        while idx < len(flattened_list):
+            field = flattened_list[idx]
+            to_reverse = set()
+            idx += 1
+
+            while idx < len(flattened_list) and flattened_list[idx] != (-1, -1):
+                to_reverse.add(flattened_list[idx])
+                idx += 1
+
+            moves_to_reverse[field] = to_reverse
+            idx += 1
+
+        try:
+            self.old_calculate_next_valid_moves()
+            assert moves_to_reverse == self.valid_moves_to_reverse
+        except:
+            print()
+            raise AssertionError
+
+        self.valid_moves_to_reverse = moves_to_reverse
+
+    def old_calculate_next_valid_moves(self):
         moves_to_reverse = {}
         for field in self.edge_fields:  # ... in self._get_edge_fields():
             if to_reverse := self._get_reversed_fields(field):
@@ -130,8 +199,8 @@ class Othello:
 
     def _get_reversed_fields(self, field):  # slowest part of the code
         res = njit_get_reversed_fields(self.board, self.player_turn, field)
-        # print(res)
-        res = set((res[idx], res[idx + 1]) for idx in range(0, len(res), 2))
+        res = set(res)
+
         old = self.old_get_reversed_fields(field)
         if res != old:
             print(f'res = {res}\nold = {old}\n')

@@ -135,7 +135,7 @@ if __name__ == '__main__':
     # both_sides(ai385, ga_custom_heu, times=100)
 
     start = time.perf_counter()
-    both_sides(ai_random, ai_random, times=200)
+    both_sides(ai_random, ai_random, times=1000)
     end = time.perf_counter()
     print(f'time needed {end - start}')
 
