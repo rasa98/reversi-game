@@ -1,7 +1,0 @@
-population_size = 100
-TOURNAMENTS = 1000
-ROUNDS = 50
-CORES = os.cpu_count()
-SAVE_FREQ = 2
-SEL_CROSSOVER = (0.3, 0.2)
-REMATCH = False
