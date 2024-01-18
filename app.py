@@ -45,11 +45,11 @@ def test_models():
     for i in range(200, 201):  # 219, 212, 235, 248, 294 -- 457, 549, --550--, 557, 591, 595, 615
 
         try:  # 930, 1283, 1319
-            f1 = ('training/Dict_obs_space/ppo_masked_selfplay' +
+            f1 = ('training/rl/Dict_obs_space/ppo_masked_selfplay' +
                   '_dict_deterministic_new_rewards/2/history_') + str(i).zfill(8)
             ai1 = {"name": f'ppo_masked_{i}', "first_turn": True, 'f': load_model_66(f1).predict_best_move}
 
-            f2 = ('training/Dict_obs_space/ppo_masked_selfplay' +
+            f2 = ('training/rl/Dict_obs_space/ppo_masked_selfplay' +
                   '_dict_deterministic_new_rewards/2/history_') + str(i + 1).zfill(8)
             ai2 = {"name": f'ppo_masked_{i + 1}', "first_turn": True, 'f': load_model_66(f2).predict_best_move}
 
@@ -65,10 +65,10 @@ def test_models():
 
 
 def bench_64_64_1():
-    logs = 'training/Dict_obs_space/mppo-1-then-2/log_vs_385.txt'
+    logs = 'training/rl/Dict_obs_space/mppo-1-then-2/log_vs_385.txt'
     for i in range(1, 90000):
         try:
-            f = ('training/Dict_obs_space/mppo-1-then-2/history_' +
+            f = ('training/rl/Dict_obs_space/mppo-1-then-2/history_' +
                  str(i).zfill(8))
             ai_other = {"name": f'ppo_masked_{i}',
                         "first_turn": True,
@@ -83,7 +83,7 @@ def bench_64_64_1():
 
 
 def bench_64_2_1():
-    model_path = 'training/Dict_obs_space/mppo_num_chips/models/history_00000414'
+    model_path = 'training/rl/Dict_obs_space/mppo_num_chips/models/history_00000414'
 
     model = {"name": f'ppo_masked_414',
              "first_turn": True,
@@ -103,10 +103,10 @@ if __name__ == '__main__':
     ai1 = {"name": "Fixed depth=3", "first_turn": True, "f": mm1.predict_best_move}
     ai2 = {"name": "dynamic d", "first_turn": True, "f": mm2.predict_best_move}
 
-    file = '/home/rasa/Desktop/jupyter/rl demo/Othello_try_1/ppo_masked_selfplay/history_00000385.zip'
+    file = 'training/rl/Dict_obs_space/history_00000385.zip'
     ai385 = {"name": 'ppo_masked_385', 'f': load_model(file).predict_best_move}
 
-    file = 'training/Dict_obs_space/mppo_num_chips/models/history_00000330'
+    file = 'training/rl/Dict_obs_space/mppo_num_chips/models/history_00000330'
     fixed_330 = {"name": 'fixed_ppo_masked_330', 'f': load_model_64_2_1(file).predict_best_move}
 
     # file2 = 'training/Dict_obs_space/mppo-1-then-2/history_' + str(354).zfill(8)
@@ -143,9 +143,20 @@ if __name__ == '__main__':
                    "f": Minimax(depth_f_default, create_heuristic2(custom_heu_2)).predict_best_move}
 
     start = time.perf_counter()
-    both_sides(fixed_330, ai385, times=1000)
+    both_sides(ai_random, ai_random, times=1000)
+    # both_sides(fixed_330, ai385, times=100)
     end = time.perf_counter()
     print(f'time needed {end - start}')
+
+    # 2000 random simulation
+    # full njit two lists: - ~ 6secs
+    # full njit arrays - ~ 12 sec ?!?!?! ne kapiram zasto
+    # single njit field - ~ 6.5 secs
+    # none njit - ~ 22 sec
+
+    # full njit two list + optimized egde_fields - 3.3 secs
+
+
 
     # bench_64_2_1()
 
