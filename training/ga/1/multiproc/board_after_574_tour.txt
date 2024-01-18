@@ -1,0 +1,100 @@
+gen alive: 11, params: min opp score: 462.29392356473954, corner divisor: 1.6139340599013359, corner exponent: 2.973053842606906, danger divisor: 2.460455892501468, id: 31186, score: 123
+gen alive: 25, params: min opp score: 106.5871768532884, corner divisor: 1.6139340599013359, corner exponent: 2.973053842606906, danger divisor: 6.131558639329769, id: 31088, score: 120
+gen alive: 2, params: danger divisor: 1.1883297170515503, chip divisor: 11.633893257769747, min opp score: 129.76487593368574, corner divisor: 2.6217541314544417, corner exponent: 2.4915055431390485, id: 31589, score: 115
+gen alive: 20, params: min opp score: 106.5871768532884, corner divisor: 1.6139340599013359, corner exponent: 2.973053842606906, danger divisor: 2.9869694316741686, id: 31525, score: 114
+gen alive: 6, params: min opp score: 106.5871768532884, corner divisor: 1.6139340599013359, corner exponent: 2.4915055431390485, danger divisor: 6.342201276716135, id: 31585, score: 111
+gen alive: 22, params: min opp score: 668.2628308661057, corner divisor: 1.6139340599013359, corner exponent: 2.1456517824190264, danger divisor: 1.0108193323567407, id: 30901, score: 109
+gen alive: 18, params: min opp score: 106.5871768532884, danger divisor: 2.9869694316741686, corner divisor: 3.959394222370935, corner exponent: 2.677136851740009, id: 31201, score: 109
+gen alive: 15, params: min opp score: 106.5871768532884, corner divisor: 3.745842508532258, corner exponent: 2.673486732600781, danger divisor: 6.561673837377781, id: 31302, score: 109
+gen alive: 14, params: min opp score: 106.5871768532884, corner divisor: 3.745842508532258, corner exponent: 2.3847789075291574, danger divisor: 2.460455892501468, id: 31471, score: 108
+gen alive: 18, params: min opp score: 668.2628308661057, corner divisor: 3.745842508532258, corner exponent: 2.673486732600781, danger divisor: 1.0108193323567407, id: 31580, score: 106
+gen alive: 7, params: min opp score: 897.6669027854517, corner divisor: 3.745842508532258, corner exponent: 2.673486732600781, danger divisor: 2.5174185793237362, id: 31561, score: 105
+gen alive: 19, params: min opp score: 106.5871768532884, corner divisor: 3.745842508532258, corner exponent: 2.673486732600781, danger divisor: 6.561673837377781, id: 31420, score: 104
+gen alive: 22, params: min opp score: 280.7522740905579, corner divisor: 2.147379215428974, corner exponent: 2.677136851740009, danger divisor: 1.0108193323567407, id: 31258, score: 103
+gen alive: 15, params: min opp score: 106.5871768532884, corner divisor: 3.8876856954724497, corner exponent: 2.673486732600781, danger divisor: 11.722133281507126, id: 31180, score: 103
+gen alive: 14, params: min opp score: 106.5871768532884, corner divisor: 3.745842508532258, corner exponent: 2.673486732600781, danger divisor: 2.5174185793237362, id: 31478, score: 103
+gen alive: 18, params: min opp score: 280.7522740905579, corner divisor: 2.147379215428974, corner exponent: 2.673486732600781, danger divisor: 1.0108193323567407, id: 31474, score: 101
+gen alive: 22, params: min opp score: 106.5871768532884, danger divisor: 1.0108193323567407, corner divisor: 3.959394222370935, corner exponent: 2.677136851740009, id: 31364, score: 100
+gen alive: 20, params: min opp score: 668.2628308661057, danger divisor: 1.0108193323567407, corner divisor: 3.959394222370935, corner exponent: 2.677136851740009, id: 31419, score: 100
+gen alive: 6, params: min opp score: 665.947291958896, corner divisor: 1.6139340599013359, corner exponent: 2.973053842606906, danger divisor: 2.460455892501468, id: 31567, score: 100
+gen alive: 18, params: min opp score: 106.5871768532884, corner divisor: 3.8876856954724497, corner exponent: 2.673486732600781, danger divisor: 6.131558639329769, id: 31415, score: 99
+gen alive: 16, params: min opp score: 106.5871768532884, corner divisor: 3.745842508532258, corner exponent: 2.673486732600781, danger divisor: 2.9869694316741686, id: 31526, score: 99
+gen alive: 11, params: min opp score: 668.2628308661057, corner divisor: 1.6139340599013359, corner exponent: 2.1456517824190264, danger divisor: 1.5970818894229433, id: 31577, score: 99
+gen alive: 9, params: min opp score: 106.5871768532884, corner divisor: 3.98526397091816, corner exponent: 2.673486732600781, danger divisor: 6.131558639329769, id: 31575, score: 99
+gen alive: 8, params: min opp score: 106.5871768532884, corner divisor: 3.745842508532258, corner exponent: 2.3847789075291574, danger divisor: 14.399716023034872, id: 31506, score: 99
+gen alive: 12, params: min opp score: 256.28153144236114, corner divisor: 1.3589415082399547, corner exponent: 2.37953246353057, danger divisor: 2.5389667881768396, id: 31361, score: 98
+gen alive: 19, params: min opp score: 668.2628308661057, corner divisor: 2.147379215428974, corner exponent: 2.677136851740009, danger divisor: 1.0108193323567407, chip divisor: 19.83258774499203, id: 31582, score: 97
+gen alive: 11, params: min opp score: 106.5871768532884, corner divisor: 3.745842508532258, corner exponent: 2.673486732600781, danger divisor: 6.131558639329769, id: 31587, score: 97
+gen alive: 32, params: min opp score: 303.7234730536205, corner divisor: 2.147379215428974, corner exponent: 2.677136851740009, danger divisor: 1.0108193323567407, chip divisor: 18.304547178507793, id: 30483, score: 95
+gen alive: 20, params: min opp score: 961.328398891156, corner divisor: 2.147379215428974, corner exponent: 2.677136851740009, danger divisor: 1.0108193323567407, id: 31528, score: 93
+gen alive: 17, params: min opp score: 668.2628308661057, corner divisor: 3.745842508532258, corner exponent: 2.677136851740009, danger divisor: 1.0108193323567407, id: 31581, score: 93
+gen alive: 15, params: min opp score: 106.5871768532884, corner divisor: 1.6139340599013359, corner exponent: 2.673486732600781, danger divisor: 6.561673837377781, chip divisor: 19.83258774499203, id: 31583, score: 93
+gen alive: 13, params: min opp score: 462.29392356473954, corner divisor: 1.6139340599013359, corner exponent: 2.973053842606906, danger divisor: 2.5174185793237362, id: 31259, score: 91
+gen alive: 7, params: min opp score: 104.11768555016633, corner divisor: 7.692424465424372, corner exponent: 2.7553918341949295, danger divisor: 6.131558639329769, id: 31520, score: 90
+gen alive: 20, params: min opp score: 668.2628308661057, corner divisor: 2.147379215428974, corner exponent: 2.677136851740009, danger divisor: 1.0108193323567407, chip divisor: 19.83258774499203, id: 31529, score: 88
+gen alive: 10, params: min opp score: 106.5871768532884, corner divisor: 1.6139340599013359, corner exponent: 2.973053842606906, danger divisor: 2.5174185793237362, id: 31307, score: 88
+gen alive: 1, params: corner divisor: 3.67812343951864, corner exponent: 1.3861065522391236, danger divisor: 14.511242943652947, id: 31592, score: 87
+gen alive: 1, params: min opp score: 180.20585553441893, corner divisor: 2.2246056357083264, corner exponent: 2.3586805368289063, danger divisor: 3.8913112218879204, id: 30982, score: 86
+gen alive: 22, params: min opp score: 280.7522740905579, corner divisor: 2.147379215428974, corner exponent: 2.677136851740009, danger divisor: 1.0108193323567407, id: 31588, score: 84
+gen alive: 6, params: min opp score: 256.28153144236114, corner divisor: 1.3589415082399547, corner exponent: 2.37953246353057, danger divisor: 2.5389667881768396, id: 31085, score: 84
+gen alive: 1, params: min opp score: 187.39484916036582, corner divisor: 3.2530518601577123, corner exponent: 2.3847789075291574, danger divisor: 11.722133281507126, id: 31534, score: 84
+gen alive: 1, params: danger divisor: 3.1632009288099683, corner divisor: 1.7298763936489507, corner exponent: 1.3402998866362792, chip divisor: 13.245982715060801, min opp score: 803.6265414339485, id: 31374, score: 83
+gen alive: 4, params: min opp score: 965.5959794544999, corner divisor: 6.540118142742801, corner exponent: 2.379542172952274, danger divisor: 2.5389667881768396, id: 31584, score: 81
+gen alive: 16, params: min opp score: 106.5871768532884, corner divisor: 1.6139340599013359, corner exponent: 2.973053842606906, danger divisor: 2.460455892501468, chip divisor: 19.83258774499203, id: 31531, score: 80
+gen alive: 1, params: danger divisor: 1.0108193323567407, corner divisor: 1.1655687885497383, corner exponent: 2.683772144422775, min opp score: 718.9777431610664, id: 31472, score: 80
+gen alive: 13, params: min opp score: 280.7522740905579, corner divisor: 2.147379215428974, corner exponent: 2.677136851740009, danger divisor: 11.722133281507126, id: 31530, score: 79
+gen alive: 1, params: chip divisor: 18.904602294833545, corner divisor: 2.931782896396287, corner exponent: 2.0735659291734265, min opp score: 997.5671414640866, danger divisor: 18.792572544188275, id: 31591, score: 79
+gen alive: 20, params: min opp score: 668.2628308661057, corner divisor: 3.959394222370935, corner exponent: 2.677136851740009, danger divisor: 1.0108193323567407, id: 31586, score: 78
+gen alive: 19, params: min opp score: 961.328398891156, corner divisor: 2.147379215428974, corner exponent: 2.677136851740009, danger divisor: 1.0108193323567407, chip divisor: 19.83258774499203, id: 31292, score: 78
+gen alive: 1, params: min opp score: 965.5959794544999, danger divisor: 1.1883297170515503, corner divisor: 1.5546472970425564, corner exponent: 1.216603916934497, id: 31565, score: 78
+gen alive: 10, params: min opp score: 668.2628308661057, corner divisor: 2.147379215428974, corner exponent: 2.677136851740009, danger divisor: 11.801706844091951, chip divisor: 19.83258774499203, id: 31579, score: 77
+gen alive: 1, params: min opp score: 124.28188476879922, danger divisor: 1.1883297170515503, corner divisor: 6.540118142742801, corner exponent: 2.379542172952274, id: 31571, score: 77
+gen alive: 1, params: corner divisor: 5.329120080162983, corner exponent: 2.9326346299494093, danger divisor: 8.003461109237465, min opp score: 373.85739082444013, chip divisor: 12.952439254749837, id: 31604, score: 76
+gen alive: 1, params: danger divisor: 4.434552751298078, corner divisor: 1.3728195051116532, corner exponent: 1.8863844119973217, id: 31538, score: 76
+gen alive: 2, params: min opp score: 965.5959794544999, danger divisor: 1.1883297170515503, corner divisor: 6.540118142742801, corner exponent: 2.379542172952274, id: 31475, score: 73
+gen alive: 1, params: min opp score: 154.4004311478871, corner divisor: 3.2530518601577123, corner exponent: 2.673486732600781, danger divisor: 13.897893614275015, chip divisor: 13.953505130933358, id: 31257, score: 73
+gen alive: 1, params: min opp score: 133.5680317798822, corner divisor: 10.107273400026681, corner exponent: 2.3370962849861128, id: 31551, score: 73
+gen alive: 1, params: min opp score: 106.5871768532884, corner divisor: 1.6139340599013359, corner exponent: 2.3847789075291574, id: 31473, score: 72
+gen alive: 7, params: min opp score: 766.3735840267512, corner divisor: 7.192513197551727, corner exponent: 2.939749595711809, danger divisor: 13.440497400193216, id: 31573, score: 70
+gen alive: 1, params: min opp score: 701.0288765856245, corner divisor: 1.6139340599013359, corner exponent: 2.973053842606906, chip divisor: 18.5641604652522, id: 31533, score: 70
+gen alive: 1, params: danger divisor: 10.621980241046737, corner divisor: 8.490112966074511, corner exponent: 1.6814575931560691, id: 31545, score: 68
+gen alive: 1, params: min opp score: 343.2642806109468, danger divisor: 1.2813633199790302, id: 31598, score: 67
+gen alive: 1, params: min opp score: 961.328398891156, corner divisor: 16.585714177975618, corner exponent: 1.3611699534686266, danger divisor: 7.9191007682490975, id: 31522, score: 65
+gen alive: 1, params: corner divisor: 5.563513702708576, corner exponent: 2.90357245332548, danger divisor: 6.815761070349024, id: 31594, score: 64
+gen alive: 1, params: min opp score: 733.6047514496781, corner divisor: 12.703087571135413, corner exponent: 1.5639679639648216, danger divisor: 2.1186888612055856, id: 31600, score: 64
+gen alive: 1, params: danger divisor: 1.096853772006292, chip divisor: 12.883624359825081, corner divisor: 14.132275333932933, corner exponent: 2.636596024146796, min opp score: 297.12038955992654, id: 31602, score: 64
+gen alive: 1, params: danger divisor: 6.342201276716135, chip divisor: 7.965671648408814, min opp score: 368.8437270155657, corner divisor: 2.6217541314544417, corner exponent: 2.4915055431390485, id: 31563, score: 63
+gen alive: 1, params: chip divisor: 13.667809182560978, danger divisor: 14.857459147027399, corner divisor: 10.699430718352613, corner exponent: 2.4453993566010643, min opp score: 571.3824025046935, id: 31596, score: 63
+gen alive: 1, params: min opp score: 972.462303681678, corner divisor: 5.781678154311372, corner exponent: 1.708827895150286, chip divisor: 9.73567659407157, id: 31453, score: 63
+gen alive: 1, params: corner divisor: 6.07260922665188, corner exponent: 1.363463635301268, min opp score: 861.6499401417809, id: 31603, score: 60
+gen alive: 1, params: chip divisor: 6.938746702521106, corner divisor: 2.4502171458235815, corner exponent: 2.6425563798793634, min opp score: 363.78394592166677, id: 31558, score: 60
+gen alive: 1, params: min opp score: 198.17492792359124, corner divisor: 1.6403250945467196, corner exponent: 1.931721555923815, danger divisor: 19.742855122870175, chip divisor: 18.334199787081662, id: 31609, score: 59
+gen alive: 1, params: danger divisor: 19.41489865183702, corner divisor: 16.49242273133175, corner exponent: 2.2687748455721577, id: 31489, score: 59
+gen alive: 1, params: danger divisor: 11.240633729083052, chip divisor: 14.462747227562799, corner divisor: 9.057794574446307, corner exponent: 2.9085270187655707, id: 31605, score: 58
+gen alive: 2, params: danger divisor: 6.342201276716135, chip divisor: 11.633893257769747, min opp score: 129.76487593368574, corner divisor: 2.6217541314544417, corner exponent: 2.4915055431390485, id: 31542, score: 57
+gen alive: 1, params: min opp score: 127.6162263830588, id: 30978, score: 57
+gen alive: 11, params: min opp score: 668.2628308661057, corner divisor: 19.431810315238707, corner exponent: 2.1456517824190264, danger divisor: 1.0108193323567407, id: 31569, score: 53
+gen alive: 1, params: min opp score: 187.15180519917493, id: 31593, score: 52
+gen alive: 1, params: corner divisor: 19.833308848666345, corner exponent: 1.5974509511778119, chip divisor: 13.754853927019939, min opp score: 719.4233589311743, danger divisor: 3.3008001367941384, id: 31327, score: 52
+gen alive: 1, params: corner divisor: 6.969600661282817, corner exponent: 1.9424282979796386, id: 31595, score: 51
+gen alive: 1, params: danger divisor: 5.20275993978557, corner divisor: 14.560101283739183, corner exponent: 1.3920950681592963, id: 31502, score: 51
+gen alive: 1, params: danger divisor: 11.980110372795023, chip divisor: 9.338059266009536, corner divisor: 15.14002424874263, corner exponent: 2.464783665233361, id: 31612, score: 50
+gen alive: 1, params: chip divisor: 2.6820739762139, danger divisor: 10.79097413567121, corner divisor: 15.019238555874296, corner exponent: 1.823790248209955, min opp score: 897.7572304154052, id: 31599, score: 49
+gen alive: 1, params: corner divisor: 6.061037638692825, corner exponent: 2.314421009786419, id: 31610, score: 47
+gen alive: 1, params: danger divisor: 3.5541308162671843, chip divisor: 2.0736406194982915, corner divisor: 2.756391816086824, corner exponent: 2.4895023794759075, id: 31486, score: 44
+gen alive: 1, params: danger divisor: 19.411167534988383, chip divisor: 14.22663030968953, min opp score: 507.62385651442855, id: 31590, score: 43
+gen alive: 1, params: danger divisor: 9.471826284025774, chip divisor: 10.867479578139477, min opp score: 239.84165581302784, id: 31607, score: 43
+gen alive: 1, params: min opp score: 858.0802370316403, id: 31537, score: 43
+gen alive: 1, params: chip divisor: 7.955586572782747, min opp score: 412.13237972397246, danger divisor: 10.628019282808111, id: 31601, score: 42
+gen alive: 1, params: min opp score: 801.5143147452771, danger divisor: 15.05922868638742, chip divisor: 11.33703131873746, corner divisor: 11.217825643738434, corner exponent: 1.1664299681545331, id: 31608, score: 41
+gen alive: 1, params: chip divisor: 1.6520202270926467, corner divisor: 14.167674251259038, corner exponent: 1.2173144057854153, min opp score: 328.04377960004086, id: 31343, score: 39
+gen alive: 1, params: chip divisor: 2.813171179515159, min opp score: 173.34208414175433, id: 31555, score: 38
+gen alive: 1, params: chip divisor: 19.3462898814536, min opp score: 380.04782055174434, corner divisor: 13.810009021014004, corner exponent: 1.979126301050938, id: 31614, score: 37
+gen alive: 1, params: corner divisor: 12.244317599461068, corner exponent: 1.359825004032388, chip divisor: 11.164424467543558, id: 31606, score: 36
+gen alive: 1, params: min opp score: 385.29216083237054, chip divisor: 15.732112917971154, danger divisor: 11.282980247267721, id: 31433, score: 36
+gen alive: 1, params: min opp score: 351.926342348455, chip divisor: 9.838621313777315, id: 31552, score: 34
+gen alive: 1, params: chip divisor: 16.990842572037593, id: 31613, score: 28
+gen alive: 1, params: corner divisor: 3.380641384564114, corner exponent: 1.5772345402011543, id: 31611, score: 27
+gen alive: 1, params: chip divisor: 7.539565638224061, corner divisor: 4.833051526945791, corner exponent: 2.9491684768439845, id: 31501, score: 27
+gen alive: 1, params: danger divisor: 13.989924688895258, id: 31504, score: 25
+gen alive: 1, params: chip divisor: 19.541567417224346, danger divisor: 16.22720654715846, id: 31597, score: 24

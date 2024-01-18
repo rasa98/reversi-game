@@ -1,6 +1,7 @@
 import sys
 # sys.path.append('/home/rasa/PycharmProjects/reversiProject/')  # TODO fix this hack
 import os
+
 source_dir = os.path.abspath(os.path.join(os.getcwd(), '../../'))
 sys.path.append(source_dir)
 
@@ -9,18 +10,21 @@ from models.minmax import Minimax
 from game_modes import ai_vs_ai_cli
 import random, itertools
 import timeit, time
-import concurrent.futures
+# import concurrent.futures
 from collections import defaultdict
+from dask.bag import from_sequence
+from dask import delayed, compute
+from dask.distributed import Client
 
 random_seed = time.time()
-population_size = 600
-TOURNAMENTS = 200
-ROUNDS = 2
-CORES = os.cpu_count()
-SAVE_FREQ = 5
+population_size = 50
+TOURNAMENTS = 10
+ROUNDS = 10
+CORES = int(sys.argv[1]) if len(sys.argv) >= 2 else os.cpu_count()
+SAVE_FREQ = 2
 SEL_CROSSOVER = (0.3, 0.5)
 REMATCH = False
-LOG_DIR = 'ga_try2_delete'
+LOG_DIR = 'ga_DELDELDEL'##sys.argv[2]
 
 os.makedirs(LOG_DIR, exist_ok=True)
 
@@ -70,22 +74,51 @@ def simulate_tournament(matches):
     return score
 
 
+# def parallel_process_list(players, func, num_processes=1, rematch=True):
+#     match_pairs = generate_all_pairs(players, ROUNDS)
+#     if rematch:
+#         match_pairs = add_rematches(match_pairs)
+#
+#     # Partition the list of matches
+#     chunk_size = len(match_pairs) // num_processes
+#     partitions = [match_pairs[i:i + chunk_size] for i in range(0, len(match_pairs), chunk_size)]
+#
+#     # Create a ProcessPoolExecutor for parallel processing
+#     with concurrent.futures.ProcessPoolExecutor(max_workers=num_processes) as executor:
+#         # Map the function to the partitions
+#         results = list(executor.map(func, partitions))
+#
+#     # Combine the results
+#     merged_dict = {p.id: 0 for p in players}
+#
+#     for result_dict in results:
+#         for key, value in result_dict.items():
+#             merged_dict[key] += value
+#
+#     sorted_dict = dict(sorted(merged_dict.items(), key=lambda item: item[1], reverse=True))
+#
+#     return sorted_dict
+
 def parallel_process_list(players, func, num_processes=1, rematch=True):
     match_pairs = generate_all_pairs(players, ROUNDS)
     if rematch:
         match_pairs = add_rematches(match_pairs)
     # print(f'len of matches pairs: {len(match_pairs)}\n\n')
 
+    # # Manually partition the list of matches
     chunk_size = len(match_pairs) // num_processes
     partitions = [match_pairs[i:i + chunk_size] for i in range(0, len(match_pairs), chunk_size)]
 
-    with concurrent.futures.ProcessPoolExecutor(max_workers=num_processes) as executor:
-        # Map the function to th
+    # Use Dask to parallelize the processing of partitions
+    delayed_results = [delayed(func)(partition) for partition in partitions]
 
-        results = list(executor.map(func, partitions))
-
-    # print(f'cores: {num_processes} \nlista vracena: {results}\n')
+    # Combine the results
     merged_dict = {p.id: 0 for p in players}
+
+    results = compute(*delayed_results,
+                      # num_workers=num_processes,
+                      # scheduler='distributed'
+                      )
 
     for result_dict in results:
         for key, value in result_dict.items():
@@ -106,7 +139,7 @@ def save_current_list(player_list, id_to_score, rounds):
 
 
 def save_start_list(player_list):
-    sorted_list = player_list #sorted(player_list, key=lambda obj: obj.params, reverse=True)
+    sorted_list = player_list  # sorted(player_list, key=lambda obj: obj.params, reverse=True)
 
     with open(f'{LOG_DIR}/start_list.txt', 'w') as f:
         for el in sorted_list:
@@ -119,23 +152,30 @@ def run_ga():
     inner_players = players
     save_counter = 0
     save_start_list(players)
+
+    start = time.perf_counter()
+
     for tour_num in range(1, TOURNAMENTS + 1):
         id_to_score_desc = parallel_process_list(inner_players, simulate_tournament,
                                                  num_processes=CORES, rematch=REMATCH)
 
         if tour_num % SAVE_FREQ == 0:
             save_counter += 1
-            save_current_list(inner_players, id_to_score_desc, save_counter*SAVE_FREQ)
+            save_current_list(inner_players, id_to_score_desc, save_counter * SAVE_FREQ)
 
         inner_players = HeuFuncIndividual.selection(inner_players, id_to_score_desc, rates=SEL_CROSSOVER)
 
         if tour_num % SAVE_FREQ == 0:
-            print(f'Done {int(tour_num / TOURNAMENTS * 100)}%')
+            end = time.perf_counter()
+            print(f'Done {int(tour_num / TOURNAMENTS * 100)}%. Time needed: {end - start:.2f}')
+            start = end
 
 
-start = time.perf_counter()
-run_ga()
-end = time.perf_counter()
-print(f'Done in {end - start} seconds,'
-      f' {(end - start) // 60} mins or'
-      f' {(end - start) // 3600} hours')
+if __name__ == '__main__':
+    start = time.perf_counter()
+    with Client() as client:
+        run_ga()
+    end = time.perf_counter()
+    print(f'Done in {end - start} seconds,'
+          f' {(end - start) // 60} mins or'
+          f' {(end - start) // 3600} hours')

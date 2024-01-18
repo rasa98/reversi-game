@@ -7,23 +7,19 @@ DIRECTIONS = np.array([(-1, -1), (-1, 0), (-1, 1),
                        (1, -1), (1, 0), (1, 1)])
 
 
-@njit
+@njit(cache=True)
 def create_empty_list_int64():
     alist = [(1, 2)]
     alist.clear()
     return alist
 
 
-@njit
+@njit(cache=True)
 def njit_get_reversed_fields(board, player_turn, field):  # slowest part of the code
-    res = []#create_empty_list_int64()
-
+    res = []  # create_empty_list_int64()
     row, col = field
-    directions = [(-1, -1), (-1, 0), (-1, 1),
-                  (0, -1), (0, 1),
-                  (1, -1), (1, 0), (1, 1)]
 
-    for x, y in directions:
+    for x, y in DIRECTIONS:
         for times in range(1, 8):
             new_row = row + x * times
             new_col = col + y * times
@@ -44,7 +40,7 @@ def njit_get_reversed_fields(board, player_turn, field):  # slowest part of the 
     return res
 
 
-@njit
+@njit(cache=True)
 def create_tuple_array(size):
     # flat_array = np.full(size * 2, -1, dtype=np.int64)  # Create an array of size * 2, filled with -1
     # tuple_array = flat_array.reshape((-1, 2))  # Reshape into a 2D array where each row represents a tuple
@@ -52,10 +48,10 @@ def create_tuple_array(size):
     return np.array([(-1, -1)] * size)
 
 
-@njit
+@njit(cache=True)
 def njit_get_all_reversed_fields(board, player_turn, fields):  # TODO: maybe make multiple smaller njit functions
     res = []  # create_empty_list_int64()
-    sub_res = []  # create_empty_list_int64()
+    to_reverse = []  # create_empty_list_int64()
 
     for field in fields:
         row, col = field
@@ -73,20 +69,21 @@ def njit_get_all_reversed_fields(board, player_turn, fields):  # TODO: maybe mak
                 elif value == player_turn:
                     if times != 1:
                         for i in range(1, times):
-                            sub_res.append((row + x * i, col + y * i))
+                            to_reverse.append((row + x * i, col + y * i))
                             # res.append(row + x * i)
                             # res.append(col + y * i)
                     break
-        if len(sub_res):
+        if len(to_reverse):
             res.append((-1, -1))
             res.append((row, col))
-            res.extend(sub_res)
-            sub_res.clear()
+            res.extend(to_reverse)
+
+            to_reverse.clear()
     return res
 
 
-@njit
-def slower_njit_get_all_reversed_fields(board, player_turn, fields):  # TODO: maybe make multiple smaller njit functions
+@njit(cache=True)
+def array_njit_get_all_reversed_fields(board, player_turn, fields):  # TODO: maybe make multiple smaller njit functions
     res = create_tuple_array(22 * len(fields))
     res_index = 0
     sub_res = create_tuple_array(20)
@@ -208,18 +205,18 @@ class Othello:
         else:
             self.chips = (y, x)
 
-    def ALL_calculate_next_valid_moves(self):  # TODO make test to confirm old and new give same results
+    def _calculate_next_valid_moves(self):  # TODO make test to confirm old and new give same results
         moves_to_reverse = {}
         list_of_fields = []
         if len(self.edge_fields):
             edge_fields = np.array(list(self.edge_fields))
             list_of_fields = njit_get_all_reversed_fields(self.board,
-                                                           self.player_turn,
-                                                           edge_fields)
+                                                          self.player_turn,
+                                                          edge_fields)
 
         idx = 1  # 0 is (-1, -1) if its not empty
         while idx < len(list_of_fields):
-            field = list_of_fields[idx]#tuple(list_of_fields[idx])
+            field = list_of_fields[idx]
             to_reverse = set()
             idx += 1
 
@@ -232,11 +229,16 @@ class Othello:
 
         self.valid_moves_to_reverse = moves_to_reverse
 
-    def _calculate_next_valid_moves(self):
+    def Single_calculate_next_valid_moves(self):
+
         moves_to_reverse = {}
         for field in self.edge_fields:  # ... in self._get_edge_fields():
             if to_reverse := self._get_reversed_fields(field):
                 moves_to_reverse[field] = to_reverse
+
+        # self.ALL_calculate_next_valid_moves()
+        # assert moves_to_reverse == self.valid_moves_to_reverse
+
         self.valid_moves_to_reverse = moves_to_reverse
 
     def _get_reversed_fields(self, field):  # slowest part of the code
@@ -248,7 +250,7 @@ class Othello:
         #     print(f'res = {res}\nold = {old}\n')
         return res
 
-    def old_get_reversed_fields(self, field):  # slowest part of the code
+    def OLD_get_reversed_fields(self, field):  # slowest part of the code
         s = set()
         maybe_s = set()
         row, col = field
@@ -279,7 +281,7 @@ class Othello:
         return s
 
     def _get_edge_fields(self):
-        player_positions = np.where(self.board != 0)#3 - self.player_turn)  # Get positions of opponents chips
+        player_positions = np.where(self.board != 0)  # 3 - self.player_turn)  # Get positions of opponents chips
 
         empty_adjacent = set()
 
@@ -338,8 +340,8 @@ class Othello:
                 self.winner, _, _ = self.count_winner()
 
     def count_winner(self):
-        white_chips = np.count_nonzero(self.board == 1)
-        black_chips = np.count_nonzero(self.board == 2)
+        white_chips = self.chips[0]
+        black_chips = self.chips[1]
         if white_chips > black_chips:
             return 1, white_chips, black_chips
         elif white_chips < black_chips:
