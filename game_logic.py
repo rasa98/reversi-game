@@ -52,25 +52,12 @@ def njit_get_all_reversed_fields(board, player_turn, fields):  # TODO: maybe mak
     return res
 
 
-def get_out_of_bounds_indices(board_size):
-    out_of_bounds_indices = set()
-
-    for i in range(-1, board_size + 1):
-        for j in range(-1, board_size + 1):
-            if not (0 <= i < board_size and 0 <= j < board_size):
-                out_of_bounds_indices.add((i, j))
-
-    return out_of_bounds_indices
-
-
 class Othello:
     DIRECTIONS = ((-1, -1), (-1, 0), (-1, 1),
                   (0, -1), (0, 1),
                   (1, -1), (1, 0), (1, 1))
 
     CORNERS = {(0, 0), (7, 7), (0, 7), (7, 0)}
-
-    OUT_OF_BOUND = get_out_of_bounds_indices(8)  # TODO: fix maybe - not instance method...hardcoded
 
     def __init__(self, players=("w", "b"), turn=1, board=None,
                  first_move=1, last_move=None, edge_fields=None, chips=(2, 2)):
@@ -136,7 +123,6 @@ class Othello:
 
     def update_chips(self, turned: int):
         #  every turn: 1 new, turned >= 1
-
         to_add = 1 + turned
         x = self.chips[self.player_turn - 1] + to_add
         y = self.chips[2 - self.player_turn] - turned
@@ -196,20 +182,7 @@ class Othello:
     def update_edge_fields(self, field):
         self.edge_fields.remove(field)
         list_of_empty_fields = njit_check_empty_edge_fields(self.board, field)
-        # list_of_empty_fields = self.check_empty_edge_fields(field)
         self.edge_fields.update(list_of_empty_fields)
-
-    def check_empty_edge_fields(self, field):
-        target_row, target_col = field
-        result = []
-
-        for offset_row, offset_col in Othello.DIRECTIONS:
-            neighbor = (target_row + offset_row, target_col + offset_col)
-
-            if neighbor not in Othello.OUT_OF_BOUND and self.board[neighbor] == 0:
-                result.append(neighbor)
-
-        return result
 
     def _check_correctness(self):
         if not self.valid_moves_to_reverse:
