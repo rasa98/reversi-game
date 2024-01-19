@@ -202,7 +202,7 @@ if __name__ == '__main__':
 
     # with Profile() as profile:
     #
-    #     print(f"{both_sides(ai385, ga_custom_2, times=100)}")
+    #     print(f"{both_sides(ai_random, ai_random, times=3000)}")
     #     (
     #         Stats(profile).
     #         strip_dirs().

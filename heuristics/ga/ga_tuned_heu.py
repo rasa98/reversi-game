@@ -10,23 +10,25 @@ from models.minmax import Minimax
 from game_modes import ai_vs_ai_cli
 import random, itertools
 import timeit, time
-# import concurrent.futures
+from concurrent import futures
 from collections import defaultdict
-from dask.bag import from_sequence
-from dask import delayed, compute
-from dask.distributed import Client
+
 
 random_seed = time.time()
 population_size = 50
 TOURNAMENTS = 10
 ROUNDS = 10
-CORES = int(sys.argv[1]) if len(sys.argv) >= 2 else os.cpu_count()
+CORES = os.cpu_count()
 SAVE_FREQ = 2
 SEL_CROSSOVER = (0.3, 0.5)
 REMATCH = False
 LOG_DIR = 'ga_DELDELDEL'##sys.argv[2]
 
 os.makedirs(LOG_DIR, exist_ok=True)
+
+
+print(f'pop: {population_size}\ntournaments: {TOURNAMENTS}\n'
+      f'rounds: {ROUNDS}\nratio: {SEL_CROSSOVER}\nrematch: {REMATCH}')
 
 
 def generate_all_pairs(ps, rounds):
@@ -74,51 +76,22 @@ def simulate_tournament(matches):
     return score
 
 
-# def parallel_process_list(players, func, num_processes=1, rematch=True):
-#     match_pairs = generate_all_pairs(players, ROUNDS)
-#     if rematch:
-#         match_pairs = add_rematches(match_pairs)
-#
-#     # Partition the list of matches
-#     chunk_size = len(match_pairs) // num_processes
-#     partitions = [match_pairs[i:i + chunk_size] for i in range(0, len(match_pairs), chunk_size)]
-#
-#     # Create a ProcessPoolExecutor for parallel processing
-#     with concurrent.futures.ProcessPoolExecutor(max_workers=num_processes) as executor:
-#         # Map the function to the partitions
-#         results = list(executor.map(func, partitions))
-#
-#     # Combine the results
-#     merged_dict = {p.id: 0 for p in players}
-#
-#     for result_dict in results:
-#         for key, value in result_dict.items():
-#             merged_dict[key] += value
-#
-#     sorted_dict = dict(sorted(merged_dict.items(), key=lambda item: item[1], reverse=True))
-#
-#     return sorted_dict
-
 def parallel_process_list(players, func, num_processes=1, rematch=True):
     match_pairs = generate_all_pairs(players, ROUNDS)
     if rematch:
         match_pairs = add_rematches(match_pairs)
-    # print(f'len of matches pairs: {len(match_pairs)}\n\n')
 
-    # # Manually partition the list of matches
+    # Partition the list of matches
     chunk_size = len(match_pairs) // num_processes
     partitions = [match_pairs[i:i + chunk_size] for i in range(0, len(match_pairs), chunk_size)]
 
-    # Use Dask to parallelize the processing of partitions
-    delayed_results = [delayed(func)(partition) for partition in partitions]
+    # Create a ProcessPoolExecutor for parallel processing
+    with futures.ProcessPoolExecutor(max_workers=num_processes) as executor:
+        # Map the function to the partitions
+        results = list(executor.map(func, partitions))
 
     # Combine the results
     merged_dict = {p.id: 0 for p in players}
-
-    results = compute(*delayed_results,
-                      # num_workers=num_processes,
-                      # scheduler='distributed'
-                      )
 
     for result_dict in results:
         for key, value in result_dict.items():
@@ -126,7 +99,6 @@ def parallel_process_list(players, func, num_processes=1, rematch=True):
 
     sorted_dict = dict(sorted(merged_dict.items(), key=lambda item: item[1], reverse=True))
 
-    # print(sorted_dict)
     return sorted_dict
 
 
@@ -173,8 +145,9 @@ def run_ga():
 
 if __name__ == '__main__':
     start = time.perf_counter()
-    with Client() as client:
-        run_ga()
+
+    run_ga()
+
     end = time.perf_counter()
     print(f'Done in {end - start} seconds,'
           f' {(end - start) // 60} mins or'

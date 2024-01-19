@@ -35,12 +35,25 @@ def njit_get_all_reversed_fields(board, player_turn, fields):  # TODO: maybe mak
     return res
 
 
+def get_out_of_bounds_indices(board_size):
+    out_of_bounds_indices = set()
+
+    for i in range(-1, board_size + 1):
+        for j in range(-1, board_size + 1):
+            if not (0 <= i < board_size and 0 <= j < board_size):
+                out_of_bounds_indices.add((i, j))
+
+    return out_of_bounds_indices
+
+
 class Othello:
     DIRECTIONS = ((-1, -1), (-1, 0), (-1, 1),
                   (0, -1), (0, 1),
                   (1, -1), (1, 0), (1, 1))
 
     CORNERS = {(0, 0), (7, 7), (0, 7), (7, 0)}
+
+    OUT_OF_BOUND = get_out_of_bounds_indices(8)  # TODO: fix maybe - not instance method...hardcoded
 
     def __init__(self, players=("w", "b"), turn=1, board=None,
                  first_move=1, last_move=None, edge_fields=None, chips=(2, 2)):
@@ -51,6 +64,7 @@ class Othello:
         self.winner = None
         self.turn = turn
         self.chips = chips
+
         if board is not None:
             self.board = np.array(board)
         else:
@@ -143,13 +157,13 @@ class Othello:
             swap_value = self.player_turn
 
             if field in self.valid_moves():
-                to_reverse = list(self.valid_moves_to_reverse[field])
+                to_reverse = self.valid_moves_to_reverse[field]
                 len_to_reverse = len(to_reverse)
-                to_reverse.append(field)
-                xs = np.array([x[0] for x in to_reverse], dtype=int)
-                ys = np.array([x[1] for x in to_reverse], dtype=int)
 
-                self.board[xs, ys] = np.array([swap_value] * len(to_reverse), dtype=int)
+                self.board[field] = swap_value
+                for f in to_reverse:
+                    self.board[f] = swap_value
+
                 self.update_edge_fields(field)
                 self.last_turn = self.player_turn
                 self.turn += 1
@@ -164,24 +178,19 @@ class Othello:
 
     def update_edge_fields(self, field):
         self.edge_fields.remove(field)
+        # assert set(self.check_empty_edge_fields(field)) == set(self.check_empty_edge_fields2(field))
         list_of_empty_fields = self.check_empty_edge_fields(field)
         self.edge_fields.update(list_of_empty_fields)
 
     def check_empty_edge_fields(self, field):
-        rows, cols = self.board.shape
         target_row, target_col = field
+        result = []
 
-        neighbors = [
-            (target_row + offset_row, target_col + offset_col)
-            for offset_row, offset_col in Othello.DIRECTIONS
-            if 0 <= target_row + offset_row < rows and 0 <= target_col + offset_col < cols
-        ]
+        for offset_row, offset_col in Othello.DIRECTIONS:
+            neighbor = (target_row + offset_row, target_col + offset_col)
 
-        result = [
-            neighbor
-            for neighbor in neighbors
-            if self.board[neighbor] == 0
-        ]
+            if neighbor not in Othello.OUT_OF_BOUND and self.board[neighbor] == 0:
+                result.append(neighbor)
 
         return result
 
