@@ -2,6 +2,23 @@ import numpy as np
 import numba
 from numba import types, njit
 
+DIRECTIONS = ((-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1))
+
+
+@njit(cache=True)
+def njit_check_empty_edge_fields(board, field):
+    target_row, target_col = field
+    result = []
+
+    for offset_row, offset_col in DIRECTIONS:
+        neighbor_row, neighbor_col = target_row + offset_row, target_col + offset_col
+
+        if 0 <= neighbor_row < board.shape[0] and 0 <= neighbor_col < board.shape[1]:
+            if board[neighbor_row, neighbor_col] == 0:
+                result.append((neighbor_row, neighbor_col))
+
+    return result
+
 
 @njit(cache=True)
 def njit_get_all_reversed_fields(board, player_turn, fields):  # TODO: maybe make multiple smaller njit functions
@@ -178,8 +195,8 @@ class Othello:
 
     def update_edge_fields(self, field):
         self.edge_fields.remove(field)
-        # assert set(self.check_empty_edge_fields(field)) == set(self.check_empty_edge_fields2(field))
-        list_of_empty_fields = self.check_empty_edge_fields(field)
+        list_of_empty_fields = njit_check_empty_edge_fields(self.board, field)
+        # list_of_empty_fields = self.check_empty_edge_fields(field)
         self.edge_fields.update(list_of_empty_fields)
 
     def check_empty_edge_fields(self, field):

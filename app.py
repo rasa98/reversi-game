@@ -143,7 +143,7 @@ if __name__ == '__main__':
                    "f": Minimax(depth_f_default, create_heuristic2(custom_heu_2)).predict_best_move}
 
     start = time.perf_counter()
-    both_sides(ai_random, ai_random, times=1000)
+    both_sides(ai_random, ai_random, times=100000)
     # both_sides(fixed_330, ai385, times=100)
     end = time.perf_counter()
     print(f'time needed {end - start}')
