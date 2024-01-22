@@ -49,13 +49,14 @@ def player_vs_ai_cli(player_name, ai: dict):
                     game.play_move(moves_dict[num])
 
 
-def ai_vs_ai_cli(ai1: dict, ai2: dict):
-    ai1_name, f1 = ai1['name'], ai1['f']
-    ai2_name, f2 = ai2['name'], ai2['f']
+def ai_vs_ai_cli(ai1, ai2):
+
+    f1 = ai1.predict_best_move
+    f2 = ai2.predict_best_move
 
     ai1_turn = 1
 
-    players = (ai1_name, ai2_name)
+    players = (str(ai1), str(ai2))
 
     game = Othello(players=players)
     while game.get_winner() is None:

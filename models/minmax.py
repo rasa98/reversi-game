@@ -1,9 +1,20 @@
 import numpy as np
 from models.model_interface import ModelInterface
 from game_logic import Othello
+from heuristics.heu1 import heuristic, heuristic2
+from heuristics.heu2 import create_heuristic
+from heuristics.ga.heu_func import (CountChips,
+                                    CountDangerEarlyGame,
+                                    CountCorners,
+                                    MinimizeOpponentMoves)
+from heuristics.ga.heu_ga import create_heuristic as create_heuristic2
 
 
-def depth_f_default(turn):
+def fixed_depth_f(d):
+    return lambda _: d
+
+
+def dynamic_depth_f(turn):
     if turn <= 5:
         return int(-0.7 * (turn - 4) + 4)
     elif turn <= 45:
@@ -15,7 +26,8 @@ def depth_f_default(turn):
 
 
 class Minimax(ModelInterface):
-    def __init__(self, depth_f, heu):
+    def __init__(self, name, depth_f, heu):
+        super().__init__(name)
         self.depth = None
         self.depth_f = depth_f
         # self.maximizing_player = maximizing_player
@@ -105,6 +117,37 @@ class Minimax(ModelInterface):
 
         return min_eval
 
+
+mm_static = Minimax('MinMax static', lambda _: 3, heuristic)
+mm2_dynamic = Minimax('MinMax dyn', dynamic_depth_f, heuristic2)
+
+heu_params = (14.110659370384004,
+              1.6725387766365891,
+              2.7262102930984993,
+              1.0988509935146311,
+              946.9075924700552)
+ga_0 = Minimax("depth 1 GA", fixed_depth_f(1), create_heuristic(*heu_params))
+
+
+custom_heu = {CountCorners: CountCorners(1.141624324278253, 2.2005380364531657),
+              CountDangerEarlyGame: CountDangerEarlyGame(1.5537486913611744),
+              MinimizeOpponentMoves: MinimizeOpponentMoves(202.78118735939893)}
+ga_1 = Minimax("depth 1 GA-custom heu", fixed_depth_f(1), create_heuristic2(custom_heu))
+
+custom_heu_2 = {CountCorners: CountCorners(1.5186058726512501, 2.5149087893017823),
+                CountDangerEarlyGame: CountDangerEarlyGame(6.374267148895484),
+                MinimizeOpponentMoves: MinimizeOpponentMoves(215.8041817188843)}
+ga_2 = Minimax("depth 1 GA-custom-2 heu", fixed_depth_f(1), create_heuristic2(custom_heu_2))
+
+# vpn cluster - folder 5 -
+# min_opp_score: 120.00812831528076,
+# corner divisor: 1.6619678910885987,
+# corner exponent: 2.1102043167782876,
+# danger divisor: 5.025284240347834
+vpn_5 = {CountCorners: CountCorners(1.6619678910885987, 2.1102043167782876),
+         CountDangerEarlyGame: CountDangerEarlyGame(5.025284240347834),
+         MinimizeOpponentMoves: MinimizeOpponentMoves(120.00812831528076)}
+ga_vpn_5 = Minimax("depth dyn GA-vpn-5", fixed_depth_f(1), create_heuristic2(vpn_5))
 
 if __name__ == '__main__':
     print([depth_f_default(x) for x in range(61)])

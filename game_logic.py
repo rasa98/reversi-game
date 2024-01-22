@@ -27,7 +27,7 @@ def njit_get_all_reversed_fields(board, player_turn, fields):  # TODO: maybe mak
 
     for field in fields:
         row, col = field
-        for x, y in ((-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)):
+        for x, y in DIRECTIONS:
             for times in range(1, 8):
                 new_row = row + x * times
                 new_col = col + y * times

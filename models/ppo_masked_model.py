@@ -14,7 +14,8 @@ from collections import OrderedDict
 #         pass
 
 class MaskedPPOWrapper(ModelInterface):
-    def __init__(self, model):
+    def __init__(self, name, model):
+        super().__init__(name)
         self.model: MaskablePPO = model
         self.obs_space = Dict({
             'board': Box(0, 2, shape=(8, 8), dtype=int),
@@ -59,7 +60,8 @@ def action_masks(game):
 
 
 class MaskedPPOWrapper2(ModelInterface):
-    def __init__(self, model):
+    def __init__(self, name, model):
+        super().__init__(name)
         self.model: MaskablePPO = model
 
     def predict_best_move(self, game: Othello):
@@ -76,7 +78,8 @@ class MaskedPPOWrapper2(ModelInterface):
 
 
 class MaskedPPOWrapper66(ModelInterface):
-    def __init__(self, model):
+    def __init__(self, name, model):
+        super().__init__(name)
         self.model: MaskablePPO = model
         self.obs_space = Dict({
             'board': Box(0, 2, shape=(8, 8), dtype=int),
@@ -117,7 +120,8 @@ class MaskedPPOWrapper66(ModelInterface):
 
 
 class MaskedPPOWrapper129(ModelInterface):
-    def __init__(self, model):
+    def __init__(self, name, model):
+        super().__init__(name)
         self.model: MaskablePPO = model
         self.obs_space = Dict({
             'board': Box(0, 2, shape=(8, 8), dtype=int),
@@ -154,7 +158,8 @@ class MaskedPPOWrapper129(ModelInterface):
 
 
 class MaskedPPOWrapper64_2_1(ModelInterface):
-    def __init__(self, model):
+    def __init__(self, name, model):
+        super().__init__(name)
         self.model: MaskablePPO = model
         self.obs_space = Dict({
             'board': Box(0, 2, shape=(8, 8), dtype=int),
@@ -179,26 +184,33 @@ class MaskedPPOWrapper64_2_1(ModelInterface):
         return (action_game,), None
 
 
-def load_model(file):
+def load_model(name, file):
     model = MaskablePPO.load(file)
-    return MaskedPPOWrapper(model)
+    return MaskedPPOWrapper(name, model)
 
 
-def load_model_2(file):
+def load_model_2(name, file):
     model = MaskablePPO.load(file)
-    return MaskedPPOWrapper2(model)
+    return MaskedPPOWrapper2(name, model)
 
 
-def load_model_66(file):
+def load_model_66(name, file):
     model = MaskablePPO.load(file)
-    return MaskedPPOWrapper66(model)
+    return MaskedPPOWrapper66(name, model)
 
 
-def load_model_64_64_1(file):
+def load_model_64_64_1(name, file):
     model = MaskablePPO.load(file)
-    return MaskedPPOWrapper129(model)
+    return MaskedPPOWrapper129(name, model)
 
 
-def load_model_64_2_1(filepath):
+def load_model_64_2_1(name, filepath):
     model = MaskablePPO.load(filepath)
-    return MaskedPPOWrapper64_2_1(model)
+    return MaskedPPOWrapper64_2_1(name, model)
+
+
+file = 'training/rl/Dict_obs_space/history_00000385'
+ai385 = load_model('ppo_masked_385', file)
+
+file = 'training/rl/Dict_obs_space/mppo_num_chips/models/history_00000330'
+fixed_330 = load_model_64_2_1('fixed_ppo_masked_330', file)
