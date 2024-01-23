@@ -64,4 +64,4 @@ def bench_both_sides(ai1, ai2, times=200):
 
 
 if __name__ == '__main__':
-    bench_both_sides(ga_vpn_5, mcts_model_1secs, times=10)
+    bench_both_sides(ai385, mcts_model_1secs, times=10)

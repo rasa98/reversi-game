@@ -9,8 +9,6 @@ from models.model_interface import ai_random
 
 from .model_interface import ModelInterface
 
-UCT_EXPLORATION_CONSTANT = 1.42
-
 
 class Node:
 
@@ -34,15 +32,14 @@ class Node:
         self.move_to_child[move] = child_node
         return child_node
 
-    def select_highest_ucb_child(self):
+    def select_highest_ucb_child(self, c):
         log_visited = math.log(self.visited)
 
-        max_child = max(self.move_to_child.values(), key=lambda c: c.get_uct(log_visited))
+        max_child = max(self.move_to_child.values(), key=lambda ch: ch.get_uct(c, log_visited))
         return max_child
 
-    def get_uct(self, logged_parent_visits):
+    def get_uct(self, c, logged_parent_visits):
         avg_val = self.value / self.visited
-        c = UCT_EXPLORATION_CONSTANT
         exploration_term = c * math.sqrt(logged_parent_visits / self.visited)
         return avg_val + exploration_term
 
@@ -53,7 +50,7 @@ class Node:
 
 
 class MCTS(ModelInterface):
-    def __init__(self, name, max_iter=None, max_time=None):
+    def __init__(self, name, max_iter=math.inf, max_time=math.inf, uct_exploration_const=1.42):
         super().__init__(name)
         self.root = None  # Node(game.get_snapshot())
         self.last_cycle_iteration = 0
@@ -63,6 +60,7 @@ class MCTS(ModelInterface):
         self.max_time = max_time
 
         self.original_game = None
+        self.uct_exploration_const = uct_exploration_const
 
     def iter_per_cycle(self):
         if self.last_cycle_time != 0:
@@ -118,7 +116,7 @@ class MCTS(ModelInterface):
                 node = node.explore_new_child()  # return node.explore_new_child()
                 break
             else:
-                node = node.select_highest_ucb_child()
+                node = node.select_highest_ucb_child(self.uct_exploration_const)
         return node, node.simulate_game()  # returns (node , winner)
 
     def backprop(self, node: Node, winner: int):
@@ -142,12 +140,11 @@ class MCTS(ModelInterface):
         self.backprop(node, winner)
 
     def mcts_search(self):
-        if self.max_time is None and self.max_iter is None:
+        if self.max_time == math.inf and self.max_iter == math.inf:
             raise ValueError("At least one of max_time or max_iter must be specified.")
 
         start_time = time.process_time()
         iterations = 0
-        node = self.root
         while True:
             # Perform MCTS steps: selection, expansion, simulation, backpropagation
             self.mcts_iter()
@@ -155,8 +152,7 @@ class MCTS(ModelInterface):
 
             # Check termination conditions
             elapsed_time = time.process_time() - start_time
-            if (self.max_time is not None and elapsed_time >= self.max_time) or \
-                    (self.max_iter is not None and iterations >= self.max_iter):
+            if elapsed_time >= self.max_time or iterations >= self.max_iter:
                 break
         self.last_cycle_time = elapsed_time
         self.last_cycle_iteration = iterations
