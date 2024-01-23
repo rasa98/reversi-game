@@ -60,7 +60,7 @@ class Othello:
     CORNERS = {(0, 0), (7, 7), (0, 7), (7, 0)}
 
     def __init__(self, players=("w", "b"), turn=1, board=None,
-                 first_move=1, last_move=None, edge_fields=None, chips=(2, 2)):
+                 first_move=1, last_move=None, edge_fields=None, chips=(2, 2), played_moves=None):
         self.white, self.black = players
         self.player_turn = first_move  # possible turns {1, 2}, white is 1
         self.last_turn = last_move
@@ -68,6 +68,7 @@ class Othello:
         self.winner = None
         self.turn = turn
         self.chips = chips
+        self.played_moves = played_moves
 
         if board is not None:
             self.board = np.array(board)
@@ -91,7 +92,8 @@ class Othello:
                        first_move=self.player_turn,
                        last_move=self.last_turn,
                        edge_fields=self.edge_fields.copy(),
-                       chips=self.chips)
+                       chips=self.chips,
+                       played_moves=self.played_moves.copy())
 
     def _swap_player_turn(self):
         self.player_turn = 3 - self.player_turn
@@ -100,6 +102,7 @@ class Othello:
         self.board = np.full((8, 8), 0)
         self.board[3:5, 3:5] = [[1, 2],
                                 [2, 1]]
+        self.played_moves = []
 
     def valid_moves(self):
         return set(self.valid_moves_to_reverse.keys())
@@ -167,6 +170,7 @@ class Othello:
                 for f in to_reverse:
                     self.board[f] = swap_value
 
+                self.played_moves.append(field)
                 self.update_edge_fields(field)
                 self.last_turn = self.player_turn
                 self.turn += 1

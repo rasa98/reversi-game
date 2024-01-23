@@ -49,7 +49,7 @@ def player_vs_ai_cli(player_name, ai: dict):
                     game.play_move(moves_dict[num])
 
 
-def ai_vs_ai_cli(ai1, ai2):
+def ai_vs_ai_cli(ai1, ai2, game=None):
 
     f1 = ai1.predict_best_move
     f2 = ai2.predict_best_move
@@ -57,26 +57,17 @@ def ai_vs_ai_cli(ai1, ai2):
     ai1_turn = 1
 
     players = (str(ai1), str(ai2))
-
-    game = Othello(players=players)
+    if game is None:
+        game = Othello()
+    game.players = players
     while game.get_winner() is None:
         if game.player_turn == ai1_turn:
-            # print("Ai1 turn\n")
             ai_moves, estimate = f1(game)
             ai_move_choice = random.choice(ai_moves)
-            # print(f'{ai1_name} chose field {ai_move_choice} with estimate: {estimate}')
             game.play_move(ai_move_choice)
         else:
-            # print("Ai2 turn\n")
             ai_moves, estimate = f2(game)
-
             ai_move_choice = random.choice(ai_moves)
-            # print(f'{ai2_name} chose field {ai_move_choice} with estimate: {estimate}')
             game.play_move(ai_move_choice)
-    # print(game)
-    # return game.get_winner_and_print()
     return game.get_winner()
 
-
-if __name__ == '__main__':
-    player_vs_player_cli("rasa", "ai")

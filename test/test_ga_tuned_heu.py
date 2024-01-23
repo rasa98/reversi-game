@@ -2,8 +2,8 @@ import random
 import unittest
 import numpy as np
 import sys
-sys.path.append('/home/rasa/PycharmProjects/reversiProject/')  # TODO fix this hack
-from heuristics.ga_tuned_heu import generate_all_pairs
+sys.path.append('/home/rasa/PycharmProjects/reversi/')  # TODO fix this hack
+from heuristics.ga.ga_tuned_heu import generate_all_pairs
 
 
 class MyTestCase(unittest.TestCase):

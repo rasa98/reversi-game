@@ -147,7 +147,9 @@ ga_2 = Minimax("depth 1 GA-custom-2 heu", fixed_depth_f(1), create_heuristic2(cu
 vpn_5 = {CountCorners: CountCorners(1.6619678910885987, 2.1102043167782876),
          CountDangerEarlyGame: CountDangerEarlyGame(5.025284240347834),
          MinimizeOpponentMoves: MinimizeOpponentMoves(120.00812831528076)}
-ga_vpn_5 = Minimax("depth dyn GA-vpn-5", fixed_depth_f(1), create_heuristic2(vpn_5))
+ga_vpn_5 = Minimax("depth dyn GA-vpn-5",
+                   fixed_depth_f(1), # dynamic_depth_f, #
+                   create_heuristic2(vpn_5))
 
 if __name__ == '__main__':
     print([depth_f_default(x) for x in range(61)])

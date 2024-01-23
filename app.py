@@ -10,6 +10,7 @@ from models.minmax import (mm_static,
 from models.ppo_masked_model import (ai385,
                                      fixed_330)
 from models.model_interface import ai_random
+from models.montecarlo import mcts_model_1secs
 
 from game_modes import ai_vs_ai_cli
 from collections import Counter
@@ -44,26 +45,23 @@ def benchmark(ai1, ai2, times=200):
     for _ in range(times):
         winner_str = ai_vs_ai_cli(ai1, ai2)
         vals.append(winner_str)
-    d_counter = dict(Counter(vals))
+    counter = Counter(vals)
+    d = {}
+    d[f"{ai1}"] = counter[1]
+    d[f"{ai2}"] = counter[2]
+    d[f"draw"] = counter[0]
 
-    sorted_dict = dict(sorted(d_counter.items(), reverse=True))
-
-    # print(sorted_dict)
-    return sorted_dict
+    print(f'{"-" * 5} {ai1} vs {ai2} {"-" * 5}')
+    print(d, "\n")
+    return counter
 
 
 @time_function
-def both_sides(ai1, ai2, times=200):
-    d1 = benchmark(ai1, ai2, times=times)
-    d2 = benchmark(ai2, ai1, times=times)
-    d = {str(ai1): ([1, d1.get(1, 0)], [2, d2.get(2, 0)]),
-         str(ai2): ([2, d1.get(2, 0)], [1, d2.get(1, 0)]),
-         'zeros': ([0, d1.get(0, 0)], [0, d2.get(0, 0)])}
-    print(d)
-    return d
+def bench_both_sides(ai1, ai2, times=200):
+    c1 = benchmark(ai1, ai2, times=times)
+    c2 = benchmark(ai2, ai1, times=times)
+    return dict(c1 + c2)
 
 
 if __name__ == '__main__':
-    both_sides(fixed_330, ga_vpn_5, times=100)
-
-    # profile(lambda: print(both_sides(ga_custom_2, ai_random, times=10)))
+    bench_both_sides(ga_vpn_5, mcts_model_1secs, times=10)
