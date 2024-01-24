@@ -161,4 +161,7 @@ class MCTS(ModelInterface):
         print(f'iterations {iterations} per one cycle: {self.iter_per_cycle()}\n')
 
 
-mcts_model_1secs = MCTS('mcts 1sec', max_time=0.5)
+time_limit = 3
+iter_limit = 3000
+mcts_model = MCTS(f'mcts {time_limit}s', max_time=time_limit, max_iter=iter_limit)
+

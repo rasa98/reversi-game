@@ -24,7 +24,8 @@ SEL_CROSSOVER = (0.3, 0.5)
 REMATCH = False
 LOG_DIR = 'ga_DELDELDEL'##sys.argv[2]
 
-os.makedirs(LOG_DIR, exist_ok=True)
+if __name__ == '__main__':
+    os.makedirs(LOG_DIR, exist_ok=True)
 
 
 print(f'pop: {population_size}\ntournaments: {TOURNAMENTS}\n'
