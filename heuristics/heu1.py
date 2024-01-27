@@ -1,4 +1,5 @@
 import numpy as np
+from numba import njit
 
 if __name__ != '__main__':
     from game_logic import Othello
@@ -9,9 +10,23 @@ else:
     Othello = None
 
 
+# def count_white_black(board: np.ndarray):
+#     white = np.count_nonzero(board == 1)
+#     black = np.count_nonzero(board == 2)
+#     return white, black
+
+
+@njit(cache=True)
 def count_white_black(board: np.ndarray):
-    white = np.count_nonzero(board == 1)
-    black = np.count_nonzero(board == 2)
+    white = 0
+    black = 0
+
+    for element in board.reshape(-1):
+        if element == 1:
+            white += 1
+        elif element == 2:
+            black += 1
+
     return white, black
 
 
@@ -55,13 +70,23 @@ def count_safer(stats, f=lambda x: (65 - x) // 10):
     return factor * (white - black)
 
 
-def minimize_opponent_moves(game: Othello, max_score):
-    factor = -1 if game.last_turn == 2 else 1  # if minimizer -> -1, maximizer -> 1
-    opponent_num_of_moves = 0
+# def minimize_opponent_moves(game: Othello, max_score):
+#     factor = -1 if game.last_turn == 2 else 1  # if minimizer -> -1, maximizer -> 1
+#     opponent_num_of_moves = 0
+#     if game.player_turn != game.last_turn:  # if they are equal, means opponent didnt have any move.
+#         opponent_num_of_moves = len(game.valid_moves())
+#     score = max_score * (1 / ((opponent_num_of_moves + 1) ** 1.5))
+#     return factor * score
+
+
+def max_my_moves(game: Othello, max_score):
+    sign = 1 if game.player_turn == 1 else -1  # if minimizer -> -1, maximizer -> 1
     if game.player_turn != game.last_turn:  # if they are equal, means opponent didnt have any move.
-        opponent_num_of_moves = len(game.valid_moves())
-    score = max_score * (1 / ((opponent_num_of_moves + 1) ** 1.5))
-    return factor * score
+        my_num_of_moves = len(game.valid_moves())
+        score_to_remove = max_score * (1 / (my_num_of_moves * 1.25))
+        return sign * (max_score - score_to_remove)
+    else:
+        return sign * 1.5 * max_score
 
 
 def heuristic(game: Othello):

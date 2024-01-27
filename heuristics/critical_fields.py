@@ -6,7 +6,8 @@ def corners(board: np.ndarray):
 
 
 def safe_fields(board: np.ndarray):
-    return board[2:6, 2:6]  # todo: exlude center positions
+    return board[[2, 2, 2, 2, 3, 3, 4, 4, 5, 5, 5, 5],
+                 [2, 3, 4, 5, 2, 5, 2, 5, 2, 3, 4, 5]]
 
 
 def danger_fields(board: np.ndarray):

@@ -5,12 +5,14 @@ import numpy as np
 # from heuristics.heu1 import (count_chips, count_corners, count_danger_early_game,
 #                              minimize_opponent_moves)
 from heuristics.ga.heu_func import (CountChips, CountDangerEarlyGame, CountCorners,
-                                    MinimizeOpponentMoves)
+                                    CountSaferEarlyGame,
+                                    MaximizeMyMoves)
 
 HEU_FUNCTION_CLASSES = (CountChips,
                         CountDangerEarlyGame,
                         CountCorners,
-                        MinimizeOpponentMoves)
+                        CountSaferEarlyGame,
+                        MaximizeMyMoves)
 
 
 def create_heuristic(heu_func_param_dict):

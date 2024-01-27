@@ -1,6 +1,6 @@
-import sys
 # sys.path.append('/home/rasa/PycharmProjects/reversiProject/')  # TODO fix this hack
 import os
+import sys
 
 source_dir = os.path.abspath(os.path.join(os.getcwd(), '../../'))
 sys.path.append(source_dir)
@@ -15,9 +15,9 @@ from collections import defaultdict
 
 
 random_seed = time.time()
-population_size = 50
+population_size = 100
 TOURNAMENTS = 10
-ROUNDS = 10
+ROUNDS = 20
 CORES = os.cpu_count()
 SAVE_FREQ = 2
 SEL_CROSSOVER = (0.3, 0.5)
@@ -59,12 +59,10 @@ def simulate_tournament(matches):
     score = defaultdict(int)
     for pair in matches:
         x, y = pair
-        mm1 = Minimax(lambda _: 1, x.get_heuristic())
-        mm2 = Minimax(lambda _: 1, y.get_heuristic())
-        ai1 = {"name": "bot1", "f": mm1.predict_best_move}
-        ai2 = {"name": "bot2", "f": mm2.predict_best_move}
+        mm1 = Minimax("bot1", lambda _: 1, x.get_heuristic())
+        mm2 = Minimax("bot2", lambda _: 1, y.get_heuristic())
 
-        winner = ai_vs_ai_cli(ai1, ai2)
+        winner = ai_vs_ai_cli(mm1, mm2)
         if winner != 0:
             winner_idx = winner - 1
             winner_model = pair[winner_idx]

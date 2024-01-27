@@ -1,7 +1,7 @@
 import numpy as np
 import random, itertools
 from heuristics.heu1 import (count_chips, count_corners, count_danger_early_game,
-                             minimize_opponent_moves)
+                             max_my_moves)
 
 
 def create_heuristic(chip_divisor, corner_divisor, corner_exponent, danger_divisor, min_opp_score):
@@ -19,7 +19,7 @@ def create_heuristic(chip_divisor, corner_divisor, corner_exponent, danger_divis
                count_corners(stats, lambda x: ((60 - x) // corner_divisor) ** corner_exponent) +
                count_danger_early_game(stats, lambda turn: (65 - turn) // danger_divisor) +
 
-               minimize_opponent_moves(game, min_opp_score)
+               max_my_moves(game, min_opp_score)
                )
         return res
 

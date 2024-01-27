@@ -2,7 +2,8 @@ import random
 from abc import ABC, abstractmethod
 
 from heuristics.heu1 import (count_chips, count_corners, count_danger_early_game,
-                             minimize_opponent_moves)
+                             count_safer,
+                             max_my_moves)
 
 
 class HeuFunctionInterface(ABC):
@@ -148,14 +149,29 @@ class CountCorners(HeuFunctionInterface):
         return f'corner divisor: {self.params[0]}, corner exponent: {self.params[1]}'
 
 
-class MinimizeOpponentMoves(HeuFunctionInterface):
-    def __init__(self, min_opp_score):
-        super().__init__(min_opp_score)
+class CountSaferEarlyGame(CountChips):
 
     @classmethod
     def create(cls):
-        min_opp_score = random.uniform(100.0, 1000.0)
-        return MinimizeOpponentMoves(min_opp_score)
+        safer_divisor = random.uniform(1.0, 20.0)
+        return CountSaferEarlyGame(safer_divisor)
+
+    def evaluate_state(self, game):
+        stats = self.get_game_stats(game)
+        return count_safer(stats, lambda turn: (65 - turn) // self.get_params()[0])
+
+    def __str__(self):
+        return f'safer divisor: {self.params[0]}'
+
+
+class MaximizeMyMoves(HeuFunctionInterface):
+    def __init__(self, max_score):
+        super().__init__(max_score)
+
+    @classmethod
+    def create(cls):
+        max_score = random.uniform(100.0, 1000.0)
+        return MaximizeMyMoves(max_score)
 
     def delta(self, idx):
         match idx:
@@ -173,7 +189,8 @@ class MinimizeOpponentMoves(HeuFunctionInterface):
 
     def evaluate_state(self, game):
         params = self.get_params()
-        return minimize_opponent_moves(game, params[0])
+        return max_my_moves(game, params[0])
 
     def __str__(self):
-        return f'min opp score: {self.params[0]}'
+        return f'max my score: {self.params[0]}'
+
