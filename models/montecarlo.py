@@ -6,6 +6,7 @@ import gc
 from game_logic import Othello
 from game_modes import ai_vs_ai_cli
 from models.model_interface import ai_random
+from collections import Counter
 
 from .model_interface import ModelInterface
 
@@ -20,6 +21,9 @@ class Node:
         self.parent = parent_node
         self.valid_moves = list(game_copy.valid_moves_to_reverse)
         self.is_final_state = len(self.valid_moves) == 0
+
+    def get_all_next_move_counter(self):
+        return Counter({move: child.visited for move, child in self.move_to_child.items()})
 
     def explored(self):
         return len(self.valid_moves) == 0
@@ -157,11 +161,10 @@ class MCTS(ModelInterface):
         self.last_cycle_time = elapsed_time
         self.last_cycle_iteration = iterations
 
-        print(f'game turn: {self.root.game.turn}')
-        print(f'iterations {iterations} per one cycle: {self.iter_per_cycle()}\n')
+        # print(f'game turn: {self.root.game.turn}')
+        # print(f'iterations {iterations} per one cycle: {self.iter_per_cycle()}\n')
 
 
-time_limit = 3
-iter_limit = 3000
+time_limit = 1
+iter_limit = math.inf
 mcts_model = MCTS(f'mcts {time_limit}s', max_time=time_limit, max_iter=iter_limit)
-

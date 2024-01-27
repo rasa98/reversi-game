@@ -11,6 +11,7 @@ from models.ppo_masked_model import (ai385,
                                      fixed_330)
 from models.model_interface import ai_random
 from models.montecarlo import mcts_model
+from models.ParallelMCTS import PMCTS
 
 from game_modes import ai_vs_ai_cli
 from collections import Counter
@@ -64,4 +65,10 @@ def bench_both_sides(ai1, ai2, times=200):
 
 
 if __name__ == '__main__':
-    bench_both_sides(ai385, mcts_model, times=100)
+    pmcts = PMCTS('parallel mcts', time_limit=5.25, iter_limit=6250)
+
+    with pmcts.create_pool_manager(num_processes=4):
+        bench_both_sides(ai385,
+                         pmcts,
+                         # mcts_model,
+                         times=10)
