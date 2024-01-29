@@ -65,10 +65,13 @@ def bench_both_sides(ai1, ai2, times=200):
 
 
 if __name__ == '__main__':
-    pmcts = PMCTS('parallel mcts', time_limit=1, iter_limit=5000)
+    pmcts = PMCTS('parallel mcts',
+                  time_limit=5,
+                  iter_limit=5000
+                  )
 
     with pmcts.create_pool_manager(num_processes=4):
-        bench_both_sides(ga_vpn_5,
+        bench_both_sides(fixed_330,
                          pmcts,
                          # mcts_model,
                          times=5)

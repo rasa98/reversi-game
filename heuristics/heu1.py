@@ -80,6 +80,10 @@ def count_safer(stats, f=lambda x: (65 - x) // 10):
 
 
 def max_my_moves(game: Othello, max_score):
+    """
+    if opponent didnt have a move returns 1.5 x max_score.
+    else the more moves you have available the more score it returns
+    """
     sign = 1 if game.player_turn == 1 else -1  # if minimizer -> -1, maximizer -> 1
     if game.player_turn != game.last_turn:  # if they are equal, means opponent didnt have any move.
         my_num_of_moves = len(game.valid_moves())
