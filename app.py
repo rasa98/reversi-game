@@ -66,7 +66,7 @@ def bench_both_sides(ai1, ai2, times=200):
 
 if __name__ == '__main__':
     pmcts = PMCTS('parallel mcts',
-                  time_limit=5,
+                  time_limit=1,
                   iter_limit=5000
                   )
 

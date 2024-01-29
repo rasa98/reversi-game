@@ -14,11 +14,10 @@ def process_init(kwargs):
     mcts_instance = MCTS(f'process local mcts', **kwargs)
 
 
-def worker(game, mcts_list=0, mcts_id=0):
-    # mcts_instance = mcts_list[mcts_id]
+def worker(game):
     _ = mcts_instance.predict_best_move(game)
     move_counter = mcts_instance.root.get_all_next_move_counter()
-    return move_counter
+    return move_counter, mcts_instance.iter_per_cycle()
 
 
 class PMCTS(ModelInterface):
@@ -29,7 +28,6 @@ class PMCTS(ModelInterface):
         self.time_limit = time_limit
         self.iter_limit = iter_limit
         self.pool = None
-        # self.mcts_list = None
         self.num_processes = None
 
     @contextmanager
@@ -37,13 +35,8 @@ class PMCTS(ModelInterface):
         self.pool = multiprocessing.Pool(num_processes,
                                          initializer=process_init,
                                          initargs=({'max_time': self.time_limit,
-                                                   'max_iter': self.iter_limit},))
-        # self.mcts_list = [MCTS(f'mcts {self.time_limit}s',
-        #                        max_time=self.time_limit,
-        #                        max_iter=self.iter_limit)
-        #                   for _ in range(num_processes)]
+                                                    'max_iter': self.iter_limit},))
         self.num_processes = num_processes
-
         try:
             yield self
         finally:
@@ -51,18 +44,26 @@ class PMCTS(ModelInterface):
                 self.pool.close()
                 self.pool.join()
                 self.pool = None  # Reset to None after cleanup
-                # self.mcts_list = None
                 self.num_processes = None
 
     def predict_best_move(self, game):
         if self.pool is None:
             raise Exception("PMCTS object pool is equal to None.")
 
-        counter_list = self.pool.starmap(worker, [(game,)#(game, self.mcts_list, i)
-                                                  for i in range(self.num_processes)])
+        counter_and_iteration_list = self.pool.starmap(worker, [(game,)
+                                                                for _ in range(self.num_processes)])
+
+        counter_list = []
+        iter_list = []
+        for counter, iteration_per_sec in counter_and_iteration_list:
+            counter_list.append(counter)
+            iter_list.append(iteration_per_sec)
 
         total_counters = sum(counter_list, Counter())
-        print(dict(total_counters))
+        # print(dict(total_counters))
+
+        print(f'game turn: {game.turn}')
+        print(f'Iterations per sec: {sum(iter_list)}\n')
 
         # Find the key with the highest count
         best_move = total_counters.most_common(1)[0]  # ((7, 5), 3455)

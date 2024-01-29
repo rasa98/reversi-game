@@ -13,7 +13,6 @@ import timeit, time
 from concurrent import futures
 from collections import defaultdict
 
-
 random_seed = time.time()
 population_size = 100
 TOURNAMENTS = 10
@@ -22,11 +21,10 @@ CORES = os.cpu_count()
 SAVE_FREQ = 2
 SEL_CROSSOVER = (0.3, 0.5)
 REMATCH = False
-LOG_DIR = 'ga_DELDELDEL'##sys.argv[2]
+LOG_DIR = 'ga_DELDELDEL'  ##sys.argv[2]
 
 if __name__ == '__main__':
     os.makedirs(LOG_DIR, exist_ok=True)
-
 
 print(f'pop: {population_size}\ntournaments: {TOURNAMENTS}\n'
       f'rounds: {ROUNDS}\nratio: {SEL_CROSSOVER}\nrematch: {REMATCH}')
@@ -75,7 +73,7 @@ def simulate_tournament(matches):
     return score
 
 
-def parallel_process_list(players, func, num_processes=1, rematch=True):
+def parallel_process_list(executor, players, func, num_processes=1, rematch=True):
     match_pairs = generate_all_pairs(players, ROUNDS)
     if rematch:
         match_pairs = add_rematches(match_pairs)
@@ -84,10 +82,8 @@ def parallel_process_list(players, func, num_processes=1, rematch=True):
     chunk_size = len(match_pairs) // num_processes
     partitions = [match_pairs[i:i + chunk_size] for i in range(0, len(match_pairs), chunk_size)]
 
-    # Create a ProcessPoolExecutor for parallel processing
-    with futures.ProcessPoolExecutor(max_workers=num_processes) as executor:
-        # Map the function to the partitions
-        results = list(executor.map(func, partitions))
+    # Map the function to the partitions
+    results = list(executor.map(func, partitions))
 
     # Combine the results
     merged_dict = {p.id: 0 for p in players}
@@ -125,21 +121,22 @@ def run_ga():
     save_start_list(players)
 
     start = time.perf_counter()
+    with futures.ProcessPoolExecutor(max_workers=CORES) as executor:
 
-    for tour_num in range(1, TOURNAMENTS + 1):
-        id_to_score_desc = parallel_process_list(inner_players, simulate_tournament,
-                                                 num_processes=CORES, rematch=REMATCH)
+        for tour_num in range(1, TOURNAMENTS + 1):
+            id_to_score_desc = parallel_process_list(executor, inner_players, simulate_tournament,
+                                                     num_processes=CORES, rematch=REMATCH)
 
-        if tour_num % SAVE_FREQ == 0:
-            save_counter += 1
-            save_current_list(inner_players, id_to_score_desc, save_counter * SAVE_FREQ)
+            if tour_num % SAVE_FREQ == 0:
+                save_counter += 1
+                save_current_list(inner_players, id_to_score_desc, save_counter * SAVE_FREQ)
 
-        inner_players = HeuFuncIndividual.selection(inner_players, id_to_score_desc, rates=SEL_CROSSOVER)
+            inner_players = HeuFuncIndividual.selection(inner_players, id_to_score_desc, rates=SEL_CROSSOVER)
 
-        if tour_num % SAVE_FREQ == 0:
-            end = time.perf_counter()
-            print(f'Done {int(tour_num / TOURNAMENTS * 100)}%. Time needed: {end - start:.2f}')
-            start = end
+            if tour_num % SAVE_FREQ == 0:
+                end = time.perf_counter()
+                print(f'Done {int(tour_num / TOURNAMENTS * 100)}%. Time needed: {end - start:.2f}')
+                start = end
 
 
 if __name__ == '__main__':

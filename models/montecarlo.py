@@ -69,7 +69,7 @@ class MCTS(ModelInterface):
 
     def iter_per_cycle(self):
         if self.last_cycle_time != 0:
-            return self.last_cycle_iteration / self.last_cycle_time
+            return int(self.last_cycle_iteration / self.last_cycle_time)
         return -1
 
     def set_root_reuse(self, game):
@@ -173,5 +173,5 @@ class MCTS(ModelInterface):
 
 
 time_limit = 1
-iter_limit = math.inf
+iter_limit = 5000#math.inf
 mcts_model = MCTS(f'mcts {time_limit}s', max_time=time_limit, max_iter=iter_limit)
