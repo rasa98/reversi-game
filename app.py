@@ -7,8 +7,8 @@ from models.minmax import (mm_static,
                            ga_1,
                            ga_2,
                            ga_vpn_5)
-from models.ppo_masked_model import (ai385,
-                                     fixed_330)
+# from models.ppo_masked_model import (ai385,
+#                                      fixed_330)
 from models.model_interface import ai_random
 from models.montecarlo import mcts_model
 from models.ParallelMCTS import PMCTS
@@ -67,11 +67,11 @@ def bench_both_sides(ai1, ai2, times=200):
 if __name__ == '__main__':
     pmcts = PMCTS('parallel mcts',
                   time_limit=1,
-                  iter_limit=5000
+                  iter_limit=2000
                   )
 
     with pmcts.create_pool_manager(num_processes=4):
-        bench_both_sides(fixed_330,
+        bench_both_sides(ga_vpn_5,
                          pmcts,
                          # mcts_model,
-                         times=5)
+                         times=1)

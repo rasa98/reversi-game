@@ -55,7 +55,7 @@ class Node:
 
 class MCTS(ModelInterface):
 
-    def __init__(self, name, max_iter=math.inf, max_time=math.inf, uct_exploration_const=1.42):
+    def __init__(self, name, max_iter=math.inf, max_time=math.inf, uct_exploration_const=1.42, verbose=0):
         super().__init__(name)
         self.root = None  # Node(game.get_snapshot())
         self.last_cycle_iteration = 0
@@ -63,6 +63,7 @@ class MCTS(ModelInterface):
 
         self.max_iter = max_iter
         self.max_time = max_time
+        self.verbose = verbose
 
         self.game_id = None
         self.uct_exploration_const = uct_exploration_const
@@ -167,11 +168,16 @@ class MCTS(ModelInterface):
                 break
         self.last_cycle_time = elapsed_time
         self.last_cycle_iteration = iterations
-
-        # print(f'game turn: {self.root.game.turn}')
-        # print(f'iterations {iterations} per one cycle: {self.iter_per_cycle()}\n')
+        
+        if self.verbose:
+            print(f'game turn: {self.root.game.turn}')
+            print(f'iterations {iterations} per one cycle: {self.iter_per_cycle()}\n')
 
 
 time_limit = 1
 iter_limit = 5000#math.inf
-mcts_model = MCTS(f'mcts {time_limit}s', max_time=time_limit, max_iter=iter_limit)
+verbose = 1  # 0 means no logging
+mcts_model = MCTS(f'mcts {time_limit}s',
+                  max_time=time_limit,
+                  max_iter=iter_limit,
+                  verbose=verbose)
