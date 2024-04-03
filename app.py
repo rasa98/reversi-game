@@ -70,7 +70,7 @@ if __name__ == '__main__':
                   iter_limit=2000
                   )
 
-    with pmcts.create_pool_manager(num_processes=4):
+    with PMCTS.create_pool_manager(pmcts, num_processes=4):
         bench_both_sides(ga_vpn_5,
                          pmcts,
                          # mcts_model,

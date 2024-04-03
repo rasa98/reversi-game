@@ -30,21 +30,22 @@ class PMCTS(ModelInterface):
         self.pool = None
         self.num_processes = None
 
+    @staticmethod
     @contextmanager
-    def create_pool_manager(self, num_processes=os.cpu_count()):
-        self.pool = multiprocessing.Pool(num_processes,
-                                         initializer=process_init,
-                                         initargs=({'max_time': self.time_limit,
-                                                    'max_iter': self.iter_limit},))
-        self.num_processes = num_processes
+    def create_pool_manager(pmcts, num_processes=os.cpu_count()):
+        pmcts.pool = multiprocessing.Pool(num_processes,
+                                          initializer=process_init,
+                                          initargs=({'max_time': pmcts.time_limit,
+                                                     'max_iter': pmcts.iter_limit},))
+        pmcts.num_processes = num_processes
         try:
-            yield self
+            yield  # self
         finally:
-            if self.pool:
-                self.pool.close()
-                self.pool.join()
-                self.pool = None  # Reset to None after cleanup
-                self.num_processes = None
+            if pmcts.pool:
+                pmcts.pool.close()
+                pmcts.pool.join()
+                pmcts.pool = None  # Reset to None after cleanup
+                pmcts.num_processes = None
 
     def predict_best_move(self, game):
         if self.pool is None:
