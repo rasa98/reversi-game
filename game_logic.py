@@ -54,8 +54,6 @@ def njit_get_all_reversed_fields(board, player_turn, fields):  # TODO: maybe mak
 
 
 class Othello:
-    it = count()
-
     DIRECTIONS = ((-1, -1), (-1, 0), (-1, 1),
                   (0, -1), (0, 1),
                   (1, -1), (1, 0), (1, 1))
@@ -64,7 +62,6 @@ class Othello:
 
     def __init__(self, players=("w", "b"), turn=1, board=None,
                  first_move=1, last_move=None, edge_fields=None, chips=(2, 2), played_moves=None):
-        self.id = next(Othello.it)
         self.white, self.black = players
         self.player_turn = first_move  # possible turns {1, 2}, white is 1
         self.last_turn = last_move

@@ -23,6 +23,7 @@ class Node:
         self.is_final_state = len(self.valid_moves) == 0
 
     def get_all_next_move_counter(self):
+        """for debug"""
         return Counter({move: child.visited for move, child in self.move_to_child.items()})
 
     def explored(self):
@@ -65,7 +66,6 @@ class MCTS(ModelInterface):
         self.max_time = max_time
         self.verbose = verbose
 
-        self.game_id = None
         self.uct_exploration_const = uct_exploration_const
 
     def iter_per_cycle(self):
@@ -73,28 +73,13 @@ class MCTS(ModelInterface):
             return int(self.last_cycle_iteration / self.last_cycle_time)
         return -1
 
-    def set_root_reuse(self, game):
-        """reuse the searched space. Useless. Overhead bigger than gain """
-        # if self.root is None:
-        if self.game_id is not game.id:  # check if its new game
-            self.game_id = game.id
-            self.root = Node(game.get_snapshot())
-            return
-        opp_turn_played = game.turn - self.root.game.turn  # +1 of ai that wasnt played yet
-        for move in game.played_moves[-opp_turn_played:]:
-            child_of_next_gamestate = self.root.move_to_child.get(move)
-            if child_of_next_gamestate is None:
-                self.root = Node(game.get_snapshot())
-                return
-            self.root = child_of_next_gamestate
-        self.root.parent = None  # gc top of the tree
-
     def set_root_new(self, game):
         """create new root Node."""
         self.root = Node(game.get_snapshot())
 
     def predict_best_move(self, game: Othello):
-        self.set_root_reuse(game)
+        self.set_root_new(game)
+
         # print(f'\nbefore simulating: {dict(self.root.get_all_next_move_counter())}')
         self.mcts_search()
         gc.collect()

@@ -41,7 +41,12 @@ def profile(lambda_my_code):
     stats.print_stats()
 
 
-def benchmark(ai1, ai2, times=200):
+def print_results(player1, player2, d):
+    print(f'{"-" * 5} {player1} vs {player2} {"-" * 5}')
+    print(d, "\n")
+
+
+def benchmark(ai1, ai2, times=200, verbose=True):
     vals = []
     for _ in range(times):
         winner_str = ai_vs_ai_cli(ai1, ai2)
@@ -52,26 +57,28 @@ def benchmark(ai1, ai2, times=200):
     d[f"{ai2}"] = counter[2]
     d[f"draw"] = counter[0]
 
-    print(f'{"-" * 5} {ai1} vs {ai2} {"-" * 5}')
-    print(d, "\n")
-    return counter
+    if verbose:
+        print_results(ai1, ai2, d)
+    return d
 
 
 @time_function
 def bench_both_sides(ai1, ai2, times=200):
-    c1 = benchmark(ai1, ai2, times=times)
-    c2 = benchmark(ai2, ai1, times=times)
-    return dict(c1 + c2)
+    d1 = benchmark(ai1, ai2, times=times, verbose=False)
+    d2 = benchmark(ai2, ai1, times=times, verbose=False)
+
+    print_results(ai1, ai2, d1)
+    print_results(ai2, ai1, d2)
 
 
 if __name__ == '__main__':
     pmcts = PMCTS('parallel mcts',
                   time_limit=1,
-                  iter_limit=2000
+                  iter_limit=1000
                   )
 
     with PMCTS.create_pool_manager(pmcts, num_processes=4):
-        bench_both_sides(ga_vpn_5,
+        bench_both_sides(ai_random,
                          pmcts,
                          # mcts_model,
                          times=1)
