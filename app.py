@@ -12,6 +12,7 @@ from models.minmax import (mm_static,
 from models.model_interface import ai_random
 from models.montecarlo import mcts_model
 from models.ParallelMCTS import PMCTS
+from models.montecarlo_alphazero_version import mcts_model as alpha_mcts
 
 from game_modes import ai_vs_ai_cli
 from collections import Counter
@@ -77,8 +78,15 @@ if __name__ == '__main__':
                   iter_limit=1000
                   )
 
-    with PMCTS.create_pool_manager(pmcts, num_processes=4):
-        bench_both_sides(ai_random,
-                         pmcts,
-                         # mcts_model,
-                         times=1)
+    # with PMCTS.create_pool_manager(pmcts, num_processes=4):
+    #     bench_both_sides(ai_random,
+    #                      pmcts,
+    #                      # mcts_model,
+    #
+    #                      times=1)
+
+    bench_both_sides(ai_random,
+                     alpha_mcts,
+                     # mcts_model,
+                     times=1)
+

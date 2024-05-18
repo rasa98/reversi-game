@@ -1,7 +1,6 @@
 import os
 import math
 import multiprocessing
-from multiprocessing import Manager
 
 from .model_interface import ModelInterface
 from .montecarlo import MCTS

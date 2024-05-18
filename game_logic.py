@@ -1,5 +1,6 @@
 import numpy as np
 import numba
+import copy
 from numba import types, njit
 from itertools import count
 
@@ -61,15 +62,18 @@ class Othello:
     CORNERS = {(0, 0), (7, 7), (0, 7), (7, 0)}
 
     def __init__(self, players=("w", "b"), turn=1, board=None,
-                 first_move=1, last_move=None, edge_fields=None, chips=(2, 2), played_moves=None):
+                 first_move=1, last_move=None, edge_fields=None,
+                 valid_moves_to_reverse=None, valid_moves_size=None, chips=(2, 2),
+                 winner=None):
         self.white, self.black = players
         self.player_turn = first_move  # possible turns {1, 2}, white is 1
         self.last_turn = last_move
-        self.valid_moves_to_reverse = None
-        self.winner = None
+        self.valid_moves_to_reverse = valid_moves_to_reverse
+        self.valid_moves_size = valid_moves_size
+        self.winner = winner
         self.turn = turn
         self.chips = chips
-        self.played_moves = played_moves
+        # self.played_moves = played_moves  # TODO: remove played_moves, used for mcts reuse tree
 
         if board is not None:
             self.board = np.array(board)
@@ -83,8 +87,10 @@ class Othello:
 
         else:
             self.edge_fields = edge_fields
-        self._calculate_next_valid_moves()
-        self._check_correctness()
+
+        if not valid_moves_to_reverse or not valid_moves_size:
+            self._calculate_next_valid_moves()
+            self._check_correctness()
 
     def get_snapshot(self):
         return Othello(players=(self.white, self.black),
@@ -93,8 +99,10 @@ class Othello:
                        first_move=self.player_turn,
                        last_move=self.last_turn,
                        edge_fields=self.edge_fields.copy(),
+                       valid_moves_to_reverse=copy.deepcopy(self.valid_moves_to_reverse),
+                       valid_moves_size=self.valid_moves_size,
                        chips=self.chips,
-                       played_moves=self.played_moves.copy())
+                       winner=self.winner)
 
     def _swap_player_turn(self):
         self.player_turn = 3 - self.player_turn
@@ -103,10 +111,23 @@ class Othello:
         self.board = np.full((8, 8), 0)
         self.board[3:5, 3:5] = [[1, 2],
                                 [2, 1]]
-        self.played_moves = []
 
     def valid_moves(self):
         return set(self.valid_moves_to_reverse.keys())
+
+    def valid_moves_encoded(self):
+        valid_moves_layer = np.zeros_like(self.board, dtype=np.uint8)
+        for move in self.valid_moves():
+            valid_moves_layer[move] = 1
+        return valid_moves_layer.reshape(-1)
+
+    @staticmethod
+    def get_decoded_field(action):
+        """input 0-63
+           output (0-7, 0-7)"""
+        row = action // 8
+        col = action % 8
+        return row, col
 
     def valid_moves_sorted(self):
         """
@@ -158,6 +179,7 @@ class Othello:
             idx += 1
 
         self.valid_moves_to_reverse = moves_to_reverse
+        self.valid_moves_size = len(self.valid_moves_to_reverse)
 
     def play_move(self, field):
         if not self.winner:  # if the game haven't ended, you can play
@@ -171,7 +193,7 @@ class Othello:
                 for f in to_reverse:
                     self.board[f] = swap_value
 
-                self.played_moves.append(field)
+                # self.played_moves.append(field)
                 self.update_edge_fields(field)
                 self.last_turn = self.player_turn
                 self.turn += 1
@@ -191,6 +213,7 @@ class Othello:
 
     def _check_correctness(self):
         if not self.valid_moves_to_reverse:
+            # if self.valid_moves_size == 0:
             self._update_state()
             if not self.valid_moves_to_reverse:
                 self.winner, _, _ = self.count_winner()
@@ -208,6 +231,9 @@ class Othello:
     def get_winner(self):
         return self.winner
 
+    def is_game_over(self):
+        return self.get_winner() is not None
+
     def get_winner_and_print(self):
         winner, amount, loser_amount = self.count_winner()
         match winner:
@@ -222,6 +248,26 @@ class Othello:
                 return self.black
             case _:
                 print("Game is still playing!")
+
+    def get_encoded_state_valid(self):
+        valid_moves_layer = np.zeros_like(self.board, dtype=np.float32)
+        for move in self.valid_moves():
+            valid_moves_layer[move] = 1.0
+
+        encoded_state = np.stack(
+            (valid_moves_layer, self.board == 1, self.board == 2)
+        ).astype(np.float32)
+
+        return encoded_state
+
+    @staticmethod
+    def get_encoded_state(state, from_perspective):
+        """ from_perspective can be: 1 or 2 """
+        encoded_state = np.stack(
+            (state == 0, state == from_perspective, state == 3-from_perspective)
+        ).astype(np.float32)
+
+        return encoded_state
 
     def __repr__(self):
         temp_board = np.copy(self.board)
