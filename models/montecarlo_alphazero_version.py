@@ -12,7 +12,10 @@ from collections import Counter
 
 from .model_interface import ModelInterface
 
-
+# TODO: dupliran kod iz Alphazero....
+GAME_ROW_COUNT = 8
+GAME_COLUMN_COUNT = 8
+ALL_FIELDS_SIZE = GAME_ROW_COUNT * GAME_COLUMN_COUNT
 
 class Node:
 
@@ -89,15 +92,20 @@ class MCTS(ModelInterface):
         """create new root Node."""
         self.root = Node(game.get_snapshot())
 
-    def predict_best_move(self, game: Othello):
+    def predict_best_move(self, game: Othello, all_moves_prob=False):
         self.set_root_new(game)
         self.mcts_search()
         # print(f'\nafter simulating: {dict(self.root.get_all_next_move_counter())}')
         gc.collect()
-        return self.best_moves(), None
+        if not all_moves_prob:
+            return self.best_moves(), None
 
-    # def best_move_child_item(self):
-    #     return max(self.root.move_to_child.items(), key=lambda item: item[1].visited)
+        action_probs = np.zeros(ALL_FIELDS_SIZE)
+        for move, child in self.root.move_to_child.items():
+            encoded_move = Othello.get_encoded_field(move)
+            action_probs[encoded_move] = child.visited
+        action_probs /= np.sum(action_probs)
+        return action_probs
 
     def best_move_child_items(self):
         best_items = []
@@ -187,6 +195,3 @@ class MCTS(ModelInterface):
         if self.verbose:
             print(f'game turn: {self.root.game.turn}')
             print(f'iterations - {iterations}, iter per second: {self.iter_per_cycle()}\n')
-
-
-

@@ -122,6 +122,12 @@ class Othello:
         return valid_moves_layer.reshape(-1)
 
     @staticmethod
+    def get_encoded_field(field):
+        """input (0-7, 0-7)
+           output 0-63"""
+        row, col = field[0], field[1]
+        return row * 8 + col
+    @staticmethod
     def get_decoded_field(action):
         """input 0-63
            output (0-7, 0-7)"""

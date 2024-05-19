@@ -1,9 +1,10 @@
 import numpy as np
 import math
+import random
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from tqdm.notebook import trange
+from tqdm import trange
 
 # for teseting purposes
 import sys
@@ -13,7 +14,7 @@ source_dir = os.path.abspath(os.path.join(os.getcwd(), '../'))
 sys.path.append(source_dir)
 # ---------------------
 from game_logic import Othello
-from .montecarlo_alphazero_version import MCTS
+from models.montecarlo_alphazero_version import MCTS
 
 GAME_ROW_COUNT = 8
 GAME_COLUMN_COUNT = 8
@@ -77,61 +78,85 @@ class ResBlock(nn.Module):
 
 
 class AlphaZero:
-    def __init__(self, model, optimizer, params):
+    def __init__(self, model, optimizer, params, mcts_params):
         self.model = model
         self.optimizer = optimizer
         self.params = params
 
-        self.mcts = MCTS("alpha-mcts", model, **params)
+        self.mcts = MCTS("alpha-mcts", model, **mcts_params)
 
     def self_play(self):
-        memory = []
-        player = 1
+        data = []
         game = Othello()
-        state = game.board
 
         while True:
-            neutral_state = self.game.change_perspective(state, player)
-            action_probs = self.mcts.search(neutral_state)
+            player = game.player_turn
+            encoded_perspective_state = Othello.get_encoded_state(game.board, player)
+            action_probs = self.mcts.predict_best_move(game, all_moves_prob=True)
 
-            memory.append((neutral_state, action_probs, player))
+            data.append((encoded_perspective_state, action_probs, player))
 
-            action = np.random.choice(self.game.action_size, p=action_probs)
+            action = np.random.choice(ALL_FIELDS_SIZE, p=action_probs)
 
-            state = self.game.get_next_state(state, action, player)
+            game.play_move(Othello.get_decoded_field(action))
+            if game.is_game_over():
+                data_to_return = []
+                winner = game.get_winner()
+                for state, action_probs, player in data:
+                    value = 0
+                    if winner == player:
+                        value = 1
+                    elif winner != 0: #  if its not a draw
+                        value = -1
 
-            value, is_terminal = self.game.get_value_and_terminated(state, action)
-
-            if is_terminal:
-                returnMemory = []
-                for hist_neutral_state, hist_action_probs, hist_player in memory:
-                    hist_outcome = value if hist_player == player else self.game.get_opponent_value(value)
-                    returnMemory.append((
-                        self.game.get_encoded_state(hist_neutral_state),
-                        hist_action_probs,
-                        hist_outcome
+                    data_to_return.append((
+                        state,
+                        action_probs,
+                        value
                     ))
-                return returnMemory
-
-            player = self.game.get_opponent(player)
+                return data_to_return
 
     def train(self, data):
-        pass
+        random.shuffle(data)
+        for batchIdx in range(0, len(data), self.params['batch_size']):
+            sample = data[batchIdx:min(len(data) - 1, batchIdx + self.params[
+                'batch_size'])]  # Change to memory[batchIdx:batchIdx+self.args['batch_size']] in case of an error
+            state, policy_targets, value_targets = zip(*sample)
+
+            state, policy_targets, value_targets = np.array(state), np.array(policy_targets), np.array(
+                value_targets).reshape(-1, 1)
+
+            state = torch.tensor(state, dtype=torch.float32)
+            policy_targets = torch.tensor(policy_targets, dtype=torch.float32)
+            value_targets = torch.tensor(value_targets, dtype=torch.float32)
+
+            out_policy, out_value = self.model(state)
+
+            policy_loss = F.cross_entropy(out_policy, policy_targets)
+            value_loss = F.mse_loss(out_value, value_targets)
+            loss = policy_loss + value_loss
+
+            self.optimizer.zero_grad()
+            loss.backward()
+            self.optimizer.step()
 
     def learn(self):
-        for iteration in range(self.args['num_iterations']):
+        for iteration in range(self.params['num_iterations']):
             memory = []
 
             self.model.eval()
-            for _ in trange(self.args['num_self_play_iterations']):
+            for _ in trange(self.params['num_self_play_iterations']):
                 memory += self.self_play()
 
             self.model.train()
-            for _ in trange(self.args['num_epochs']):
+            for _ in trange(self.params['num_epochs']):
                 self.train(memory)
 
-            torch.save(self.model.state_dict(), f"model_{iteration}.pt")
-            torch.save(self.optimizer.state_dict(), f"optimizer_{iteration}.pt")
+            folder = 'alpha-zero'
+            os.makedirs(folder, exist_ok=True)
+
+            torch.save(self.model.state_dict(), f"{folder}/model_{iteration}.pt")
+            torch.save(self.optimizer.state_dict(), f"{folder}/optimizer_{iteration}.pt")
 
 
 time_limit = 1
@@ -169,18 +194,25 @@ def move_to_testing():
 
 
 if __name__ == "__main__":
+    import timeit
+
     game = Othello()
     model = ResNet(game, 4, 64)
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
     params = {
-        'uct_exploration_const': 2,
-        'max_iter': 60,
-        'num_iterations': 3,
-        'num_self_play_iterations': 10,
-        'num_epochs': 4
-
+        'num_iterations': 5,
+        'num_self_play_iterations': 32,
+        'num_epochs': 10,
+        'batch_size': 8
     }
-    azero = AlphaZero(game, model, optimizer, params)
-    azero.learn()
+    mcts_params = {
+        'uct_exploration_const': 2,
+        'max_iter': 50,
+    }
+    azero = AlphaZero(model, optimizer, params, mcts_params)
+
+    execution_time = timeit.timeit(azero.learn, number=1)
+    print(f"Execution time: {execution_time} seconds")
+
 
     # move_to_testing()
