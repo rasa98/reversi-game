@@ -22,8 +22,12 @@ ALL_FIELDS_SIZE = GAME_ROW_COUNT * GAME_COLUMN_COUNT
 
 
 class ResNet(nn.Module):
-    def __init__(self, game, num_resBlocks, num_hidden):
+    def __init__(self, num_resBlocks, num_hidden, device):
         super().__init__()
+        self.device = device
+        self.to(device)
+        self.iterations_trained = 0
+
         self.startBlock = nn.Sequential(
             nn.Conv2d(3, num_hidden, kernel_size=3, padding=1),
             nn.BatchNorm2d(num_hidden),
@@ -96,7 +100,10 @@ class AlphaZero:
 
             data.append((encoded_perspective_state, action_probs, player))
 
-            action = np.random.choice(ALL_FIELDS_SIZE, p=action_probs)
+            temp_action_probs = action_probs ** (1 / self.params['temp'])
+            temp_action_probs /= np.sum(temp_action_probs)
+
+            action = np.random.choice(ALL_FIELDS_SIZE, p=temp_action_probs)
 
             game.play_move(Othello.get_decoded_field(action))
             if game.is_game_over():
@@ -126,9 +133,9 @@ class AlphaZero:
             state, policy_targets, value_targets = np.array(state), np.array(policy_targets), np.array(
                 value_targets).reshape(-1, 1)
 
-            state = torch.tensor(state, dtype=torch.float32)
-            policy_targets = torch.tensor(policy_targets, dtype=torch.float32)
-            value_targets = torch.tensor(value_targets, dtype=torch.float32)
+            state = torch.tensor(state, dtype=torch.float32, device=self.model.device)
+            policy_targets = torch.tensor(policy_targets, dtype=torch.float32, device=self.model.device)
+            value_targets = torch.tensor(value_targets, dtype=torch.float32, device=self.model.device)
 
             out_policy, out_value = self.model(state)
 
@@ -158,12 +165,14 @@ class AlphaZero:
             torch.save(self.model.state_dict(), f"{folder}/model_{iteration}.pt")
             torch.save(self.optimizer.state_dict(), f"{folder}/optimizer_{iteration}.pt")
 
+            self.model.iterations_trained += 1
+
 
 time_limit = 1
 iter_limit = 1500  # math.inf
 verbose = 1  # 0 means no logging
 
-m = ResNet(Othello, 4, 64)
+m = ResNet(4, 64, torch.device('cpu'))
 m.eval()
 
 mcts_model = MCTS(f'alpha-mcts {time_limit}s',
@@ -181,7 +190,7 @@ def move_to_testing():
     encoded_state = Othello.get_encoded_state(game.board, 1)
 
     tensor_state = torch.tensor(encoded_state).unsqueeze(0)
-    model = ResNet(game, 4, 64)
+    model = ResNet(4, 64, torch.device('cpu'))
     policy, value = model(tensor_state)
     value = value.item()
     policy = (torch.softmax(policy, dim=1).squeeze(0).detach()
@@ -197,17 +206,24 @@ if __name__ == "__main__":
     import timeit
 
     game = Othello()
-    model = ResNet(game, 4, 64)
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    model = ResNet(4, 64, device)
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.001, weight_decay=0.0001)
     params = {
         'num_iterations': 5,
         'num_self_play_iterations': 32,
         'num_epochs': 10,
-        'batch_size': 8
+        'batch_size': 8,
+        'temp': 1.2
     }
     mcts_params = {
         'uct_exploration_const': 2,
         'max_iter': 50,
+        # these are flexible dirichlet epsilon for noise
+        # favor exploration more in the beginning
+        'initial_alpha': 0.4,
+        'final_alpha': 0.1,
+        'decay_steps': 50
     }
     azero = AlphaZero(model, optimizer, params, mcts_params)
 

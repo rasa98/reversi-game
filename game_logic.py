@@ -127,6 +127,7 @@ class Othello:
            output 0-63"""
         row, col = field[0], field[1]
         return row * 8 + col
+
     @staticmethod
     def get_decoded_field(action):
         """input 0-63
@@ -270,7 +271,7 @@ class Othello:
     def get_encoded_state(state, from_perspective):
         """ from_perspective can be: 1 or 2 """
         encoded_state = np.stack(
-            (state == 0, state == from_perspective, state == 3-from_perspective)
+            (state == 0, state == from_perspective, state == 3 - from_perspective)
         ).astype(np.float32)
 
         return encoded_state

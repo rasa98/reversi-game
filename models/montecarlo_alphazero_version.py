@@ -19,9 +19,9 @@ ALL_FIELDS_SIZE = GAME_ROW_COUNT * GAME_COLUMN_COUNT
 
 class Node:
 
-    def __init__(self, game_copy, parent_node=None, prior=0):
+    def __init__(self, game_copy, parent_node=None, visited=0, prior=0):
         self.game = game_copy
-        self.visited = 0
+        self.visited = visited
         self.value = 0
         self.prior = prior
         self.move_to_child = {}
@@ -69,7 +69,9 @@ class Node:
 
 class MCTS(ModelInterface):
 
-    def __init__(self, name, model, max_iter=math.inf, max_time=math.inf, uct_exploration_const=2.0, verbose=0):
+    def __init__(self, name, model, max_iter=math.inf, max_time=math.inf,
+                 uct_exploration_const=2.0, verbose=0, dirichlet_epsilon=0.2,
+                 initial_alpha=0.4, final_alpha=0.1, decay_steps=50):
         super().__init__(name)
         self.root = None  # Node(game.get_snapshot())
         self.model = model
@@ -81,6 +83,11 @@ class MCTS(ModelInterface):
         self.max_time = max_time
         self.verbose = verbose
 
+        self.dirichlet_epsilon = dirichlet_epsilon
+        self.initial_alpha = initial_alpha
+        self.final_alpha = final_alpha
+        self.decay_steps = decay_steps
+
         self.uct_exploration_const = uct_exploration_const
 
     def iter_per_cycle(self):
@@ -90,7 +97,11 @@ class MCTS(ModelInterface):
 
     def set_root_new(self, game):
         """create new root Node."""
-        self.root = Node(game.get_snapshot())
+        game_copy = game.get_snapshot()
+        encoded_state = Othello.get_encoded_state(game_copy.board, game_copy.player_turn)
+        policy, _ = self.run_model(encoded_state, game_copy, add_noise=True)
+        self.root = Node(game.get_snapshot(), visited=1)
+        self.root.explore_all_children(policy)
 
     def predict_best_move(self, game: Othello, all_moves_prob=False):
         self.set_root_new(game)
@@ -123,7 +134,6 @@ class MCTS(ModelInterface):
         items = self.best_move_child_items()  # [(move, child),..]
         return [el[0] for el in items]  # [move1, move2, ...]
 
-    @torch.no_grad()
     def select_expansion_sim(self):
         node: Node = self.root
         value = 0
@@ -137,15 +147,15 @@ class MCTS(ModelInterface):
                 break  # return node
             elif not node.explored():
                 encoded_state = Othello.get_encoded_state(node.game.board, node.game.player_turn)
-                policy, value = self.model(
-                    torch.tensor(encoded_state).unsqueeze(0)
-                )
-                policy = torch.softmax(policy, dim=1).squeeze(0).cpu().numpy()
-                valid_moves = node.game.valid_moves_encoded()
-
-                policy *= valid_moves
-                policy /= np.sum(policy)
-
+                # policy, value = self.model(
+                #     torch.tensor(encoded_state, device=self.model.device).unsqueeze(0)
+                # )
+                # policy = torch.softmax(policy, dim=1).squeeze(0).cpu().numpy()
+                # valid_moves = node.game.valid_moves_encoded()
+                #
+                # policy *= valid_moves
+                # policy /= np.sum(policy)
+                policy, value = self.run_model(encoded_state, node.game)
                 value = value.item()
 
                 node.explore_all_children(policy)  # return node.explore_new_child()
@@ -169,6 +179,31 @@ class MCTS(ModelInterface):
         elapsed_time = time.time() - start_time
         return elapsed_time >= max_time_sec
 
+    @torch.no_grad()
+    def run_model(self, encoded_state, game, add_noise=False):
+        policy, value = self.model(
+            torch.tensor(encoded_state, device=self.model.device).unsqueeze(0)
+        )
+        policy = torch.softmax(policy, dim=1).squeeze(0).cpu().numpy()
+
+        if add_noise:
+            policy = policy * (1 - self.dirichlet_epsilon) + self.dirichlet_epsilon \
+                     * np.random.dirichlet([self.get_dirichlet_alpha()] * ALL_FIELDS_SIZE)
+
+        valid_moves = game.valid_moves_encoded()
+        policy *= valid_moves
+        policy /= np.sum(policy)
+
+        return policy, value
+
+    def get_dirichlet_alpha(self):
+        # Linear decay of alpha
+        training_step = self.model.iterations_trained
+        if training_step >= self.decay_steps:
+            return self.final_alpha
+        else:
+            return self.initial_alpha - (self.initial_alpha - self.final_alpha) * (training_step / self.decay_steps)
+
     def mcts_iter(self):
         node, value = self.select_expansion_sim()
         self.backprop(node, value)
@@ -178,7 +213,8 @@ class MCTS(ModelInterface):
             raise ValueError("At least one of max_time or max_iter must be specified.")
 
         start_time = time.perf_counter()
-        iterations = 0
+
+        iterations = 1  # root is always called in advance to add some noise
         while True:
             # Perform MCTS steps: selection, expansion, simulation, backpropagation
             self.mcts_iter()
