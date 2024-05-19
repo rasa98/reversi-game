@@ -11,7 +11,7 @@ from models.model_interface import ai_random
 from collections import Counter
 
 from .model_interface import ModelInterface
-from .AlphaZero import ResNet
+
 
 
 class Node:
@@ -53,8 +53,8 @@ class Node:
         if self.visited == 0:
             q_value = 0
         else:
-            # q_value = self.value / self.visited
-            q_value = 1 - (self.value / self.visited + 1) / 2
+            q_value = self.value / self.visited
+            # q_value = 1 - (self.value / self.visited + 1) / 2
         exploration_term = c * (math.sqrt(parent_visits) / (self.visited + 1)) * self.prior
         return q_value + exploration_term
 
@@ -189,15 +189,4 @@ class MCTS(ModelInterface):
             print(f'iterations - {iterations}, iter per second: {self.iter_per_cycle()}\n')
 
 
-time_limit = 1
-iter_limit = 5000  # math.inf
-verbose = 1  # 0 means no logging
 
-m = ResNet(Othello, 4, 64)
-m.eval()
-
-mcts_model = MCTS(f'mcts {time_limit}s',
-                  m,
-                  max_time=time_limit,
-                  max_iter=iter_limit,
-                  verbose=verbose)

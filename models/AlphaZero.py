@@ -3,6 +3,7 @@ import math
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from tqdm.notebook import trange
 
 # for teseting purposes
 import sys
@@ -12,6 +13,7 @@ source_dir = os.path.abspath(os.path.join(os.getcwd(), '../'))
 sys.path.append(source_dir)
 # ---------------------
 from game_logic import Othello
+from .montecarlo_alphazero_version import MCTS
 
 GAME_ROW_COUNT = 8
 GAME_COLUMN_COUNT = 8
@@ -74,7 +76,79 @@ class ResBlock(nn.Module):
         return x
 
 
-if __name__ == "__main__":
+class AlphaZero:
+    def __init__(self, model, optimizer, params):
+        self.model = model
+        self.optimizer = optimizer
+        self.params = params
+
+        self.mcts = MCTS("alpha-mcts", model, **params)
+
+    def self_play(self):
+        memory = []
+        player = 1
+        game = Othello()
+        state = game.board
+
+        while True:
+            neutral_state = self.game.change_perspective(state, player)
+            action_probs = self.mcts.search(neutral_state)
+
+            memory.append((neutral_state, action_probs, player))
+
+            action = np.random.choice(self.game.action_size, p=action_probs)
+
+            state = self.game.get_next_state(state, action, player)
+
+            value, is_terminal = self.game.get_value_and_terminated(state, action)
+
+            if is_terminal:
+                returnMemory = []
+                for hist_neutral_state, hist_action_probs, hist_player in memory:
+                    hist_outcome = value if hist_player == player else self.game.get_opponent_value(value)
+                    returnMemory.append((
+                        self.game.get_encoded_state(hist_neutral_state),
+                        hist_action_probs,
+                        hist_outcome
+                    ))
+                return returnMemory
+
+            player = self.game.get_opponent(player)
+
+    def train(self, data):
+        pass
+
+    def learn(self):
+        for iteration in range(self.args['num_iterations']):
+            memory = []
+
+            self.model.eval()
+            for _ in trange(self.args['num_self_play_iterations']):
+                memory += self.self_play()
+
+            self.model.train()
+            for _ in trange(self.args['num_epochs']):
+                self.train(memory)
+
+            torch.save(self.model.state_dict(), f"model_{iteration}.pt")
+            torch.save(self.optimizer.state_dict(), f"optimizer_{iteration}.pt")
+
+
+time_limit = 1
+iter_limit = 1500  # math.inf
+verbose = 1  # 0 means no logging
+
+m = ResNet(Othello, 4, 64)
+m.eval()
+
+mcts_model = MCTS(f'alpha-mcts {time_limit}s',
+                  m,
+                  max_time=time_limit,
+                  max_iter=iter_limit,
+                  verbose=verbose)
+
+
+def move_to_testing():
     game = Othello()
     game.play_move((2, 4))
     game.play_move((2, 3))
@@ -92,3 +166,21 @@ if __name__ == "__main__":
     # print(value, policy)
     res = game.valid_moves_encoded() * policy
     print(res / np.sum(res))
+
+
+if __name__ == "__main__":
+    game = Othello()
+    model = ResNet(game, 4, 64)
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+    params = {
+        'uct_exploration_const': 2,
+        'max_iter': 60,
+        'num_iterations': 3,
+        'num_self_play_iterations': 10,
+        'num_epochs': 4
+
+    }
+    azero = AlphaZero(game, model, optimizer, params)
+    azero.learn()
+
+    # move_to_testing()
