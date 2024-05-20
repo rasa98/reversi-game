@@ -256,20 +256,21 @@ class Othello:
             case _:
                 print("Game is still playing!")
 
-    def get_encoded_state_valid(self):
-        valid_moves_layer = np.zeros_like(self.board, dtype=np.float32)
-        for move in self.valid_moves():
-            valid_moves_layer[move] = 1.0
+    # def get_encoded_state_valid(self):
+    #     valid_moves_layer = np.zeros_like(self.board, dtype=np.float32)
+    #     for move in self.valid_moves():
+    #         valid_moves_layer[move] = 1.0
+    #
+    #     encoded_state = np.stack(
+    #         (valid_moves_layer, self.board == 1, self.board == 2)
+    #     ).astype(np.float32)
+    #
+    #     return encoded_state
 
-        encoded_state = np.stack(
-            (valid_moves_layer, self.board == 1, self.board == 2)
-        ).astype(np.float32)
-
-        return encoded_state
-
-    @staticmethod
-    def get_encoded_state(state, from_perspective):
+    def get_encoded_state(self):
         """ from_perspective can be: 1 or 2 """
+        state = self.board
+        from_perspective = self.player_turn
         encoded_state = np.stack(
             (state == 0, state == from_perspective, state == 3 - from_perspective)
         ).astype(np.float32)

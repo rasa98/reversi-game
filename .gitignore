@@ -1,5 +1,7 @@
 __pycache__/
 .idea/
 *.zip
+*.pt
 training/
 game-venv/
+models/alpha-zero/

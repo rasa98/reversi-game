@@ -69,13 +69,13 @@ class Node:
         return winner
 
 
-class MCTS(ModelInterface):
+class MCTS():
 
     def __init__(self, name, model, max_iter=math.inf, max_time=math.inf,
                  uct_exploration_const=2.0, verbose=0, dirichlet_epsilon=0.2,
                  initial_alpha=0.4, final_alpha=0.1, decay_steps=50):
-        super().__init__(name)
-        self.root = None  # Node(game.get_snapshot())
+        # super().__init__(name)
+        # self.root = None
         self.model = model
 
         self.last_cycle_iteration = 0
@@ -97,29 +97,32 @@ class MCTS(ModelInterface):
             return int(self.last_cycle_iteration / self.last_cycle_time)
         return -1
 
-    def set_root_new(self, game):
+    def set_root_new(self, spgs):
         """create new root Node."""
-        game_copy = game.get_snapshot()
-        encoded_state = game_copy.get_encoded_state()
-        policy, _ = self.run_model(encoded_state, game_copy, add_noise=True)
-        self.root = Node(game_copy, None, visited=1)
-        self.root.explore_all_children(policy)
+        games_copy = [spg.game.get_snapshot() for spg in spgs]
+        policies, _ = self.run_model(games_copy, add_noise=True)
+        # TODO get back and finish
 
-    def predict_best_move(self, game: Othello, all_moves_prob=False):
-        self.set_root_new(game)
-        self.mcts_search()
+        for i, spg in enumerate(spgs):
+            spg.root = Node(games_copy[i], None, visited=1)
+            policy = policies[i]
+            spg.root.explore_all_children(policy)
+
+    def predict_best_move(self, spgs):
+        self.set_root_new(spgs)
+        self.mcts_search(spgs)
         # print(f'\nafter simulating: {dict(self.root.get_all_next_move_counter())}')
         gc.collect()
 
-        if not all_moves_prob:
-            return self.best_moves(), None
+        action_probs = np.zeros((len(spgs), ALL_FIELDS_SIZE))
 
-        action_probs = np.zeros(ALL_FIELDS_SIZE)
-        for child in self.root.children:
-            move = child.move
-            encoded_move = Othello.get_encoded_field(move)
-            action_probs[encoded_move] = child.visited
-        action_probs /= np.sum(action_probs)
+        for i, spg in enumerate(spgs):
+            for child in spg.root.children:
+                move = child.move
+                encoded_move = Othello.get_encoded_field(move)
+                action_probs[i][encoded_move] = child.visited
+            action_probs[i] /= np.sum(action_probs[i])
+
         return action_probs
 
     def best_move_child_items(self):
@@ -133,41 +136,51 @@ class MCTS(ModelInterface):
             elif current_value == max_value:
                 best_items.append((move, node))
 
-        return best_items
+        return best_itemsselect_expansion_sim
 
     def best_moves(self):
         items = self.best_move_child_items()  # [(move, child),..]
         return [el[0] for el in items]  # [move1, move2, ...]
 
-    def select_expansion_sim(self):
-        node: Node = self.root
-        value = 0
-        while True:
-            if node.is_final_state:
-                winner = node.game.get_winner()
-                if node.game.last_turn == winner:
-                    value = 1
-                elif winner != 0:
-                    value = -1  # else it stays 0
-                break  # return node
-            elif not node.explored():
-                encoded_state = node.game.get_encoded_state()
-                # policy, value = self.model(
-                #     torch.tensor(encoded_state, device=self.model.device).unsqueeze(0)
-                # )
-                # policy = torch.softmax(policy, dim=1).squeeze(0).cpu().numpy()
-                # valid_moves = node.game.valid_moves_encoded()
-                #
-                # policy *= valid_moves
-                # policy /= np.sum(policy)
-                policy, value = self.run_model(encoded_state, node.game)
-                value = value.item()
+    def select_expansion_sim(self, spgs):
+        nodes = []
+        values = []
 
-                node.explore_all_children(policy)  # return node.explore_new_child()
-                break
-            else:
-                node = node.select_highest_ucb_child(self.uct_exploration_const)
-        return node, value  # returns (node , winner)
+        games = []
+        nodes_to_expand = []
+        for spg in spgs:
+            node: Node = spg.root
+            value = 0
+            while True:
+                if node.is_final_state:
+                    winner = node.game.get_winner()
+                    if node.game.last_turn == winner:
+                        value = 1
+                    elif winner != 0:
+                        value = -1  # else it stays 0
+                    nodes.append(node)
+                    values.append(value)
+                    break  # return node
+                elif not node.explored():
+                    # policy, value = self.run_model(node.game)
+                    # value = value.item()
+                    #
+                    # node.explore_all_children(policy)  # return node.explore_new_child()
+                    # spg.node = node
+                    nodes_to_expand.append(node)
+                    games.append(node.game)
+                    break
+                else:
+                    node = node.select_highest_ucb_child(self.uct_exploration_const)
+
+        if len(games) > 0:
+            policies, vals = self.run_model(games)
+            for i, node in enumerate(nodes_to_expand):
+                node.explore_all_children(policies[i])
+                nodes.append(node)
+                values.append(vals[i])
+
+        return nodes, values  # returns (node , winner)
 
     def backprop(self, node: Node, value: float):
         from_perspective_of = node.game.last_turn
@@ -185,19 +198,24 @@ class MCTS(ModelInterface):
         return elapsed_time >= max_time_sec
 
     @torch.no_grad()
-    def run_model(self, encoded_state, game, add_noise=False):
+    def run_model(self, games, add_noise=False):
+        states = np.stack([game.get_encoded_state() for game in games])
+
         policy, value = self.model(
-            torch.tensor(encoded_state, device=self.model.device).unsqueeze(0)
+            torch.tensor(states, device=self.model.device)
         )
-        policy = torch.softmax(policy, dim=1).squeeze(0).cpu().numpy()
+        policy = torch.softmax(policy, dim=1).cpu().numpy()
+        value = value.cpu().numpy()
 
         if add_noise:
             policy = policy * (1 - self.dirichlet_epsilon) + self.dirichlet_epsilon \
-                     * np.random.dirichlet([self.get_dirichlet_alpha()] * ALL_FIELDS_SIZE)
+                     * np.random.dirichlet([self.get_dirichlet_alpha()] * ALL_FIELDS_SIZE,
+                                           size=policy.shape[0])
 
-        valid_moves = game.valid_moves_encoded()
-        policy *= valid_moves
-        policy /= np.sum(policy)
+        for i, game in enumerate(games):
+            valid_moves = game.valid_moves_encoded()  # TODO mozda spg.root.game ???
+            policy[i] *= valid_moves
+            policy[i] /= np.sum(policy[i])
 
         return policy, value
 
@@ -209,11 +227,12 @@ class MCTS(ModelInterface):
         else:
             return self.initial_alpha - (self.initial_alpha - self.final_alpha) * (training_step / self.decay_steps)
 
-    def mcts_iter(self):
-        node, value = self.select_expansion_sim()
-        self.backprop(node, value)
+    def mcts_iter(self, spgs):
+        nodes, values = self.select_expansion_sim(spgs)
+        for node, value in zip(nodes, values):
+            self.backprop(node, value)
 
-    def mcts_search(self):
+    def mcts_search(self, spgs):
         if self.max_time == math.inf and self.max_iter == math.inf:
             raise ValueError("At least one of max_time or max_iter must be specified.")
 
@@ -222,7 +241,7 @@ class MCTS(ModelInterface):
         iterations = 1  # root is always called in advance to add some noise
         while True:
             # Perform MCTS steps: selection, expansion, simulation, backpropagation
-            self.mcts_iter()
+            self.mcts_iter(spgs)
             iterations += 1
 
             # Check termination conditions

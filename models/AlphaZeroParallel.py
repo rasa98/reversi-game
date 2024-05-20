@@ -14,7 +14,7 @@ source_dir = os.path.abspath(os.path.join(os.getcwd(), '../'))
 sys.path.append(source_dir)
 # ---------------------
 from game_logic import Othello
-from models.montecarlo_alphazero_version import MCTS
+from models.mcts_alpha_parallel import MCTS
 
 GAME_ROW_COUNT = 8
 GAME_COLUMN_COUNT = 8
@@ -90,38 +90,51 @@ class AlphaZero:
         self.mcts = MCTS("alpha-mcts", model, **mcts_params)
 
     def self_play(self):
-        data = []
-        game = Othello()
+        data_to_return = []
+        # game = Othello()
+        spGames = [SPG() for _ in range(self.params['num_parallel_games'])]
 
-        while True:
-            player = game.player_turn  # !!! changed get_encoded_state
-            encoded_perspective_state = game.get_encoded_state()
-            action_probs = self.mcts.predict_best_move(game, all_moves_prob=True)
+        # while True:
+        while len(spGames) > 0:
+            action_probs = self.mcts.predict_best_move(spGames)
+            # print(f'before - {action_probs.shape}')
+            for i in range(len(spGames) - 1, -1, -1):
+                # print(f'after 0 - {action_probs.shape}')
+                spg = spGames[i]
+                encoded_perspective_state = spg.game.get_encoded_state()
+                game = spg.game
 
-            data.append((encoded_perspective_state, action_probs, player))
+                # print(f'after 1 - {action_probs.shape}')
+                spg.data.append((encoded_perspective_state,
+                                 action_probs[i],
+                                 game.player_turn))
+                # print(f'after 2 - {action_probs.shape}')
+                temp_action_probs = action_probs[i] ** (1 / self.params['temp'])
+                temp_action_probs /= np.sum(temp_action_probs)
+                # print(f'after 4 - {action_probs.shape}')
 
-            temp_action_probs = action_probs ** (1 / self.params['temp'])
-            temp_action_probs /= np.sum(temp_action_probs)
+                action = np.random.choice(ALL_FIELDS_SIZE, p=temp_action_probs)
 
-            action = np.random.choice(ALL_FIELDS_SIZE, p=temp_action_probs)
+                # print(f'after 5 - {action_probs.shape}')
+                game.play_move(Othello.get_decoded_field(action))
+                if game.is_game_over():
+                    winner = game.get_winner()
+                    for state, probs, player in spg.data:
+                        value = 0
+                        if winner == player:
+                            value = 1
+                        elif winner != 0:  # if its not a draw
+                            value = -1
 
-            game.play_move(Othello.get_decoded_field(action))
-            if game.is_game_over():
-                data_to_return = []
-                winner = game.get_winner()
-                for state, action_probs, player in data:
-                    value = 0
-                    if winner == player:
-                        value = 1
-                    elif winner != 0:  # if its not a draw
-                        value = -1
-
-                    data_to_return.append((
-                        state,
-                        action_probs,
-                        value
-                    ))
-                return data_to_return
+                        data_to_return.append((
+                            state,
+                            probs,
+                            value
+                        ))
+                    del spGames[i]
+                    # print(f'after 6 - {action_probs.shape}')
+                # print(f'after 7 - {action_probs.shape}')
+        return data_to_return
 
     def train(self, data):
         random.shuffle(data)
@@ -157,7 +170,7 @@ class AlphaZero:
             memory = []
 
             self.model.eval()
-            for _ in trange(self.params['num_self_play_iterations']):
+            for _ in trange(self.params['num_self_play_iterations'] // self.params['num_parallel_games']):
                 memory += self.self_play()
 
             self.model.train()
@@ -170,40 +183,12 @@ class AlphaZero:
             self.model.iterations_trained += 1
 
 
-time_limit = 1
-iter_limit = 1500  # math.inf
-verbose = 1  # 0 means no logging
-
-m = ResNet(4, 64, torch.device('cpu'))
-# print(f'dir: {os.getcwd()}')
-m.load_state_dict(torch.load('alpha-zero/train-1/model_17.pt'))
-m.eval()
-
-mcts_model = MCTS(f'alpha-mcts {time_limit}s',
-                  m,
-                  max_time=time_limit,
-                  max_iter=iter_limit,
-                  verbose=verbose)
-
-
-def move_to_testing():
-    game = Othello()
-    game.play_move((2, 4))
-    game.play_move((2, 3))
-    # print(game)
-    encoded_state = game.get_encoded_state()
-
-    tensor_state = torch.tensor(encoded_state).unsqueeze(0)
-    model = ResNet(4, 64, torch.device('cpu'))
-    policy, value = model(tensor_state)
-    value = value.item()
-    policy = (torch.softmax(policy, dim=1).squeeze(0).detach()
-              .cpu()
-              .numpy())
-
-    # print(value, policy)
-    res = game.valid_moves_encoded() * policy
-    print(res / np.sum(res))
+class SPG:
+    def __init__(self):
+        self.game = Othello()
+        self.data = []
+        self.root = None
+        # self.node = None
 
 
 if __name__ == "__main__":
@@ -214,15 +199,16 @@ if __name__ == "__main__":
     model = ResNet(4, 64, device)
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001, weight_decay=0.0001)
     params = {
-        'num_iterations': 200,
-        'num_self_play_iterations': 200,
+        'num_iterations': 5,
+        'num_self_play_iterations': 20,
         'num_epochs': 20,
         'batch_size': 64,
-        'temp': 1.1
+        'temp': 1.1,
+        'num_parallel_games': 5
     }
     mcts_params = {
         'uct_exploration_const': 2,
-        'max_iter': 500,
+        'max_iter': 50,
         # these are flexible dirichlet epsilon for noise
         # favor exploration more in the beginning
         'initial_alpha': 0.4,
