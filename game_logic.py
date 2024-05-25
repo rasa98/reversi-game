@@ -88,7 +88,7 @@ class Othello:
         else:
             self.edge_fields = edge_fields
 
-        if not valid_moves_to_reverse or not valid_moves_size:
+        if valid_moves_to_reverse is None or valid_moves_size is None:
             self._calculate_next_valid_moves()
             self._check_correctness()
 
@@ -189,7 +189,7 @@ class Othello:
         self.valid_moves_size = len(self.valid_moves_to_reverse)
 
     def play_move(self, field):
-        if not self.winner:  # if the game haven't ended, you can play
+        if self.winner is None:  # if the game haven't ended, you can play
             swap_value = self.player_turn
 
             if field in self.valid_moves():
@@ -219,10 +219,10 @@ class Othello:
         self.edge_fields.update(list_of_empty_fields)
 
     def _check_correctness(self):
-        if not self.valid_moves_to_reverse:
+        if self.valid_moves_size == 0:  # not self.valid_moves_to_reverse:
             # if self.valid_moves_size == 0:
             self._update_state()
-            if not self.valid_moves_to_reverse:
+            if self.valid_moves_size == 0:  # not self.valid_moves_to_reverse:
                 self.winner, _, _ = self.count_winner()
 
     def count_winner(self):
