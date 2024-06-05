@@ -58,8 +58,8 @@ class Node:
         if self.visited == 0:
             q_value = 0
         else:
-            q_value = self.value / self.visited
-            # q_value = 1 - (self.value / self.visited + 1) / 2
+            #q_value = self.value / self.visited
+            q_value = 1 - (self.value / self.visited + 1) / 2
         exploration_term = c * (math.sqrt(parent_visits) / (self.visited + 1)) * self.prior
         return q_value + exploration_term
 
@@ -202,7 +202,7 @@ class MCTS():
         states = np.stack([game.get_encoded_state() for game in games])
 
         policy, value = self.model(
-            torch.tensor(states, device=self.model.device)
+            torch.tensor(states, device=self.model.device, dtype=torch.float32)
         )
         policy = torch.softmax(policy, dim=1).cpu().numpy()
         value = value.cpu().numpy()

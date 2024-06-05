@@ -24,8 +24,7 @@ ALL_FIELDS_SIZE = GAME_ROW_COUNT * GAME_COLUMN_COUNT
 class ResNet(nn.Module):
     def __init__(self, num_resBlocks, num_hidden, device):
         super().__init__()
-        self.device = device
-        self.to(device)
+        self.device = device        
         self.iterations_trained = 0
 
         self.startBlock = nn.Sequential(
@@ -54,6 +53,8 @@ class ResNet(nn.Module):
             nn.Linear(3 * GAME_ROW_COUNT * GAME_COLUMN_COUNT, 1),
             nn.Tanh()
         )
+
+        self.to(device)
 
     def forward(self, x):
         x = self.startBlock(x)
@@ -170,21 +171,101 @@ class AlphaZero:
             self.model.iterations_trained += 1
 
 
-time_limit = 1
-iter_limit = 1500  # math.inf
-verbose = 1  # 0 means no logging
+def gen_azero_model(file, hidden_layer=64, res_blocks=4):
+    time_limit = math.inf
+    iter_limit = iter_depth  # math.inf
+    verbose = 0  # 0 means no logging
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-m = ResNet(4, 64, torch.device('cpu'))
-# print(f'dir: {os.getcwd()}')
-m.load_state_dict(torch.load('alpha-zero/train-1/model_17.pt'))
-m.eval()
+    m = ResNet(res_blocks, hidden_layer, device)
+    # print(f'dir: {os.getcwd()}')
+    model_location = file
 
-mcts_model = MCTS(f'alpha-mcts {time_limit}s',
-                  m,
-                  max_time=time_limit,
-                  max_iter=iter_limit,
-                  verbose=verbose)
+    m.load_state_dict(torch.load(model_location, map_location=device))
+    m.eval()
 
+    return MCTS(f'alpha-mcts - {file}',
+                m,
+                max_time=time_limit,
+                max_iter=iter_limit,
+                verbose=verbose)
+
+
+
+def model_generator(file_location, model_idxs, hidden_layer=64, res_blocks=4):
+    for i in model_idxs:
+        model_location = f'{file_location}/model_{i}.pt'
+        try:
+            model = gen_azero_model(model_location, hidden_layer=hidden_layer, res_blocks=res_blocks)
+        except: 
+            break
+        yield model
+
+
+def model_generator_all(file_location, hidden_layer=64, res_blocks=4):
+    cwd = os.getcwd()
+    d = os.path.join(cwd, file_location)
+    file_names = [f for f in os.listdir(d)
+                  if os.path.isfile(os.path.join(d, f)) and f.startswith('model')]
+    
+    # In the meantime if new models were created, also detect them
+    previous_contents = set()
+    
+    while True:
+        current_contents = set(os.listdir(d))
+        new_files = current_contents - previous_contents
+        if new_files:
+            for f in sorted(list(new_files)):
+                    if os.path.isfile(os.path.join(d, f)) and f.startswith('model'):                        
+                        model_location = f'{file_location}/{f}'
+                        model = gen_azero_model(model_location, hidden_layer=hidden_layer, res_blocks=res_blocks)
+                        yield model
+        else:
+            break
+                
+        previous_contents = current_contents    
+
+
+def multi_folder_load_models(folder_hiddenlayer_resblock):
+    for folder, layer_number, res_blocks in folder_hiddenlayer:
+        print(f'\n++++++++++++++++ TESTED FOLDER - {folder}++++++++++++++++\n')
+        yield from model_generator_all(folder, layer_number, res_blocks=res_blocks)
+        print()
+
+
+def multi_folder_load_some_models(folder_hiddenlayer_resblock_model_idxs):
+    for folder, layer_number, res_blocks, model_idxs in folder_hiddenlayer_resblock_model_idxs:
+        print(f'\n++++++++++++++++ TESTED FOLDER - {folder}++++++++++++++++\n')
+        yield from model_generator(folder, model_idxs,layer_number, res_blocks=res_blocks)
+        print()
+
+
+
+if __name__ != "__main__":
+    iter_depth = 50
+    print(f'mcts iter depth: {iter_depth}')  
+    model_location = f'alpha-zero/low_mcts_iter_training4_128layer/model_11.pt'
+    # model_location = f'alpha-zero/low_mcts_iter_training3/model_99.pt'
+    # model_location = f'alpha-zero/low_mcts_iter_training/model_66.pt'
+    # model_location = f'alpha-zero/model_34_n20+n01.pt'
+    mcts_model = None #gen_azero_model(model_location, 128)
+          
+    # model_location = 'alpha-zero/low_mcts_iter_training4_128layer' # [99, 40, 24, 25, 21, 20, 13, 12, 11, 9, 7] 11 best
+    #model_location = 'alpha-zero/low_mcts_iter_training4_128layer_v2'
+    #model_location = f'alpha-zero/low_mcts_iter_training4_128layer_v3'
+    
+    
+    hid_layer = 128
+    res_blocks = 20
+    folder_hiddenlayer = [(f'alpha-zero/res20layer128v9', 128, res_blocks, range(104, 800, 5))]    
+    many_models = multi_folder_load_some_models(folder_hiddenlayer)
+    
+    #folder_hiddenlayer = [(f'alpha-zero/low_mcts_iter_training4_128layer_v{i}', hid_layer, [11, 12, 13, 14, 15]) for i in [9, 10]]
+    #folder_hiddenlayer =[#('alpha-zero/low_mcts_iter_training4_128layer_v15', 128, [24]),
+                         #('alpha-zero/low_mcts_iter_training4_128layer_v17', 128, [38]),
+                         #('alpha-zero/low_mcts_iter_training4_128layer_v18', 128, [23, 53]),
+     #                    ('alpha-zero/low_mcts_iter_training4_128layer_v19', 128, [19])]
+    #many_models = multi_folder_load_some_models(folder_hiddenlayer) 
 
 def move_to_testing():
     game = Othello()

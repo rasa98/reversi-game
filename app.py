@@ -13,7 +13,7 @@ from models.model_interface import ai_random
 from models.montecarlo import mcts_model
 from models.ParallelMCTS import PMCTS
 import models.AlphaZero
-from models.AlphaZero import mcts_model as alpha_mcts
+from models.AlphaZero import mcts_model as alpha_mcts, many_models as many_zero_models
 
 from game_modes import ai_vs_ai_cli
 from collections import Counter
@@ -27,6 +27,7 @@ def time_function(func):
         res = func(*args, **kwargs)
         end = time.perf_counter()
         print(f'Time needed: {end - start} seconds')
+        print('----------------------------------------------', flush=True)
         return res
 
     return wrapper
@@ -65,7 +66,7 @@ def benchmark(ai1, ai2, times=200, verbose=True):
 
 
 @time_function
-def bench_both_sides(ai1, ai2, times=200):
+def bench_both_sides(ai1, ai2, times=200):    
     d1 = benchmark(ai1, ai2, times=times, verbose=False)
     d2 = benchmark(ai2, ai1, times=times, verbose=False)
 
@@ -86,8 +87,11 @@ if __name__ == '__main__':
     #                      alpha_mcts,
     #                      times=5)
 
-    bench_both_sides(ai_random,
-                     alpha_mcts,
-                     # mcts_model,
-                     times=5)
+    #bench_both_sides(ai_random,
+    #                 alpha_mcts,
+    #                 # mcts_model,
+    #                 times=30)
 
+    for zero in many_zero_models:
+        bench_both_sides(ai_random, zero,
+                         times=30)
