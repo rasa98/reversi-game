@@ -8,8 +8,6 @@ from models.minmax import (mm_static,
                            ga_2,
                            ga_vpn_5)
 from models.ppo_masked_model import (load_model_new,
-    # ai385,
-    # fixed_330
                                      )
 from models.model_interface import ai_random
 from models.montecarlo import mcts_model
@@ -19,11 +17,8 @@ from models.AlphaZero import (gen_azero_model,
                               multi_folder_load_some_models)
 from bench_agent import bench_both_sides
 
-from game_modes import ai_vs_ai_cli
-from collections import Counter
 from cProfile import Profile
 from pstats import SortKey, Stats
-
 
 
 def ppo_death_match(multi_ppo, times=100):
@@ -89,4 +84,3 @@ if __name__ == '__main__':
             times=10,
             timed=False,
             verbose=1)
-
