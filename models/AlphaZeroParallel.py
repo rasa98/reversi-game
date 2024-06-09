@@ -331,9 +331,6 @@ class SPG:
 
 
 if __name__ == "__main__":
-    import os
-    os.chdir('../')
-
     params = {
         'res_blocks': 4,
         'hidden_layer': 128,
