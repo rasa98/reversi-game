@@ -98,9 +98,12 @@ class AlphaZero:
         self.model_output = params['model_output']
 
         self.best_model = None
+        self.best_models_optimizer = None
         self.test_agent = self.load_test_agent()
         self.mcts = MCTS("alpha-mcts", model, **mcts_params)
         self.model_iteration = 0
+        self.model_subsequent_fail = 0
+        self.max_fail_times = params['model_subsequent_fail']
 
         self.copy_model()
 
@@ -121,6 +124,7 @@ class AlphaZero:
 
     def copy_model(self):
         self.best_model = copy.deepcopy(self.model)
+        self.best_models_optimizer = copy.deepcopy(self.optimizer)
 
     @staticmethod
     def bench_agents(a1, a2, times=10):
@@ -141,20 +145,21 @@ class AlphaZero:
         print(f'\n×××××  benchmarking model after training  ×××××')
         _, _, a1_winrate = self.bench_agents(current_agent, ai_random)
         if a1_winrate < 0.8:
-            return
+            return False
 
         if self.model_iteration > 0:
             current_wins, test_wins, _ = self.bench_agents(current_agent, test_agent)
             if current_wins <= test_wins:
-                return
+                return False
 
             _, _, a1_winrate = self.bench_agents(current_agent, best_agent)
             if a1_winrate < 0.6:
-                return
+                return False
         torch.save(self.model.state_dict(), f"{folder}/model_{iteration}.pt")
         torch.save(self.optimizer.state_dict(), f"{folder}/optimizer_{iteration}.pt")
         self.copy_model()
         self.model_iteration += 1
+        return True
 
     def self_play(self):
         data_to_return = []
@@ -295,9 +300,15 @@ class AlphaZero:
             for epoch in range(self.params['num_epochs']):
                 self.train(train_data, val_data, epoch)
 
-            self.save_if_passes_bench(folder, iteration)
-
-            self.model.iterations_trained += 1
+            if not self.save_if_passes_bench(folder, iteration):
+                self.model_subsequent_fail += 1
+                if self.model_subsequent_fail > self.max_fail_times:
+                    print(f'FAILED TO SATISFY BENCHMARKS {self.max_fail_times} times in a row. Reseting to earlier best model...')
+                    self.model = self.best_model
+                    self.optimizer = self.best_models_optimizer
+            else:
+                self.model_subsequent_fail = 0
+                self.model.iterations_trained += 1
 
 
 def load_model_and_optimizer(params, model_state_path, optimizer_state_path, device):
@@ -334,7 +345,8 @@ if __name__ == "__main__":
         'batch_size': 64,
         'temp': 1.03,
         'num_parallel_games': 50,
-        'model_output': 'models/alpha-zero/res4layer128v1'
+        'model_subsequent_fail': 5,
+        'model_output': 'models_output/alpha-zero/res4layer128v1'
     }
     mcts_params = {
         'uct_exploration_const': 2,
