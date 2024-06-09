@@ -2,7 +2,7 @@ import time
 from game_logic import Othello
 import random
 
-random.seed(time.time())
+# random.seed(time.time())
 
 
 def player_vs_player_cli(name1, name2):

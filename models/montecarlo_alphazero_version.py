@@ -105,13 +105,13 @@ class MCTS(ModelInterface):
         self.root = Node(game_copy, None, visited=1)
         self.root.explore_all_children(policy)
 
-    def predict_best_move(self, game: Othello, all_moves_prob=False):
+    def predict_best_move(self, game: Othello, deterministic=True):
         self.set_root_new(game)
         self.mcts_search()
         # print(f'\nafter simulating: {dict(self.root.get_all_next_move_counter())}')
         gc.collect()
 
-        if not all_moves_prob:
+        if deterministic:
             return self.best_moves(), None
 
         action_probs = np.zeros(ALL_FIELDS_SIZE)
