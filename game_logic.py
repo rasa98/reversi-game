@@ -243,18 +243,17 @@ class Othello:
 
     def get_winner_and_print(self):
         winner, amount, loser_amount = self.count_winner()
-        match winner:
-            case 0:
-                print(f"Its a draw - {amount} : {loser_amount}")
-                return "draw"
-            case 1:
-                print(f"{self.white} won: {amount} : {loser_amount}")
-                return self.white
-            case 2:
-                print(f"{self.black} won: {amount} : {loser_amount}")
-                return self.black
-            case _:
-                print("Game is still playing!")
+        if winner == 0:
+            print(f"Its a draw - {amount} : {loser_amount}")
+            return "draw"
+        elif winner == 1:
+            print(f"{self.white} won: {amount} : {loser_amount}")
+            return self.white
+        elif winner == 2:
+            print(f"{self.black} won: {amount} : {loser_amount}")
+            return self.black
+        else:
+            print("Game is still playing!")
 
     # def get_encoded_state_valid(self):
     #     valid_moves_layer = np.zeros_like(self.board, dtype=np.float32)

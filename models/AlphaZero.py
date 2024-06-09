@@ -257,7 +257,7 @@ if __name__ != "__main__":
     
     hid_layer = 128
     res_blocks = 20
-    folder_hiddenlayer = [(f'alpha-zero/res20layer128v9', 128, res_blocks, range(104, 800, 5))]    
+    folder_hiddenlayer = [(f'alpha-zero/res20layer128vF', 128, res_blocks, range(4, 800, 5))]    
     many_models = multi_folder_load_some_models(folder_hiddenlayer)
     
     #folder_hiddenlayer = [(f'alpha-zero/low_mcts_iter_training4_128layer_v{i}', hid_layer, [11, 12, 13, 14, 15]) for i in [9, 10]]
