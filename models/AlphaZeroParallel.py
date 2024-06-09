@@ -10,14 +10,19 @@ from tqdm import trange
 
 # for teseting purposes
 import sys
+import copy
 import os
 
-
-#source_dir = os.path.abspath(os.path.join(os.getcwd(), '../'))
-#sys.path.append(source_dir)
+source_dir = os.path.abspath(os.path.join(os.getcwd(), '../'))
+sys.path.append(source_dir)
 # ---------------------
 from game_logic import Othello
 from models.mcts_alpha_parallel import MCTS
+
+from models.ppo_masked_model import load_model_new
+from bench_agent import bench_both_sides
+from models.montecarlo_alphazero_version import MCTS as MCTS1
+from models.model_interface import ai_random
 
 GAME_ROW_COUNT = 8
 GAME_COLUMN_COUNT = 8
@@ -27,7 +32,7 @@ ALL_FIELDS_SIZE = GAME_ROW_COUNT * GAME_COLUMN_COUNT
 class ResNet(nn.Module):
     def __init__(self, num_resBlocks, num_hidden, device):
         super().__init__()
-        self.device = device        
+        self.device = device
         self.iterations_trained = 0
 
         self.startBlock = nn.Sequential(
@@ -91,9 +96,65 @@ class AlphaZero:
         self.optimizer = optimizer
         self.params = params
         self.model_output = params['model_output']
-        self.save_every = params['model_save_x_iter']
 
+        self.best_model = None
+        self.test_agent = self.load_test_agent()
         self.mcts = MCTS("alpha-mcts", model, **mcts_params)
+        self.model_iteration = 0
+
+        self.copy_model()
+
+    @staticmethod
+    def load_test_agent():
+        ppo_18_big_rollouts = (
+            load_model_new('18 big rollout',
+                           'scripts/rl/scripts/rl/test-working/ppo/1/history_0018'))
+        return ppo_18_big_rollouts
+
+    def load_azero_agent(self, name, model):
+        model.eval()
+        return MCTS1(f'alpha-mcts - {name}',
+                     model,
+                     max_time=self.mcts.max_time,
+                     max_iter=self.mcts.max_iter,
+                     verbose=0)
+
+    def copy_model(self):
+        self.best_model = copy.deepcopy(self.model)
+
+    @staticmethod
+    def bench_agents(a1, a2, times=10):
+        a1_wins, a2_wins = bench_both_sides(
+            a1,
+            a2,
+            times=times,
+            timed=True,
+            verbose=1)
+        a1_win_rate = a1_wins / (2 * times)
+        return a1_wins, a2_wins, a1_win_rate
+
+    def save_if_passes_bench(self, folder, iteration):
+        current_agent = self.load_azero_agent("current", self.model)
+        best_agent = self.load_azero_agent('best yet', self.best_model)
+        test_agent = self.test_agent
+
+        print(f'\n×××××  benchmarking model after training  ×××××')
+        _, _, a1_winrate = self.bench_agents(current_agent, ai_random)
+        if a1_winrate < 0.8:
+            return
+
+        if self.model_iteration > 0:
+            current_wins, test_wins, _ = self.bench_agents(current_agent, test_agent)
+            if current_wins <= test_wins:
+                return
+
+            _, _, a1_winrate = self.bench_agents(current_agent, best_agent)
+            if a1_winrate < 0.6:
+                return
+        torch.save(self.model.state_dict(), f"{folder}/model_{iteration}.pt")
+        torch.save(self.optimizer.state_dict(), f"{folder}/optimizer_{iteration}.pt")
+        self.copy_model()
+        self.model_iteration += 1
 
     def self_play(self):
         data_to_return = []
@@ -162,26 +223,26 @@ class AlphaZero:
 
             policy_loss = F.cross_entropy(out_policy, policy_targets)
             value_loss = F.mse_loss(out_value, value_targets)
-            loss = policy_loss + value_loss  
+            loss = policy_loss + value_loss
 
             train_policy_loss += policy_loss
-            train_value_loss += value_loss          
+            train_value_loss += value_loss
 
             self.optimizer.zero_grad()
             loss.backward()
             self.optimizer.step()
-        
+
         train_policy_loss /= len(data) // self.params['batch_size']
         train_value_loss /= len(data) // self.params['batch_size']
         scale = 1000
         print(f"Epoch {epoch + 1}/{params['num_epochs']} - \n"
-                  f"Train Policy Loss: {scale * train_policy_loss}, "
-                  f"Train Value Loss: {scale * train_value_loss}")
+              f"Train Policy Loss: {scale * train_policy_loss}, "
+              f"Train Value Loss: {scale * train_value_loss}")
 
         val_policy_loss, val_value_loss = self.validate_loss(val_data)
-        print(#f"Epoch {epoch + 1}/{params['num_epochs']} - "
-              f"Valid Policy Loss: {scale * val_policy_loss}, "
-              f"Valid Value Loss: {scale * val_value_loss}", flush=True)
+        print(  # f"Epoch {epoch + 1}/{params['num_epochs']} - "
+            f"Valid Policy Loss: {scale * val_policy_loss}, "
+            f"Valid Value Loss: {scale * val_value_loss}", flush=True)
 
     def validate_loss(self, data):
         self.model.eval()
@@ -216,7 +277,7 @@ class AlphaZero:
         folder = self.model_output
         if os.path.isdir(folder) and len(os.listdir(folder)) > 0:
             raise Exception("Model output already exists. You probably need to update it!!!")
-        os.makedirs(folder, exist_ok=True)        
+        os.makedirs(folder, exist_ok=True)
 
         for iteration in range(self.params['num_iterations']):
             print(f'Learning Iteration - {iteration}')
@@ -233,17 +294,22 @@ class AlphaZero:
             train_data = memory[separation_idx:]
             for epoch in range(self.params['num_epochs']):
                 self.train(train_data, val_data, epoch)
-            
-            if iteration > self.params['model_save_after_x_iter'] and (iteration + 1) % self.save_every == 0:
-                torch.save(self.model.state_dict(), f"{folder}/model_{iteration}.pt")
-                torch.save(self.optimizer.state_dict(), f"{folder}/optimizer_{iteration}.pt")
+
+            self.save_if_passes_bench(folder, iteration)
 
             self.model.iterations_trained += 1
 
-def load_model_and_optimizer(model, optimizer, model_state_path, optimizer_state_path, device):
-    model.load_state_dict(torch.load(model_state_path))
-    model.to(device)
-    optimizer.load_state_dict(torch.load(optimizer_state_path))
+
+def load_model_and_optimizer(params, model_state_path, optimizer_state_path, device):
+    model = ResNet(params['res_blocks'], params['hidden_layer'], device)
+    optimizer = torch.optim.Adam(model.parameters(), lr=params['lr'], weight_decay=params['weight_decay'])
+
+    if model_state_path is not None:
+        model.load_state_dict(torch.load(model_state_path))
+        optimizer.load_state_dict(torch.load(optimizer_state_path))
+
+    return model, optimizer
+
 
 class SPG:
     def __init__(self):
@@ -253,50 +319,50 @@ class SPG:
         # self.node = None
 
 
-if __name__ == "__main__":    
+if __name__ == "__main__":
+    import os
+    os.chdir('../')
+
     params = {
         'res_blocks': 20,
         'hidden_layer': 128,
         'lr': 0.0003,
         'weight_decay': 0.08,
-        'num_iterations': 500,
-        'num_self_play_iterations': 50,
-        'num_epochs': 5,
-        'batch_size': 128,
+        'num_iterations': 5,
+        'num_self_play_iterations': 2,
+        'num_epochs': 3,
+        'batch_size': 16,
         'temp': 1.03,
-        'num_parallel_games': 50,
-        'model_save_x_iter': 5,
-        'model_save_after_x_iter': 0,
-        'model_output': 'alpha-zero/res20layer128vF'               
+        'num_parallel_games': 2,
+        'model_output': 'models/alpha-zero/res20layer128vF'
     }
     mcts_params = {
         'uct_exploration_const': 2,
-        'max_iter': 125,        
+        'max_iter': 10,
         # these are flexible dirichlet epsilon for noise
         # favor exploration more in the beginning
         'dirichlet_epsilon': 0.05,
         'initial_alpha': 0.4,
         'final_alpha': 0.05,
         'decay_steps': 100
-    }  
-    
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')  
+    }
 
-    # Initialize model and optimizer
-    model = ResNet(params['res_blocks'], params['hidden_layer'], device)
-    optimizer = torch.optim.Adam(model.parameters(), lr=params['lr'], weight_decay=params['weight_decay'])
-    #optimizer = torch.optim.SGD(model.parameters(), params['lr'], weight_decay=params['weight_decay'])
-    
-    print(F'CURRENT WORKING DIR - {os.getcwd()}')
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+    model_state_path = None
+    optimizer_state_path = None
     if len(sys.argv) > 2:
         model_state_path = sys.argv[1]
-        optimizer_state_path = sys.argv[2]        
+        optimizer_state_path = sys.argv[2]
         print(f'----------STARTING MODEL - {model_state_path}----------')
-        # Load model and optimizer states
-        load_model_and_optimizer(model, optimizer, model_state_path, optimizer_state_path, device)          
-    
-    print(f'\nparams \n{json.dumps(params, indent=4)}')    
+
+    model, optimizer = load_model_and_optimizer(params,
+                                                model_state_path,
+                                                optimizer_state_path,
+                                                device)
+
+    print(f'\nparams \n{json.dumps(params, indent=4)}')
     print(f'\nmcts_maprams \n{json.dumps(mcts_params, indent=4)}\n')
 
-    azero = AlphaZero(model, optimizer, params, mcts_params)   
+    azero = AlphaZero(model, optimizer, params, mcts_params)
     azero.learn()

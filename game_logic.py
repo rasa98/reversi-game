@@ -208,6 +208,8 @@ class Othello:
                 self._update_state()
                 self._check_correctness()
                 return self.chips
+            else:
+                raise Exception('INVALID MOVE!!')
 
     def _update_state(self):
         self._swap_player_turn()

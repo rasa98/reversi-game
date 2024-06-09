@@ -1,0 +1,56 @@
+import time
+from game_modes import ai_vs_ai_cli
+from collections import Counter
+
+
+def print_results(player1, player2, d):
+    print(f'{"-" * 5} {player1} vs {player2} {"-" * 5}')
+    print(d, "\n")
+
+
+def time_function(func):
+    def wrapper(*args, **kwargs):
+        start = time.perf_counter()
+        res = func(*args, **kwargs)
+        end = time.perf_counter()
+        print(f'Time needed: {end - start} seconds')
+        print('----------------------------------------------', flush=True)
+        return res
+
+    return wrapper
+
+
+def benchmark(ai1, ai2, times=200, verbose=1):
+    vals = []
+    for _ in range(times):
+        winner_str = ai_vs_ai_cli(ai1, ai2)
+        vals.append(winner_str)
+    counter = Counter(vals)
+    d = {}
+    d[f"{ai1}"] = counter[1]
+    d[f"{ai2}"] = counter[2]
+    d[f"draw"] = counter[0]
+
+    if verbose:
+        print_results(ai1, ai2, d)
+    return d
+
+
+def _bench_both_sides(ai1, ai2, times=200, verbose=1):
+    d1 = benchmark(ai1, ai2, times=times, verbose=verbose)
+    d2 = benchmark(ai2, ai1, times=times, verbose=verbose)
+
+    w_sum_1 = d1[ai1.name] + d2[ai1.name]
+    w_sum_2 = d1[ai2.name] + d2[ai2.name]
+
+    return w_sum_1, w_sum_2
+
+
+def bench_both_sides(ai1, ai2, times=200, timed=True, verbose=0):
+    f = _bench_both_sides
+    if timed:
+        f = time_function(_bench_both_sides)
+    return f(ai1,
+             ai2,
+             times=times,
+             verbose=verbose)

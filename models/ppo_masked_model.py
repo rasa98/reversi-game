@@ -1,3 +1,5 @@
+import os
+
 from sb3_contrib.ppo_mask import MaskablePPO
 from models.model_interface import ModelInterface
 from game_logic import Othello
@@ -184,6 +186,29 @@ class MaskedPPOWrapper64_2_1(ModelInterface):
         return (action_game,), None
 
 
+class MaskedPPOWrapperNew(ModelInterface):
+    def __init__(self, name, model):
+        super().__init__(name)
+        self.model: MaskablePPO = model
+        self.obs_space = Box(low=0, high=1, shape=(64 * 3,), dtype=np.float32)
+
+    def predict_best_move(self, game: Othello):
+        encoded_state = game.get_encoded_state().reshape(-1)
+
+        action, _ = self.model.predict(encoded_state,
+                                       action_masks=action_masks(game),
+                                       deterministic=False)
+
+        move = Othello.get_decoded_field(action)  # from [0, 63] -> (0-7, 0-7)
+        # print(f'action : {action}, - {action_game}')
+        return (move,), None
+
+
+def load_model_new(name, file):
+    model = MaskablePPO.load(file, custom_objects={'lr_schedule': lambda _: 0.0005, 'clip_range': 0.2})
+    return MaskedPPOWrapperNew(name, model)
+
+
 def load_model(name, file):
     model = MaskablePPO.load(file)
     return MaskedPPOWrapper(name, model)
@@ -209,8 +234,10 @@ def load_model_64_2_1(name, filepath):
     return MaskedPPOWrapper64_2_1(name, model)
 
 
-file = 'training/rl/Dict_obs_space/history_00000385'
-ai385 = load_model('ppo_masked_385', file)
+# file = 'training/rl/Dict_obs_space/history_00000385'
+# ai385 = load_model('ppo_masked_385', file)
+#
+# file = 'training/rl/Dict_obs_space/mppo_num_chips/models/history_00000330'
+# fixed_330 = load_model_64_2_1('fixed_ppo_masked_330', file)
 
-file = 'training/rl/Dict_obs_space/mppo_num_chips/models/history_00000330'
-fixed_330 = load_model_64_2_1('fixed_ppo_masked_330', file)
+
