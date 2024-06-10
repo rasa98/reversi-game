@@ -46,6 +46,8 @@ if __name__ == '__main__':
     ppo_del2 = load_model_new('cloud_test2', 'scripts/rl/scripts/rl/test-working/ppo/v1/history_0003.zip')  # file)
     ppo_18_big_rollouts = load_model_new('18 big rollout', 'scripts/rl/scripts/rl/test-working/ppo/1/history_0018')
 
+    ppo_19_cloud = load_model_new('ppo 19 cloud long batch', 'scripts/rl/ppo_masked/cloud/v3/history_0019')
+
     # file_base = 'scripts/rl/ppo_masked/cloud/v2/history_'
     # multi_ppo = (load_model_new(f'ppo_{i}', f'{file_base}{str(i).zfill(4)}')
     #              for i in range(1, 362))
@@ -59,12 +61,12 @@ if __name__ == '__main__':
                   iter_limit=1000
                   )
 
-    model_location = f'models/alpha-zero/my_models/vF/model_329.pt'
-    alpha_params = {'hidden_layer': 128, 'res_block': 20}
-    alpha_329 = gen_azero_model(model_location, alpha_params)
+    # model_location = f'models/alpha-zero/my_models/vF/model_329.pt'
+    # alpha_params = {'hidden_layer': 128, 'res_block': 20}
+    # alpha_329 = gen_azero_model(model_location, alpha_params)
 
-    folder_params = [(f'models/alpha-zero/my_models/v17', alpha_params, range(38, 39))]
-    many_zero_models = multi_folder_load_some_models(folder_params)
+    # folder_params = [(f'models/alpha-zero/my_models/v17', alpha_params, range(38, 39))]
+    # many_zero_models = multi_folder_load_some_models(folder_params)
 
     # with PMCTS.create_pool_manager(pmcts, num_processes=4):
     #     bench_both_sides(
@@ -81,12 +83,12 @@ if __name__ == '__main__':
     #                  # ga_vpn_5,
     #                  times=100)
 
-    for agent in [ppo_del]:
+    for agent in [ppo_19_cloud]:
         bench_both_sides(
-            ppo_18_big_rollouts,
+            ga_vpn_5,
             # mcts_model,
             agent,
             times=10,
-            timed=False,
+            timed=True,
             verbose=1)
 

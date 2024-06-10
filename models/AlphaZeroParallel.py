@@ -305,8 +305,8 @@ def load_model_and_optimizer(params, model_state_path, optimizer_state_path, dev
     optimizer = torch.optim.Adam(model.parameters(), lr=params['lr'], weight_decay=params['weight_decay'])
 
     if model_state_path is not None:
-        model.load_state_dict(torch.load(model_state_path))
-        optimizer.load_state_dict(torch.load(optimizer_state_path))
+        model.load_state_dict(torch.load(model_state_path, map_location=device))
+        optimizer.load_state_dict(torch.load(optimizer_state_path, map_location=device))
 
     return model, optimizer
 
@@ -324,21 +324,21 @@ if __name__ == "__main__":
     os.chdir('../')
 
     params = {
-        'res_blocks': 20,
+        'res_blocks': 4,
         'hidden_layer': 128,
-        'lr': 0.0003,
+        'lr': 0.0001,
         'weight_decay': 0.08,
-        'num_iterations': 5,
-        'num_self_play_iterations': 2,
-        'num_epochs': 3,
-        'batch_size': 16,
-        'temp': 1.03,
+        'num_iterations': 200,
+        'num_self_play_iterations': 50,
+        'num_epochs': 5,
+        'batch_size': 64,
+        'temp': 1.1,
         'num_parallel_games': 2,
         'model_output': 'models/alpha-zero/res20layer128vF'
     }
     mcts_params = {
-        'uct_exploration_const': 2,
-        'max_iter': 10,
+        'uct_exploration_const': 1.41,
+        'max_iter': 50,
         # these are flexible dirichlet epsilon for noise
         # favor exploration more in the beginning
         'dirichlet_epsilon': 0.05,

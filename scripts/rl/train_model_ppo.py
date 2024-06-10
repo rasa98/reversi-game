@@ -11,6 +11,7 @@ import torch
 from stable_baselines3.common.vec_env import VecEnv, DummyVecEnv, sync_envs_normalization
 
 import torch
+import copy
 from torch import nn
 from stable_baselines3.common.torch_layers import BaseFeaturesExtractor
 from stable_baselines3.common.policies import ActorCriticPolicy
@@ -53,26 +54,40 @@ policy_kwargs = dict(
 #
 
 
-starting_model_filepath = LOGDIR + 'random_start_model'
-# starting_model_filepath = 'ppo_masked/cloud/v2/history_0299'
+# starting_model_filepath = LOGDIR + 'random_start_model'
+starting_model_filepath = 'ppo_masked/cloud/v2/history_0299'
+# starting_model_filepath = "scripts/rl/output/v3/" + 'history_0020'
 
 
-model = MaskablePPO(MaskableActorCriticPolicy,
-                    env=env,
-                    device=device,
-                    learning_rate=0.0001,
-                    n_steps=2048 * 10,
-                    n_epochs=10,
-                    clip_range=0.15,
-                    batch_size=128,
-                    ent_coef=0.01,
-                    gamma=0.99,
-                    verbose=100,
-                    seed=SEED
-                    )
-model.save(starting_model_filepath)
+# model = MaskablePPO(MaskableActorCriticPolicy,
+#                     env=env,
+#                     device=device,
+#                     learning_rate=0.0001,
+#                     n_steps=2048 * 10,
+#                     n_epochs=10,
+#                     clip_range=0.15,
+#                     batch_size=128,
+#                     ent_coef=0.01,
+#                     gamma=0.99,
+#                     verbose=100,
+#                     seed=SEED
+#                     )
+params = {'learning_rate': 0.00007,
+          'n_steps': 2048 * 10,
+          'n_epochs': 10,
+          'clip_range': 0.3,
+          'batch_size': 128,
+          'ent_coef': 0.05,
+          'gamma':0.96}
 
+model = MaskablePPO.load(starting_model_filepath, env=env, custom_objects=params)
+
+print(f'device {model.device}')
+
+# model.save(starting_model_filepath)
 start_model_copy = model.load(starting_model_filepath)
+
+
 env.envs[0].unwrapped.change_to_latest_agent(start_model_copy)
 
 params = {
@@ -91,5 +106,5 @@ eval_callback = SelfPlayCallback(
 )
 
 model.learn(total_timesteps=NUM_TIMESTEPS,
-            # log_interval=100,
+            log_interval=100,
             callback=eval_callback)

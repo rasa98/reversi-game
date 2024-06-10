@@ -97,7 +97,7 @@ class AlphaZero:
         while True:
             player = game.player_turn  # !!! changed get_encoded_state
             encoded_perspective_state = game.get_encoded_state()
-            action_probs = self.mcts.predict_best_move(game, all_moves_prob=True)
+            action_probs = self.mcts.predict_best_move(game, deterministic=False)
 
             data.append((encoded_perspective_state, action_probs, player))
 
@@ -179,6 +179,8 @@ def gen_azero_model(model_location, params=None):
     res_blocks = params.get('res_block', 20)
     time_limit = params.get('mcts_time_limit', math.inf)
     iter_limit = params.get('mcts_iter_limit', 50)
+    c = params.get('c', 1.41)
+    dirichlet_epsilon = params.get('dirichlet_epsilon', 0)
     verbose = params.get('verbose', 0)  # 0 means no logging
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -191,6 +193,8 @@ def gen_azero_model(model_location, params=None):
                 m,
                 max_time=time_limit,
                 max_iter=iter_limit,
+                uct_exploration_const=c,
+                dirichlet_epsilon=dirichlet_epsilon,
                 verbose=verbose)
 
 

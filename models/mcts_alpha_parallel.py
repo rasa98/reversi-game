@@ -28,15 +28,15 @@ class Node:
         self.prior = prior
         # self.move_to_child = {}
         self.parent = parent_node
-        self.valid_moves = list(game_copy.valid_moves_to_reverse)
+        #self.valid_moves = list(game_copy.valid_moves_to_reverse)
         self.is_final_state = self.game.is_game_over()
 
     # def get_all_next_move_counter(self):
     #     """for debug"""
     #     return Counter({move: child.visited for move, child in self.move_to_child.items()})
 
-    def explored_OLD(self):
-        return len(self.valid_moves) == 0
+    # def explored_OLD(self):
+    #     return len(self.valid_moves) == 0
 
     def explored(self):
         return len(self.children) > 0
@@ -59,9 +59,13 @@ class Node:
             q_value = 0
         else:
             #q_value = self.value / self.visited
-            q_value = 1 - (self.value / self.visited + 1) / 2
-        exploration_term = c * (math.sqrt(parent_visits) / (self.visited + 1)) * self.prior
-        return q_value + exploration_term
+            # q_value = 1 - (self.value / self.visited + 1) / 2
+            avg_value = self.value / self.visited
+            q_value = (avg_value + 1) / 2
+        exploration_term = c * (math.sqrt(parent_visits) / (self.visited + 1))
+        explo_biased = exploration_term * (self.prior + 0.5)
+
+        return q_value + explo_biased
 
     def simulate_game(self):
         game_copy = self.game.get_snapshot()
@@ -178,7 +182,7 @@ class MCTS():
             for i, node in enumerate(nodes_to_expand):
                 node.explore_all_children(policies[i])
                 nodes.append(node)
-                values.append(vals[i])
+                values.append(vals[i][0])
 
         return nodes, values  # returns (node , winner)
 
@@ -243,6 +247,10 @@ class MCTS():
             # Perform MCTS steps: selection, expansion, simulation, backpropagation
             self.mcts_iter(spgs)
             iterations += 1
+
+            print(f'iteration {iterations} done!')
+            if iterations > 45 and spgs[0].game.turn > 45: # TODO delete DEBUG
+                pass
 
             # Check termination conditions
             check_time = time.perf_counter()
