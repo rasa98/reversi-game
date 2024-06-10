@@ -59,9 +59,12 @@ class Node:
             q_value = 0
         else:
             #q_value = self.value / self.visited
-            q_value = 1 - (self.value / self.visited + 1) / 2
-        exploration_term = c * (math.sqrt(parent_visits) / (self.visited + 1)) * self.prior
-        return q_value + exploration_term
+            avg_value = self.value / self.visited
+            q_value = (avg_value + 1) / 2
+        exploration_term = c * (math.sqrt(parent_visits) / (self.visited + 1))
+        explo_biased = exploration_term * (self.prior + 0.5)
+
+        return q_value + explo_biased
 
     def simulate_game(self):
         game_copy = self.game.get_snapshot()
@@ -178,7 +181,7 @@ class MCTS():
             for i, node in enumerate(nodes_to_expand):
                 node.explore_all_children(policies[i])
                 nodes.append(node)
-                values.append(vals[i])
+                values.append(vals[i][0])
 
         return nodes, values  # returns (node , winner)
 

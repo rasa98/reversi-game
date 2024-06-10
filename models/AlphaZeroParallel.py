@@ -6,6 +6,7 @@ import timeit
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torch.optim.lr_scheduler import StepLR
 from tqdm import trange
 
 # for teseting purposes
@@ -91,9 +92,10 @@ class ResBlock(nn.Module):
 
 
 class AlphaZero:
-    def __init__(self, model, optimizer, params, mcts_params):
+    def __init__(self, model, optimizer, scheduler,params, mcts_params):
         self.model = model
         self.optimizer = optimizer
+        self.scheduler = scheduler
         self.params = params
         self.model_output = params['model_output']
 
@@ -111,7 +113,7 @@ class AlphaZero:
     def load_test_agent():
         ppo_18_big_rollouts = (
             load_model_new('18 big rollout',
-                           'scripts/rl/scripts/rl/test-working/ppo/1/history_0018'))
+                           'scripts/rl/ppo_masked/local/history_0018'))
         return ppo_18_big_rollouts
 
     def load_azero_agent(self, name, model):
@@ -120,11 +122,16 @@ class AlphaZero:
                      model,
                      max_time=self.mcts.max_time,
                      max_iter=self.mcts.max_iter,
+                     uct_exploration_const=1.41,
+                     dirichlet_epsilon=0,
                      verbose=0)
 
     def copy_model(self):
         self.best_model = copy.deepcopy(self.model)
-        self.best_models_optimizer = copy.deepcopy(self.optimizer)
+        self.best_models_optimizer = torch.optim.Adam(self.best_model.parameters())
+    
+        # Copy the state of the old optimizer to the new one
+        self.best_models_optimizer.load_state_dict(self.optimizer.state_dict())
 
     @staticmethod
     def bench_agents(a1, a2, times=10):
@@ -147,7 +154,7 @@ class AlphaZero:
         if a1_winrate < 0.8:
             return False
 
-        if self.model_iteration > 0:
+        if self.model_iteration > 4:
             current_wins, test_wins, _ = self.bench_agents(current_agent, test_agent)
             if current_wins <= test_wins:
                 return False
@@ -237,12 +244,15 @@ class AlphaZero:
             loss.backward()
             self.optimizer.step()
 
+        self.scheduler.step()        
+
         train_policy_loss /= len(data) // self.params['batch_size']
         train_value_loss /= len(data) // self.params['batch_size']
         scale = 1000
         print(f"Epoch {epoch + 1}/{params['num_epochs']} - \n"
               f"Train Policy Loss: {scale * train_policy_loss}, "
-              f"Train Value Loss: {scale * train_value_loss}")
+              f"Train Value Loss: {scale * train_value_loss}"
+              f", lr: {self.scheduler.get_last_lr()[0]}")
 
         val_policy_loss, val_value_loss = self.validate_loss(val_data)
         print(  # f"Epoch {epoch + 1}/{params['num_epochs']} - "
@@ -306,6 +316,7 @@ class AlphaZero:
                     print(f'FAILED TO SATISFY BENCHMARKS {self.max_fail_times} times in a row. Reseting to earlier best model...')
                     self.model = self.best_model
                     self.optimizer = self.best_models_optimizer
+                    self.model_subsequent_fail = 0
             else:
                 self.model_subsequent_fail = 0
                 self.model.iterations_trained += 1
@@ -316,10 +327,16 @@ def load_model_and_optimizer(params, model_state_path, optimizer_state_path, dev
     optimizer = torch.optim.Adam(model.parameters(), lr=params['lr'], weight_decay=params['weight_decay'])
 
     if model_state_path is not None:
-        model.load_state_dict(torch.load(model_state_path))
-        optimizer.load_state_dict(torch.load(optimizer_state_path))
+        model.load_state_dict(torch.load(model_state_path, map_location=device))
+        optimizer.load_state_dict(torch.load(optimizer_state_path, map_location=device))
+        
+        for param_group in optimizer.param_groups:
+            param_group['lr'] = params['lr']
+            param_group['weight_decay'] = params['weight_decay']
 
-    return model, optimizer
+    scheduler = StepLR(optimizer, step_size=params['scheduler_step_size'], gamma=params['scheduler_gamma'])
+
+    return model, optimizer, scheduler
 
 
 class SPG:
@@ -330,33 +347,32 @@ class SPG:
         # self.node = None
 
 
-if __name__ == "__main__":
-    import os
-    os.chdir('../')
-
+if __name__ == "__main__":    
     params = {
-        'res_blocks': 4,
-        'hidden_layer': 128,
-        'lr': 0.0001,
-        'weight_decay': 0.08,
-        'num_iterations': 100,
-        'num_self_play_iterations': 500,
-        'num_epochs': 5,
-        'batch_size': 64,
-        'temp': 1.03,
+        'res_blocks': 16,
+        'hidden_layer': 64,
+        'lr': 1e-4,
+        'weight_decay': 0.01,
+        'num_iterations': 200,
+        'num_self_play_iterations': 200,
+        'num_epochs': 10,
+        'batch_size': 128,
+        'temp': 1.1,
         'num_parallel_games': 50,
-        'model_subsequent_fail': 5,
-        'model_output': 'models_output/alpha-zero/res4layer128v1'
+        'model_subsequent_fail': 200,
+        'scheduler_step_size': 10, 
+        'scheduler_gamma':0.99,
+        'model_output': 'models_output/alpha-zero/res16layer64v1'
     }
     mcts_params = {
-        'uct_exploration_const': 2,
-        'max_iter': 50,
+        'uct_exploration_const': 1.3,
+        'max_iter': 125,
         # these are flexible dirichlet epsilon for noise
         # favor exploration more in the beginning
-        'dirichlet_epsilon': 0.05,
+        'dirichlet_epsilon': 0.15,
         'initial_alpha': 0.4,
         'final_alpha': 0.05,
-        'decay_steps': 100
+        'decay_steps': 130
     }
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -366,15 +382,15 @@ if __name__ == "__main__":
     if len(sys.argv) > 2:
         model_state_path = sys.argv[1]
         optimizer_state_path = sys.argv[2]
-        print(f'----------STARTING MODEL - {model_state_path}----------')
+    print(f'----------STARTING MODEL - {model_state_path}----------')
 
-    model, optimizer = load_model_and_optimizer(params,
-                                                model_state_path,
-                                                optimizer_state_path,
-                                                device)
+    model, optimizer, scheduler = load_model_and_optimizer(params,
+                                                           model_state_path,
+                                                           optimizer_state_path,
+                                                           device)
 
     print(f'\nparams \n{json.dumps(params, indent=4)}')
     print(f'\nmcts_maprams \n{json.dumps(mcts_params, indent=4)}\n')
 
-    azero = AlphaZero(model, optimizer, params, mcts_params)
+    azero = AlphaZero(model, optimizer, scheduler, params, mcts_params)
     azero.learn()

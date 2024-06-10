@@ -205,7 +205,7 @@ class MaskedPPOWrapperNew(ModelInterface):
 
 
 def load_model_new(name, file):
-    model = MaskablePPO.load(file, custom_objects={'lr_schedule': lambda _: 0.0005, 'clip_range': 0.2})
+    model = MaskablePPO.load(file, custom_objects={'lr_schedule': lambda _: 0.0005, 'clip_range': 0.2, 'action_space': Discrete(64)})
     return MaskedPPOWrapperNew(name, model)
 
 

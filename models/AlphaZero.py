@@ -180,6 +180,8 @@ def gen_azero_model(model_location, params=None):
     time_limit = params.get('mcts_time_limit', math.inf)
     iter_limit = params.get('mcts_iter_limit', 50)
     verbose = params.get('verbose', 0)  # 0 means no logging
+    c = params.get('c', 1.41)
+    dirichlet_epsilon = params.get('dirichlet_epsilon', 0)
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     m = ResNet(res_blocks, hidden_layer, device)
@@ -191,6 +193,8 @@ def gen_azero_model(model_location, params=None):
                 m,
                 max_time=time_limit,
                 max_iter=iter_limit,
+                uct_exploration_const=c,
+                dirichlet_epsilon=dirichlet_epsilon,
                 verbose=verbose)
 
 
