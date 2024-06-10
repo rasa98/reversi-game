@@ -18,12 +18,20 @@ from scripts.rl.ppo_masked import OthelloEnv, SelfPlayCallback
 
 # Settings
 SEED = 19  # NOT USED
-NUM_TIMESTEPS = int(50_000_000)
-EVAL_FREQ = int(2048 * 20 + 1)
-EVAL_EPISODES = int(400)
-BEST_THRESHOLD = 0.20  # must achieve a mean score above this to replace prev best self
+NUM_TIMESTEPS = int(100_000_000)
+N_STEPS = 2048 * 30
+EVAL_FREQ = int(N_STEPS + 1)
+EVAL_EPISODES = int(500)
+BEST_THRESHOLD = 0.14  # must achieve a mean score above this to replace prev best self
 RENDER_MODE = False  # set this to false if you plan on running for full 1000 trials.
-LOGDIR = "scripts/rl/output/v3/"
+LOGDIR = "scripts/rl/output/v3v3/"
+
+
+def linear_schedule(initial_value):
+    def func(progress_remaining):
+        return progress_remaining * initial_value
+    return func
+
 
 env = OthelloEnv()
 env = Monitor(env=env)
@@ -33,8 +41,8 @@ device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cp
 
 policy_kwargs = {
     'net_arch': {
-        'pi': [128, 128, 128, 128], 
-        'vf': [128, 128, 128, 128] 
+        'pi': [64, 64, 64, 64, 64, 64, 64, 64], 
+        'vf': [64, 64, 64, 64] 
     }
 }
 print(f'net architecture - {policy_kwargs}')
@@ -42,27 +50,35 @@ print(f'net architecture - {policy_kwargs}')
 print(f'params: \nNUM_TIMESTEPS -{NUM_TIMESTEPS}\nEVAL_FREQ={EVAL_FREQ}\nEVAL_EPISODES={EVAL_EPISODES}\nBEST_THRESHOLD={BEST_THRESHOLD}\nLOGDIR={LOGDIR}')
 
 params = {
-    'learning_rate': 0.0001,
-    'n_steps': 2048 * 20,
-    'n_epochs': 10,
-    'clip_range': 0.15,
-    'batch_size': 128,
-    'ent_coef': 0.01,
-    'gamma': 0.99,
-    'verbose': 1
+    'learning_rate': linear_schedule(9e-5),
+    'n_steps': N_STEPS,
+    'n_epochs': 5,
+    #'clip_range': 0.2,
+    'batch_size': 64,
+    #'ent_coef': 0.01,
+    #'gae_lambda': 0.95,
+    #'gamma': 1,
+    #'verbose': 1
 }
 
 print(f'model params: \n {params}')
 
-model = MaskablePPO(policy=MaskableActorCriticPolicy,
-                    env=env,
-                    device=device,                    
-                    policy_kwargs=policy_kwargs,
-                    **params)
-starting_model_filepath = LOGDIR + 'random_start_model'
-# model = MaskablePPO.load(starting_model_filepath, env=env)
-model.save(starting_model_filepath)
+#model = MaskablePPO(policy=MaskableActorCriticPolicy,
+#                    env=env,
+#                    device=device,                    
+#                    policy_kwargs=policy_kwargs,
+#                    **params)
 
+#starting_model_filepath = LOGDIR + 'random_start_model'
+#model.save(starting_model_filepath)
+
+#  ------ load pretrained ---------
+starting_model_filepath = "scripts/rl/output/v3/" + 'history_0020'
+model = MaskablePPO.load(starting_model_filepath, env=env, custom_objects=params)
+
+
+
+print(f'starting model: {starting_model_filepath}')
 start_model_copy = model.load(starting_model_filepath)
 env.unwrapped.change_to_latest_agent(start_model_copy)
 
