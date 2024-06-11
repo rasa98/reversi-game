@@ -349,28 +349,28 @@ class SPG:
 
 if __name__ == "__main__":    
     params = {
-        'res_blocks': 16,
-        'hidden_layer': 64,
+        'res_blocks': 8,
+        'hidden_layer': 128,
         'lr': 1e-4,
         'weight_decay': 0.01,
         'num_iterations': 200,
         'num_self_play_iterations': 200,
         'num_epochs': 10,
         'batch_size': 128,
-        'temp': 1.1,
+        'temp': 1,
         'num_parallel_games': 50,
         'model_subsequent_fail': 200,
         'scheduler_step_size': 10, 
-        'scheduler_gamma':0.99,
-        'model_output': 'models_output/alpha-zero/res16layer64v1'
+        'scheduler_gamma':0.9,
+        'model_output': 'models_output/alpha-zero/res8layer128v1'
     }
     mcts_params = {
-        'uct_exploration_const': 1.3,
-        'max_iter': 125,
+        'uct_exploration_const': 1.2,
+        'max_iter': 30,
         # these are flexible dirichlet epsilon for noise
         # favor exploration more in the beginning
-        'dirichlet_epsilon': 0.15,
-        'initial_alpha': 0.4,
+        'dirichlet_epsilon': 0.1,
+        'initial_alpha': 0.27,
         'final_alpha': 0.05,
         'decay_steps': 130
     }
