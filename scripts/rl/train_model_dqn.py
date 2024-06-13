@@ -25,6 +25,10 @@ from sb3_contrib.common.maskable.policies import MaskableActorCriticPolicy
 from sb3_contrib.ppo_mask import MaskablePPO
 from scripts.rl.game_env import OthelloEnv, OthelloEnvNoMask, SelfPlayCallback
 
+import stable_baselines3.common.callbacks as callbacks_module
+from sb3_contrib.common.maskable.evaluation import evaluate_policy as masked_evaluate_policy
+callbacks_module.evaluate_policy = masked_evaluate_policy
+
 th = torch
 
 

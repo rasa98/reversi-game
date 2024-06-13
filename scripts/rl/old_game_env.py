@@ -129,8 +129,8 @@ class OthelloEnv(gym.Env):
         # Set True for each index in the set
         for index in valid_moves:
             mask[index] = True
-        mask.flatten()
-        return mask
+        return mask.flatten()
+
 
 
 class SelfPlayCallback(EvalCallback):

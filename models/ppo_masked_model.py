@@ -58,8 +58,7 @@ def action_masks(game):
     # Set True for each index in the set
     for index in valid_moves:
         mask[index] = True
-    mask.flatten()
-    return mask
+    return mask.flatten()
 
 
 class MaskedPPOWrapper2(ModelInterface):
@@ -205,12 +204,11 @@ class MaskedPPOWrapperNew(ModelInterface):
         return (move,), None
 
 
-def load_model_new(name, file):
-
-    model = MaskablePPO.load(file, custom_objects={'lr_schedule': lambda _: 0.0005,
-                                                   'clip_range': 0.2,
-                                                   'action_space': Discrete(64),
-                                                   'seed': int(time.time())})
+def load_model_new(name, file, cls=MaskablePPO):  # TODO generalize this module
+    model = cls.load(file, custom_objects={'lr_schedule': lambda _: 0.0005,
+                                           'clip_range': 0.2,
+                                           'action_space': Discrete(64),
+                                           'seed': int(time.time())})
 
     return MaskedPPOWrapperNew(name, model)
 
@@ -239,11 +237,8 @@ def load_model_64_2_1(name, filepath):
     model = MaskablePPO.load(filepath, custom_objects={'seed': int(time.time())})
     return MaskedPPOWrapper64_2_1(name, model)
 
-
 # file = 'training/rl/Dict_obs_space/history_00000385'
 # ai385 = load_model('ppo_masked_385', file)
 #
 # file = 'training/rl/Dict_obs_space/mppo_num_chips/models/history_00000330'
 # fixed_330 = load_model_64_2_1('fixed_ppo_masked_330', file)
-
-
