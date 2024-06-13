@@ -20,7 +20,7 @@ def worker(game):
 
 
 class PMCTS(ModelInterface):
-    def __init__(self, name, time_limit=math.inf, iter_limit=math.inf):
+    def __init__(self, name, time_limit=math.inf, iter_limit=math.inf, verbose=0):
         if time_limit is None and iter_limit is None:
             raise Exception(f'Need to give at least one limit in PMCTS!')
         super().__init__(name)
@@ -28,6 +28,7 @@ class PMCTS(ModelInterface):
         self.iter_limit = iter_limit
         self.pool = None
         self.num_processes = None
+        self.verbose = verbose
 
     @staticmethod
     @contextmanager
@@ -62,10 +63,14 @@ class PMCTS(ModelInterface):
         total_counters = sum(counter_list, Counter())
         # print(dict(total_counters))
 
-        print(f'game turn: {game.turn}')
-        print(f'Iterations per sec: {sum(iter_list)}\n')
+        if self.verbose:
+            print(f'game turn: {game.turn}')
+            print(f'Iterations per sec: {sum(iter_list)}\n')
 
         # Find the key with the highest count
         best_move = total_counters.most_common(1)[0]  # ((7, 5), 3455)
         # print(f'best move: {best_move})')
         return [best_move[0]], None
+
+    def __repr__(self):
+        return self.name + f' {self.iter_limit}'

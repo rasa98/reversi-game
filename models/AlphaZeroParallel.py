@@ -91,16 +91,19 @@ class ResBlock(nn.Module):
 
 
 class AlphaZero:
-    def __init__(self, model, optimizer, params, mcts_params):
+    def __init__(self, model, optimizer, scheduler, params, mcts_params):
+
         self.model = model
         self.optimizer = optimizer
         self.params = params
         self.model_output = params['model_output']
 
         self.best_model = None
+        self.best_models_optimizer = None
         self.test_agent = self.load_test_agent()
         self.mcts = MCTS("alpha-mcts", model, **mcts_params)
         self.model_iteration = 0
+        self.scheduler = scheduler
 
         self.copy_model()
 
@@ -121,6 +124,11 @@ class AlphaZero:
 
     def copy_model(self):
         self.best_model = copy.deepcopy(self.model)
+        self.best_models_optimizer = torch.optim.Adam(self.best_model.parameters())
+
+        # Copy the state of the old optimizer to the new one
+        self.best_models_optimizer.load_state_dict(self.optimizer.state_dict())
+
 
     @staticmethod
     def bench_agents(a1, a2, times=10):
@@ -232,6 +240,10 @@ class AlphaZero:
             loss.backward()
             self.optimizer.step()
 
+
+        self.scheduler.step()
+
+
         train_policy_loss /= len(data) // self.params['batch_size']
         train_value_loss /= len(data) // self.params['batch_size']
         scale = 1000
@@ -295,9 +307,19 @@ class AlphaZero:
             for epoch in range(self.params['num_epochs']):
                 self.train(train_data, val_data, epoch)
 
-            self.save_if_passes_bench(folder, iteration)
 
-            self.model.iterations_trained += 1
+            if not self.save_if_passes_bench(folder, iteration):
+                self.model_subsequent_fail += 1
+                if self.model_subsequent_fail > self.max_fail_times:
+                    print(
+                        f'FAILED TO SATISFY BENCHMARKS {self.max_fail_times} times in a row. Reseting to earlier best model...')
+                    self.model = self.best_model
+                    self.optimizer = self.best_models_optimizer
+                    self.model_subsequent_fail = 0
+            else:
+                self.model_subsequent_fail = 0
+                self.model.iterations_trained += 1
+
 
 
 def load_model_and_optimizer(params, model_state_path, optimizer_state_path, device):
@@ -307,6 +329,12 @@ def load_model_and_optimizer(params, model_state_path, optimizer_state_path, dev
     if model_state_path is not None:
         model.load_state_dict(torch.load(model_state_path, map_location=device))
         optimizer.load_state_dict(torch.load(optimizer_state_path, map_location=device))
+
+
+        for param_group in optimizer.param_groups:
+            param_group['lr'] = params['lr']
+            param_group['weight_decay'] = params['weight_decay']
+
 
     return model, optimizer
 
@@ -320,29 +348,32 @@ class SPG:
 
 
 if __name__ == "__main__":
-    import os
-    os.chdir('../')
+    if os.environ['USER'] == 'rasa':
+        os.chdir('../')
 
     params = {
-        'res_blocks': 4,
-        'hidden_layer': 128,
-        'lr': 0.0001,
-        'weight_decay': 0.08,
-        'num_iterations': 200,
-        'num_self_play_iterations': 50,
-        'num_epochs': 5,
+        'res_blocks': 1,
+        'hidden_layer': 32,
+        'lr': 1e-4,
+        'weight_decay': 0.01,
+        'num_iterations': 100,
+        'num_self_play_iterations': 1,
+        'num_epochs': 10,
         'batch_size': 64,
-        'temp': 1.1,
-        'num_parallel_games': 2,
-        'model_output': 'models/alpha-zero/res20layer128vF'
+        'temp': 0.8,
+        'num_parallel_games': 1,
+        'model_subsequent_fail': 200,
+        'scheduler_step_size': 10,
+        'scheduler_gamma': 0.9,
+        'model_output': 'models_output/alpha-zero/res4layer64v1'
     }
     mcts_params = {
-        'uct_exploration_const': 1.41,
-        'max_iter': 50,
+        'uct_exploration_const': 1.3,
+        'max_iter': 90,
         # these are flexible dirichlet epsilon for noise
         # favor exploration more in the beginning
-        'dirichlet_epsilon': 0.05,
-        'initial_alpha': 0.4,
+        'dirichlet_epsilon': 0.4,
+        'initial_alpha': 0.8,
         'final_alpha': 0.05,
         'decay_steps': 100
     }
@@ -364,5 +395,8 @@ if __name__ == "__main__":
     print(f'\nparams \n{json.dumps(params, indent=4)}')
     print(f'\nmcts_maprams \n{json.dumps(mcts_params, indent=4)}\n')
 
-    azero = AlphaZero(model, optimizer, params, mcts_params)
+    scheduler = None
+    if scheduler is None:
+        raise Exception('Implement scheduler in AlphazeroParal!!!')
+    azero = AlphaZero(model, optimizer, scheduler, params, mcts_params)
     azero.learn()

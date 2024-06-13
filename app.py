@@ -46,15 +46,43 @@ if __name__ == '__main__':
     ppo_del2 = load_model_new('cloud_test2', 'scripts/rl/scripts/rl/test-working/ppo/v1/history_0003.zip')  # file)
     ppo_18_big_rollouts = load_model_new('18 big rollout', 'scripts/rl/scripts/rl/test-working/ppo/1/history_0018')
 
-    ppo_19_cloud = load_model_new('ppo 19 cloud long batch', 'scripts/rl/ppo_masked/cloud/v3/history_0019')
 
-    # file_base = 'scripts/rl/ppo_masked/cloud/v2/history_'
-    # multi_ppo = (load_model_new(f'ppo_{i}', f'{file_base}{str(i).zfill(4)}')
-    #              for i in range(1, 362))
+    cloud_random = load_model_new(f'ppo_random_cloud', f'scripts/rl/ppo_masked/cloud/paral/random_start_model')
+    file_base = 'scripts/rl/ppo_masked/cloud/paral/history_'
+    multi_ppo = (load_model_new(f'ppo_{i}', f'{file_base}{str(i).zfill(4)}')
+                 for i in range(14, 17))
 
-    file_base = 'scripts/rl/scripts/rl/test-working/ppo/1/history_'
-    multi_ppo = (load_model_new(f'ppo_{i}_bigg rollouts', f'{file_base}{str(i).zfill(4)}')
-                 for i in range(14, 19))
+
+    file_base_v3v3 = 'scripts/rl/output/v3v3/history_'
+    multi_ppo_v3v3 = lambda: (load_model_new(f'ppo_{i}', f'{file_base_v3v3}{str(i).zfill(4)}')
+                      for i in [17, 18, 19, 20, 21, 22])
+    it = multi_ppo_v3v3()
+    best_ppo_yet = next(it)
+    best_next_18 = next(it)
+
+    file_base_v3v3v1 = 'scripts/rl/output/v3v3-1/history_'
+    multi_ppo_v3v3v1 = lambda: (load_model_new(f'ppo_{i}', f'{file_base_v3v3v1}{str(i).zfill(4)}')
+                        for i in [24, 32, 33, 37])  # 32 univerzalno bolji
+
+    file_base_v4 = 'scripts/rl/output/v4/history_'
+    multi_ppo_v4 = lambda: (load_model_new(f'ppo_{i}', f'{file_base_v4}{str(i).zfill(4)}')
+                            for i in [37, 38, 39, 40, 41])
+
+    file_base = 'scripts/rl/output/paral/base/v0/history_'
+    multi_ppo_paral_v0 = (load_model_new(f'ppo_{i}', f'{file_base}{str(i).zfill(4)}')
+                          for i in [8, 9, 10])
+
+    file_base = 'scripts/rl/output/paral/base/v1/history_'
+    multi_ppo_paral_v1 = (load_model_new(f'ppo_{i}', f'{file_base}{str(i).zfill(4)}')
+                          for i in [1, 2, 3, 4, 5])
+
+    file_base = 'scripts/rl/output/paral/base/v1.1/history_'
+    multi_ppo_paral_v11 = (load_model_new(f'ppo_{i}', f'{file_base}{str(i).zfill(4)}')
+                           for i in [1, 2, 3, 4, 5])
+
+    # file_base = 'scripts/rl/scripts/rl/test-working/ppo/1/history_'
+    # multi_ppo = (load_model_new(f'ppo_{i}_bigg rollouts', f'{file_base}{str(i).zfill(4)}')
+    #              for i in range(14, 19))
 
     pmcts = PMCTS('parallel mcts',
                   time_limit=1,
@@ -83,12 +111,37 @@ if __name__ == '__main__':
     #                  # ga_vpn_5,
     #                  times=100)
 
-    for agent in [ppo_19_cloud]:
-        bench_both_sides(
-            ga_vpn_5,
-            # mcts_model,
-            agent,
-            times=10,
-            timed=True,
-            verbose=1)
+    import random
+    import numpy as np
+    import time
+
+    # Use different seeds
+    seed = int(time.time())
+    random.seed(seed)
+    np.random.seed(seed)
+
+    # for agent in [cloud_random] + list(multi_ppo):
+    # with PMCTS.create_pool_manager(pmcts, num_processes=4):
+    #     for agent in list(multi_ppo_v3v3v1):
+    #         bench_both_sides(
+    #             best_next_18.set_deterministic(False),
+    #             #best_ppo_yet.set_deterministic(False),
+    #             # ga_vpn_5,
+    #             agent.set_deterministic(False),
+    #             # ppo_del2.set_deterministic(False),#agent,
+    #             times=50,
+    #             timed=True,
+    #             verbose=1)
+    with PMCTS.create_pool_manager(pmcts, num_processes=4):
+        l1 = list(multi_ppo_v3v3v1())
+        for agent in l1:
+            bench_both_sides(
+                pmcts,
+                # best_ppo_yet.set_deterministic(False),
+                # ga_vpn_5,
+                agent,
+                # ppo_del2.set_deterministic(False),#agent,
+                times=10,
+                timed=True,
+                verbose=1)
 

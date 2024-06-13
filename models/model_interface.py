@@ -5,6 +5,11 @@ from game_logic import Othello
 class ModelInterface(ABC):
     def __init__(self, name):
         self.name = name
+        self.deterministic = True
+
+    def set_deterministic(self, det):
+        self.deterministic = det
+        return self
 
     @abstractmethod
     def predict_best_move(self, game: Othello):

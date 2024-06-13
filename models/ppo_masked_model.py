@@ -1,4 +1,5 @@
 import os
+import time
 
 from sb3_contrib.ppo_mask import MaskablePPO
 from models.model_interface import ModelInterface
@@ -44,7 +45,7 @@ class MaskedPPOWrapper(ModelInterface):
 
         action, _ = self.model.predict(flattened_obs,
                                        action_masks=self.action_masks(game),
-                                       deterministic=False)
+                                       deterministic=self.deterministic)
 
         action_game = (action // 8, action % 8)
         # print(f'action : {action}, - {action_game}')
@@ -72,7 +73,7 @@ class MaskedPPOWrapper2(ModelInterface):
 
         action, _ = self.model.predict(flattened_obs,
                                        action_masks=action_masks(game),
-                                       deterministic=False)
+                                       deterministic=self.deterministic)
 
         action_game = (action // 8, action % 8)
         # print(f'action : {action}, - {action_game}')
@@ -114,7 +115,7 @@ class MaskedPPOWrapper66(ModelInterface):
 
         action, _ = self.model.predict(flattened_obs,
                                        action_masks=self.action_masks(game),
-                                       deterministic=False)
+                                       deterministic=self.deterministic)
 
         action_game = (action // 8, action % 8)
         # print(f'action : {action}, - {action_game}')
@@ -152,7 +153,7 @@ class MaskedPPOWrapper129(ModelInterface):
 
         action, _ = self.model.predict(flattened_obs,
                                        action_masks=self.action_masks(game),
-                                       deterministic=False)
+                                       deterministic=self.deterministic)
 
         action_game = (action // 8, action % 8)
         # print(f'action : {action}, - {action_game}')
@@ -179,7 +180,7 @@ class MaskedPPOWrapper64_2_1(ModelInterface):
 
         action, _ = self.model.predict(flattened_obs,
                                        action_masks=action_masks(game),
-                                       deterministic=False)
+                                       deterministic=self.deterministic)
 
         action_game = (action // 8, action % 8)
         # print(f'action : {action}, - {action_game}')
@@ -197,7 +198,7 @@ class MaskedPPOWrapperNew(ModelInterface):
 
         action, _ = self.model.predict(encoded_state,
                                        action_masks=action_masks(game),
-                                       deterministic=False)
+                                       deterministic=self.deterministic)
 
         move = Othello.get_decoded_field(action)  # from [0, 63] -> (0-7, 0-7)
         # print(f'action : {action}, - {action_game}')
@@ -205,32 +206,37 @@ class MaskedPPOWrapperNew(ModelInterface):
 
 
 def load_model_new(name, file):
-    model = MaskablePPO.load(file, custom_objects={'lr_schedule': lambda _: 0.0005, 'clip_range': 0.2})
+
+    model = MaskablePPO.load(file, custom_objects={'lr_schedule': lambda _: 0.0005,
+                                                   'clip_range': 0.2,
+                                                   'action_space': Discrete(64),
+                                                   'seed': int(time.time())})
+
     return MaskedPPOWrapperNew(name, model)
 
 
 def load_model(name, file):
-    model = MaskablePPO.load(file)
+    model = MaskablePPO.load(file, custom_objects={'seed': int(time.time())})
     return MaskedPPOWrapper(name, model)
 
 
 def load_model_2(name, file):
-    model = MaskablePPO.load(file)
+    model = MaskablePPO.load(file, custom_objects={'seed': int(time.time())})
     return MaskedPPOWrapper2(name, model)
 
 
 def load_model_66(name, file):
-    model = MaskablePPO.load(file)
+    model = MaskablePPO.load(file, custom_objects={'seed': int(time.time())})
     return MaskedPPOWrapper66(name, model)
 
 
 def load_model_64_64_1(name, file):
-    model = MaskablePPO.load(file)
+    model = MaskablePPO.load(file, custom_objects={'seed': int(time.time())})
     return MaskedPPOWrapper129(name, model)
 
 
 def load_model_64_2_1(name, filepath):
-    model = MaskablePPO.load(filepath)
+    model = MaskablePPO.load(filepath, custom_objects={'seed': int(time.time())})
     return MaskedPPOWrapper64_2_1(name, model)
 
 
