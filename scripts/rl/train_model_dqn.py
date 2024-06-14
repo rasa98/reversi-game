@@ -7,12 +7,12 @@ import random
 from gymnasium import spaces
 
 sys.path.append('/home/rasa/PycharmProjects/reversi-game/')
-import torch
+
 from stable_baselines3.common.vec_env import VecEnv, DummyVecEnv, sync_envs_normalization
 
 import torch
 from torch import nn
-from stable_baselines3.common.torch_layers import BaseFeaturesExtractor
+
 from stable_baselines3.common.policies import ActorCriticPolicy
 from stable_baselines3.common.distributions import CategoricalDistribution
 from stable_baselines3 import DQN
@@ -23,33 +23,14 @@ from stable_baselines3.common.monitor import Monitor
 
 from sb3_contrib.common.maskable.policies import MaskableActorCriticPolicy
 from sb3_contrib.ppo_mask import MaskablePPO
-from scripts.rl.game_env import OthelloEnv, OthelloEnvNoMask, SelfPlayCallback
+from scripts.rl.old_game_env import OthelloEnv, SelfPlayCallback, ReversiCNN
 
 import stable_baselines3.common.callbacks as callbacks_module
 from sb3_contrib.common.maskable.evaluation import evaluate_policy as masked_evaluate_policy
+
 callbacks_module.evaluate_policy = masked_evaluate_policy
 
 th = torch
-
-
-class CustomPolicy(ActorCriticPolicy):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-    def _predict(self, observation, action_masks=None, deterministic=False):
-        # Call the parent class to get the logits
-        distribution = super()._predict(observation, deterministic)
-
-        # Apply the action mask
-        valid_actions = action_masks
-        logits = distribution.distribution.logits
-        logits[~valid_actions] = float('-inf')
-
-        # Create a new distribution with the masked logits
-        masked_distribution = CategoricalDistribution(self.action_space.n)
-        masked_distribution.distribution = torch.distributions.Categorical(logits=logits)
-
-        return masked_distribution
 
 
 class CustomDQNPolicy(MlpPolicy):
@@ -115,45 +96,107 @@ class CustomDQNPolicy(MlpPolicy):
 
         return actions, state  # type: ignore[return-value]
 
-    # def forward(self, obs, deterministic: bool = True) -> th.Tensor:  #  ovo se nikad ne poziva ???
-    #     print('lolsadf')
-    #     return self._predict(obs, deterministic=deterministic)
+    def _predict(self, obs, action_masks=None, deterministic=False):
+        self = self.q_net
+        q_values = self.q_net(self.extract_features(obs, self.features_extractor))
 
-    def _predict(self, observation, action_masks=None, deterministic=False):
-        q_values = self.q_net(observation)
+        # action_masks = th.tensor(action_masks, dtype=th.float32, device=self.device)
 
         # Apply action mask
-        if action_masks is not None:
-            q_values[~action_masks] = float('-inf')
 
+        q_values[~action_masks] = float('-inf')
+        # q_values = q_values + (1.0 - action_masks) * -10e6  # when action mask is not tensor
+
+        return th.argmax(q_values, dim=1)
         # if deterministic:
-        value = q_values.argmax(dim=1).reshape(-1)
+        #     return th.argmax(q_values, dim=1)
         # else:
-        #     dist = CategoricalDistribution(q_values.size(-1))
-        #     dist.proba_distribution(q_values)
-        #     value = dist.sample()
-        return value
-    # def _predict(self, observation, action_masks=None, deterministic=False):
-    #     if not isinstance(observation, torch.Tensor):
-    #         observation = torch.tensor(observation, dtype=torch.float32, device=self.device).unsqueeze(0)
-    #     if not isinstance(action_masks, torch.Tensor):
-    #         action_masks = torch.tensor(action_masks, dtype=torch.bool, device=self.device)
-    #         if action_masks.ndim == 1:
-    #             action_masks = action_masks.unsqueeze(0)
-    #     q_values = self.q_net(observation)
-    #     # Apply action mask
-    #     q_values[~action_masks] = float('-inf')
-    #
-    #     if deterministic:
-    #         value = torch.argmax(q_values, dim=-1)
-    #     else:
-    #         dist = CategoricalDistribution(q_values.size(-1))
-    #         dist.proba_distribution(q_values)
-    #         value = dist.sample()
-    #
-    #     if action_masks.ndim == 1:
-    #         return value.item(), None
-    #     return value.detach().numpy(), None
+        #     probabilities = th.softmax(q_values, dim=1)
+        #     return th.multinomial(probabilities, num_samples=1).squeeze(1)
+
+
+class CustomCnnDQNPolicy(CnnPolicy):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs,
+                         features_extractor_class=ReversiCNN,
+                         features_extractor_kwargs=dict(features_dim=512))
+
+    def predict(
+            self,
+            observation: Union[np.ndarray, Dict[str, np.ndarray]],
+            state: Optional[Tuple[np.ndarray, ...]] = None,
+            episode_start: Optional[np.ndarray] = None,
+            action_masks=None,
+            deterministic: bool = False,
+    ) -> Tuple[np.ndarray, Optional[Tuple[np.ndarray, ...]]]:
+        """
+        Get the policy action from an observation (and optional hidden state).
+        Includes sugar-coating to handle different observations (e.g. normalizing images).
+
+        :param observation: the input observation
+        :param state: The last hidden states (can be None, used in recurrent policies)
+        :param episode_start: The last masks (can be None, used in recurrent policies)
+            this correspond to beginning of episodes,
+            where the hidden states of the RNN must be reset.
+        :param deterministic: Whether or not to return deterministic actions.
+        :return: the model's action and the next hidden state
+            (used in recurrent policies)
+        """
+        # Switch to eval mode (this affects batch norm / dropout)
+        self.set_training_mode(False)
+
+        # Check for common mistake that the user does not mix Gym/VecEnv API
+        # Tuple obs are not supported by SB3, so we can safely do that check
+        if isinstance(observation, tuple) and len(observation) == 2 and isinstance(observation[1], dict):
+            raise ValueError(
+                "You have passed a tuple to the predict() function instead of a Numpy array or a Dict. "
+                "You are probably mixing Gym API with SB3 VecEnv API: `obs, info = env.reset()` (Gym) "
+                "vs `obs = vec_env.reset()` (SB3 VecEnv). "
+                "See related issue https://github.com/DLR-RM/stable-baselines3/issues/1694 "
+                "and documentation for more information: https://stable-baselines3.readthedocs.io/en/master/guide/vec_envs.html#vecenv-api-vs-gym-api"
+            )
+
+        obs_tensor, vectorized_env = self.obs_to_tensor(observation)
+
+        with torch.no_grad():
+            actions = self._predict(obs_tensor, action_masks=action_masks, deterministic=deterministic)
+        # Convert to numpy, and reshape to the original action shape
+        actions = actions.cpu().numpy().reshape((-1, *self.action_space.shape))  # type: ignore[misc, assignment]
+
+        if isinstance(self.action_space, spaces.Box):
+            if self.squash_output:
+                # Rescale to proper domain when using squashing
+                actions = self.unscale_action(actions)  # type: ignore[assignment, arg-type]
+            else:
+                # Actions could be on arbitrary scale, so clip the actions to avoid
+                # out of bound error (e.g. if sampling from a Gaussian distribution)
+                actions = np.clip(actions, self.action_space.low,
+                                  self.action_space.high)  # type: ignore[assignment, arg-type]
+
+        # Remove batch dimension if needed
+        if not vectorized_env:
+            assert isinstance(actions, np.ndarray)
+            actions = actions.squeeze(axis=0)
+
+        return actions, state  # type: ignore[return-value]
+
+    def _predict(self, obs, action_masks=None, deterministic=False):
+        self = self.q_net
+        q_values = self.q_net(self.extract_features(obs, self.features_extractor))
+
+        # action_masks = th.tensor(action_masks, dtype=th.float32, device=self.device)
+
+        # Apply action mask
+
+        q_values[~action_masks] = float('-inf')
+        # q_values = q_values + (1.0 - action_masks) * -10e6  # when action mask is not tensor
+
+        return th.argmax(q_values, dim=1)
+        # if deterministic:
+        #     return th.argmax(q_values, dim=1)
+        # else:
+        #     probabilities = th.softmax(q_values, dim=1)
+        #     return th.multinomial(probabilities, num_samples=1).squeeze(1)
 
 
 class MaskableDQN(DQN):
@@ -181,9 +224,9 @@ class MaskableDQN(DQN):
             else:
                 raise Exception('Need to wrap it in VecENV !!!!')
 
-        action_masks = torch.tensor(action_masks, dtype=torch.bool, device=self.device)
-        if action_masks.ndim == 1:
-            action_masks = action_masks.unsqueeze(0)
+        action_masks_tensor = torch.tensor(action_masks, dtype=torch.bool, device=self.device)
+        if action_masks_tensor.ndim == 1:
+            action_masks_tensor = action_masks_tensor.unsqueeze(0)
 
         if not deterministic and np.random.rand() < self.exploration_rate:
             if self.policy.is_vectorized_observation(observation):
@@ -193,21 +236,24 @@ class MaskableDQN(DQN):
                     n_batch = observation.shape[0]
                 res = []
                 for i in range(n_batch):
-                    env = self.env.envs[i].unwrapped
-                    random_move = random.choice(list(env.game.valid_moves()))
-                    encoded_random_move = env.game.get_encoded_field(random_move)
-                    res.append(encoded_random_move)
+                    # env = self.env.envs[i].unwrapped
+                    valid_moves_batch_list = [np.where(mask)[0].tolist() for mask in action_masks]
+                    random_move_list = [random.choice(valid_moves) for valid_moves in valid_moves_batch_list]
+                    # encoded_random_move = env.game.get_encoded_field(random_move)
+                    res += random_move_list
                 action = np.array(res)
             else:
                 res = []
-                for i in range(self.env.num_envs):
-                    env = self.env.envs[i].unwrapped
-                    random_move = random.choice(list(env.game.valid_moves()))
-                    encoded_random_move = env.game.get_encoded_field(random_move)
-                    res.append(encoded_random_move)
+                # env = self.env
+                valid_moves = np.where(action_masks)[0].tolist()
+                random_move = random.choice(valid_moves)
+                # encoded_random_move = env.game.get_encoded_field(random_move)
+                res.append(random_move)
                 action = np.array(res)
         else:
-            action, state = self.policy.predict(observation, action_masks=action_masks, deterministic=deterministic)
+            action, state = self.policy.predict(observation,
+                                                action_masks=action_masks_tensor,
+                                                deterministic=deterministic)
         return action, state
 
     def _sample_action(
@@ -266,100 +312,97 @@ class MaskableDQN(DQN):
         return action, buffer_action
 
 
-def get_env(env_factory):
-    monitor = Monitor(env=env_factory())
+def get_env(env_factory, use_cnn=False):
+    monitor = Monitor(env=env_factory(use_cnn))
     return DummyVecEnv([lambda: monitor])
 
 
-# Settings
-SEED = 19  # NOT USED
-NUM_TIMESTEPS = int(30_000_000)
-EVAL_FREQ = int(10_000)
-EVAL_EPISODES = int(100)
-BEST_THRESHOLD = 0.15  # must achieve a mean score above this to replace prev best self
-RENDER_MODE = False  # set this to false if you plan on running for full 1000 trials.
-# LOGDIR = 'scripts/rl/test-working/ppo/v1/'  # "ppo_masked/test/"
-LOGDIR = 'scripts/rl/test-working/dqn/2'  # "ppo_masked/test/"
-NON_MASKABLE_MODEL = False
+if __name__ == '__main__':
 
-print(f'CUDA available: {torch.cuda.is_available()}')
-device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+    # Settings
+    SEED = 11  # NOT USED
+    NUM_TIMESTEPS = int(30_000_000)
+    EVAL_FREQ = int(160_00)
+    EVAL_EPISODES = int(50)
+    BEST_THRESHOLD = 0.25  # must achieve a mean score above this to replace prev best self
+    RENDER_MODE = False  # set this to false if you plan on running for full 1000 trials.
+    # LOGDIR = 'scripts/rl/test-working/ppo/v1/'  # "ppo_masked/test/"
+    LOGDIR = 'scripts/rl/test-working/dqn/5cnn/'  # "ppo_masked/test/"
+    CNN_POLICY = True
+    CONTINUE_FROM_MODEL = None  # 'scripts/rl/test-working/dqn/4/history_0004'
 
-if not NON_MASKABLE_MODEL:
-    import stable_baselines3.common.callbacks as callbacks_module
-    from sb3_contrib.common.maskable.evaluation import evaluate_policy as masked_evaluate_policy
+    policy_kwargs = dict(
+        net_arch=[64] * 4
+    )
 
-    callbacks_module.evaluate_policy = masked_evaluate_policy
+    params = {
+        'learning_rate': 1e-4,
+        'buffer_size': 160_00,
+        'learning_starts': 1,  # train_freq + learning_starts = first train
+        'batch_size': 128,
+        # tau=0.5,
+        # gamma=0.9,
+        'train_freq': (50, "episode"),
+        # gradient_steps=1,
+        # max_grad_norm=20,  # 10
+        # target_update_interval=10000,
+        'exploration_fraction': 0.7,
+        'exploration_initial_eps': 0.9,
+        'exploration_final_eps': 0.3,
+        'verbose': 1,
+        'seed': SEED
+    }
+
+    print(f'CUDA available: {torch.cuda.is_available()}')
+    device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+
     env = OthelloEnv
-else:
-    env = OthelloEnvNoMask
+    if CNN_POLICY:
+        env = get_env(env, use_cnn=True)
+        policy_class = CustomCnnDQNPolicy
+    else:
+        env = get_env(env)
+        policy_class = CustomDQNPolicy
 
-env = get_env(env)
-# env = lambda: Monitor(env=env())
-# env = DummyVecEnv([lambda: env()])
+    # --------------------------------------------
 
+    #
+    if CONTINUE_FROM_MODEL is None:
+        params['policy_kwargs'] = policy_kwargs
+        model = MaskableDQN(policy=policy_class,
+                            env=env,
+                            device=device,
+                            **params)
+        starting_model_filepath = LOGDIR + 'random_start_model'
+        model.save(starting_model_filepath)
+    else:
+        starting_model_filepath = CONTINUE_FROM_MODEL
+        params['exploration_rate'] = 1.0  # to reset exploration rate !!!
+        model = MaskableDQN.load(starting_model_filepath,
+                                 env=env,
+                                 device=device,
+                                 custom_objects=params)
 
-# --------------------------------------------
-policy_kwargs = dict(
-    net_arch=[32]*2
-)
-#
-model = MaskableDQN(policy=CustomDQNPolicy,
-                    env=env,
-                    device=device,
-                    # learning_rate=1e-4,
-                    buffer_size=50*30,  # 1e5
-                    learning_starts=1000,
-                    batch_size=64,
-                    # tau=0.5,
-                    gamma=0.9,
-                    train_freq=(50, "episode"),
-                    # gradient_steps=1,
-                    # max_grad_norm=20,  # 10
-                    # target_update_interval=10000,
-                    # exploration_fraction=0.1,
-                    # exploration_initial_eps=1.0,
-                    # exploration_final_eps=0.05,
-                    verbose=1,
-                    seed=SEED,
-                    policy_kwargs=policy_kwargs)
-# --------------------------------------------------
-import os
+    start_model_copy = model.load(starting_model_filepath,
+                                  device=device,
+                                  custom_objects=params)
+    env.envs[0].unwrapped.change_to_latest_agent(start_model_copy)
 
-print(os.getcwd())
-# starting_model_filepath = LOGDIR + 'random_start_model'
-# starting_model_filepath = 'ppo_masked/cloud/v2/history_0299'
-starting_model_filepath = 'scripts/rl/test-working/dqn/history_0004'
+    callback_params = {
+        'eval_env': env,
+        'LOGDIR': LOGDIR,
+        'BEST_THRESHOLD': BEST_THRESHOLD
+    }
 
-# model = MaskablePPO.load(starting_model_filepath, env=env, device=device,
-#                          learning_rate=0.0001,
-#                          n_steps=2048*2,
-#                          clip_range=0.15,
-#                          batch_size=128,
-#                          ent_coef=0.01,
-#                          gamma=0.99,
-#
-#                          )
-model.save(starting_model_filepath)
+    eval_callback = SelfPlayCallback(
+        callback_params,
+        best_model_save_path=LOGDIR,
+        log_path=LOGDIR,
+        eval_freq=EVAL_FREQ,
+        n_eval_episodes=EVAL_EPISODES,
+        deterministic=True
+    )
 
-start_model_copy = model.load(starting_model_filepath)
-env.envs[0].unwrapped.change_to_latest_agent(start_model_copy)
-
-params = {
-    'eval_env': env,
-    'LOGDIR': LOGDIR,
-    'BEST_THRESHOLD': BEST_THRESHOLD
-}
-
-eval_callback = SelfPlayCallback(
-    params,
-    best_model_save_path=LOGDIR,
-    log_path=LOGDIR,
-    eval_freq=EVAL_FREQ,
-    n_eval_episodes=EVAL_EPISODES,
-    deterministic=False
-)
-
-model.learn(total_timesteps=NUM_TIMESTEPS,
-            log_interval=100,
-            callback=eval_callback)
+    model.learn(total_timesteps=NUM_TIMESTEPS,
+                log_interval=260,
+                callback=eval_callback)

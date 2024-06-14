@@ -4,13 +4,17 @@
 import gymnasium as gym
 import stable_baselines3.common.callbacks as callbacks_module
 from sb3_contrib.common.maskable.evaluation import evaluate_policy as masked_evaluate_policy
+from stable_baselines3.common.torch_layers import BaseFeaturesExtractor
+from gymnasium import spaces
+import torch as th
+from torch import nn
 
 # Modify the namespace of EvalCallback directly
 callbacks_module.evaluate_policy = masked_evaluate_policy
 from stable_baselines3.common.callbacks import EvalCallback
 
 from shutil import copyfile  # keep track of generations
-from gymnasium.spaces import Discrete, Box
+from gymnasium.spaces import Discrete, Box, MultiBinary
 
 from game_logic import Othello
 import numpy as np
@@ -19,7 +23,7 @@ from itertools import cycle
 
 
 class OthelloEnv(gym.Env):
-    def __init__(self):
+    def __init__(self, use_cnn=False):
         self.game = Othello()
         self.agent_turn = 1
         shape = self.game.board.shape
@@ -28,7 +32,11 @@ class OthelloEnv(gym.Env):
         #                                 'board' : Box(0, 2, shape=shape, dtype=int),
         #                                 'player': Discrete(2, start=1)
         #                               })
-        self.observation_space = Box(low=0, high=1, shape=(64 * 3,), dtype=np.float32)
+        self.use_cnn = use_cnn
+        if use_cnn:
+            self.observation_space = Box(low=0, high=255, shape=(3, 8, 8), dtype=np.uint8)
+        else:
+            self.observation_space = Box(low=0, high=1, shape=(64 * 3,), dtype=np.float32)
         self.other_agent = None
         self.reset_othello_gen = self.reset_othello()
         self.episodes = 0
@@ -46,7 +54,10 @@ class OthelloEnv(gym.Env):
         self.other_agent = agent
 
     def get_obs(self):
-        encoded_board = self.game.get_encoded_state().reshape(-1)
+        if self.use_cnn:
+            encoded_board = self.game.get_encoded_state_as_img()
+        else:
+            encoded_board = self.game.get_encoded_state().reshape(-1)
         return encoded_board
 
     def check_game_ended(self):
@@ -73,9 +84,12 @@ class OthelloEnv(gym.Env):
 
     def other_agent_play_move(self):
         obs = self.get_obs()
+
         action, _ = self.other_agent.predict(obs,
                                              action_masks=self.action_masks(),
                                              deterministic=False)
+        if isinstance(action, np.ndarray):
+            action = action.item()
         game_action = Othello.get_decoded_field(action)
         self.game.play_move(game_action)
 
@@ -132,7 +146,6 @@ class OthelloEnv(gym.Env):
         return mask.flatten()
 
 
-
 class SelfPlayCallback(EvalCallback):
     # hacked it to only save new version offrom gymnasium.wrappers import FlattenObservation best model if beats prev self by BEST_THRESHOLD score
     # after saving model, resets the best score to be BEST_THRESHOLD
@@ -156,6 +169,29 @@ class SelfPlayCallback(EvalCallback):
             backup_file = os.path.join(self.log_dir, "history_" + str(self.generation).zfill(4) + ".zip")
             copyfile(source_file, backup_file)
             self.best_mean_reward = self.params['BEST_THRESHOLD']
-            agent = self.model.load(source_file)
+            agent = self.model.load(source_file, device=self.model.device)
+            # agent.env = self.eval_env.envs[0]  # important for action mask of inner agent
             self.eval_env.envs[0].unwrapped.change_to_latest_agent(agent)
         return result
+
+
+class ReversiCNN(BaseFeaturesExtractor):
+    def __init__(self, observation_space: spaces.Box, features_dim: int = 128):
+        super().__init__(observation_space, features_dim)
+
+        n_input_channels = observation_space.shape[0]
+
+        self.cnn = nn.Sequential(
+            nn.Conv2d(n_input_channels, 32, kernel_size=7, stride=1, padding=3),  # 8x8 -> 8x8
+            nn.ReLU(),
+            nn.Conv2d(32, 64, kernel_size=5, stride=1, padding=2),  # 8x8 -> 8x8
+            nn.ReLU(),
+            nn.Conv2d(64, 128, kernel_size=3, stride=1, padding=1),  # 8x8 -> 8x8
+            nn.ReLU(),
+            nn.Flatten(),
+            nn.Linear(128 * 8 * 8, features_dim),
+            nn.ReLU()
+        )
+
+    def forward(self, observations: th.Tensor) -> th.Tensor:
+        return self.cnn(observations)

@@ -43,7 +43,7 @@ if __name__ == '__main__':
     ppo_531 = load_model_new('cloud_531', 'scripts/rl/ppo_masked/cloud/v2/history_0531.zip')
     ppo_del = load_model_new('cloud_test', 'scripts/rl/scripts/rl/test-working/ppo/v1/history_0004.zip')  # file)
     ppo_del2 = load_model_new('cloud_test2', 'scripts/rl/scripts/rl/test-working/ppo/v1/history_0003.zip')  # file)
-    ppo_18_big_rollouts = load_model_new('18 big rollout', 'scripts/rl/scripts/rl/test-working/ppo/1/history_0018')
+    # ppo_18_big_rollouts = load_model_new('18 big rollout', 'scripts/rl/scripts/rl/test-working/ppo/1/history_0018')
 
     cloud_random = load_model_new(f'ppo_random_cloud', f'scripts/rl/ppo_masked/cloud/paral/random_start_model')
     file_base = 'scripts/rl/ppo_masked/cloud/paral/history_'
@@ -132,21 +132,33 @@ if __name__ == '__main__':
     # with PMCTS.create_pool_manager(pmcts, num_processes=4):
 
     from scripts.rl.train_model_ars import MaskableArs
+    from scripts.rl.train_model_dqn import MaskableDQN
 
-    file_base = 'scripts/rl/scripts/rl/test-working/ars/del2/history_'
+    file_base_ars = 'scripts/rl/scripts/rl/test-working/ars/del2/history_'
     multi_ars = lambda: (load_model_new(f'ars_{i}',
-                                        f'{file_base}{str(i).zfill(4)}',
+                                        f'{file_base_ars}{str(i).zfill(4)}',
                                         MaskableArs)
-                         for i in range(14, 34))  #  num 15 je najbolji
+                         for i in range(14, 34))  # num 15 je najbolji
 
-    l1 = list(multi_ppo_v3v3v1())
-    for agent in [best_next_18]:
+    file_base_dqn = 'scripts/rl/scripts/rl/test-working/dqn/4v1/history_'
+    multi_dqn = lambda: (load_model_new(f'dqn_{i}',
+                                        f'{file_base_dqn}{str(i).zfill(4)}',
+                                        MaskableDQN)
+                         for i in range(1, 75))  # num 15 je najbolji
+
+    file_base_ppo_cnn = 'scripts/rl/scripts/rl/test-working/ppo/1/history_'
+    multi_ppo_cnn_paral_v0 = lambda: (load_model_new(f'ppo_{i}',
+                                                     f'{file_base}{str(i).zfill(4)}')
+                                      for i in [1, 2, 3, 4])
+
+    # l1 = list(multi_dqn())
+    for agent in multi_ppo_cnn_paral_v0():
         bench_both_sides(
             ga_vpn_5,
             # best_ppo_yet.set_deterministic(False),
             # ga_vpn_5,
             agent.set_deterministic(False),
             # ppo_del2.set_deterministic(False),#agent,
-            times=10,
+            times=100,
             timed=True,
             verbose=1)

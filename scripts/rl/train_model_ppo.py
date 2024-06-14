@@ -22,92 +22,109 @@ from stable_baselines3.dqn.policies import MlpPolicy, CnnPolicy, MultiInputPolic
 # from sb3_contrib.common.maskable.evaluation import evaluate_policy
 from stable_baselines3.common.monitor import Monitor
 
-from sb3_contrib.common.maskable.policies import MaskableActorCriticPolicy
+from sb3_contrib.common.maskable.policies import MaskableActorCriticPolicy, MaskableActorCriticCnnPolicy
 from sb3_contrib.ppo_mask import MaskablePPO
-from scripts.rl.ppo_masked import OthelloEnv, SelfPlayCallback
+from scripts.rl.old_game_env import OthelloEnv, SelfPlayCallback, ReversiCNN
 import stable_baselines3.common.callbacks as callbacks_module
 from sb3_contrib.common.maskable.evaluation import evaluate_policy as masked_evaluate_policy
-
 
 callbacks_module.evaluate_policy = masked_evaluate_policy
 
 th = torch
 
 
-
-# Settings
-SEED = 19  # NOT USED
-NUM_TIMESTEPS = int(30_000_000)
-EVAL_FREQ = int(20_000)
-EVAL_EPISODES = int(200)
-BEST_THRESHOLD = 0.15  # must achieve a mean score above this to replace prev best self
-RENDER_MODE = False  # set this to false if you plan on running for full 1000 trials.
-# LOGDIR = 'scripts/rl/test-working/ppo/v1/'  # "ppo_masked/test/"
-LOGDIR = 'scripts/rl/test-working/ppo/1/'  # "ppo_masked/test/"
-
-print(f'CUDA available: {torch.cuda.is_available()}')
-device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
-
-env = DummyVecEnv([lambda: Monitor(env=OthelloEnv())])
-
-# --------------------------------------------
-policy_kwargs = dict(
-    net_arch=[32] * 2
-)
-#
+class CustomCnnPPOPolicy(MaskableActorCriticCnnPolicy):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs,
+                         features_extractor_class=ReversiCNN,
+                         features_extractor_kwargs=dict(features_dim=512))
 
 
-# starting_model_filepath = LOGDIR + 'random_start_model'
-starting_model_filepath = 'ppo_masked/cloud/v2/history_0299'
-# starting_model_filepath = "scripts/rl/output/v3/" + 'history_0020'
+def get_env(env_factory, use_cnn=False):
+    monitor = Monitor(env=env_factory(use_cnn))
+    return DummyVecEnv([lambda: monitor])
 
 
-# model = MaskablePPO(MaskableActorCriticPolicy,
-#                     env=env,
-#                     device=device,
-#                     learning_rate=0.0001,
-#                     n_steps=2048 * 10,
-#                     n_epochs=10,
-#                     clip_range=0.15,
-#                     batch_size=128,
-#                     ent_coef=0.01,
-#                     gamma=0.99,
-#                     verbose=100,
-#                     seed=SEED
-#                     )
-params = {'learning_rate': 0.00007,
-          'n_steps': 2048 * 10,
-          'n_epochs': 10,
-          'clip_range': 0.3,
-          'batch_size': 128,
-          'ent_coef': 0.05,
-          'gamma':0.96}
+if __name__ == '__main__':
+    # Settings
+    SEED = 19  # NOT USED
+    NUM_TIMESTEPS = int(30_000_000)
+    EVAL_FREQ = int(20_000)
+    EVAL_EPISODES = int(200)
+    BEST_THRESHOLD = 0.15  # must achieve a mean score above this to replace prev best self
+    RENDER_MODE = False  # set this to false if you plan on running for full 1000 trials.
+    # LOGDIR = 'scripts/rl/test-working/ppo/v1/'  # "ppo_masked/test/"
+    LOGDIR = 'scripts/rl/test-working/ppo/2cnn/'  # "ppo_masked/test/"
+    CNN_POLICY = True
+    CONTINUE_FROM_MODEL = None
 
-model = MaskablePPO.load(starting_model_filepath, env=env, custom_objects=params)
+    params = {
+        'learning_rate': 0.0001,
+        'n_steps': 2048 * 10,
+        'n_epochs': 10,
+        'clip_range': 0.15,
+        'batch_size': 128,
+        'ent_coef': 0.01,
+        'gamma': 0.99,
+        'verbose': 100,
+        'seed': SEED,
+    }
 
-print(f'device {model.device}')
+    print(f'CUDA available: {torch.cuda.is_available()}')
+    device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
-# model.save(starting_model_filepath)
-start_model_copy = model.load(starting_model_filepath)
+    # --------------------------------------------
+    policy_kwargs = dict(
+        net_arch=[32] * 2
+    )
 
+    env = OthelloEnv
+    if CNN_POLICY:
+        env = get_env(env, use_cnn=True)
+        policy_class = CustomCnnPPOPolicy
+    else:
+        env = get_env(env)
+        policy_class = MaskableActorCriticPolicy
 
-env.envs[0].unwrapped.change_to_latest_agent(start_model_copy)
+    # starting_model_filepath = LOGDIR + 'random_start_model'
+    # starting_model_filepath = 'ppo_masked/cloud/v2/history_0299'
+    # starting_model_filepath = "scripts/rl/output/v3/" + 'history_0020'
 
-params = {
-    'eval_env': env,
-    'LOGDIR': LOGDIR,
-    'BEST_THRESHOLD': BEST_THRESHOLD
-}
+    if CONTINUE_FROM_MODEL is None:
+        params['policy_kwargs'] = policy_kwargs
+        model = MaskablePPO(policy=policy_class,
+                            env=env,
+                            device=device,
+                            **params)
+        starting_model_filepath = LOGDIR + 'random_start_model'
+        model.save(starting_model_filepath)
+    else:
+        starting_model_filepath = CONTINUE_FROM_MODEL
+        # params['exploration_rate'] = 1.0  # to reset exploration rate !!!
+        model = MaskableDQN.load(starting_model_filepath,
+                                 env=env,
+                                 device=device,
+                                 custom_objects=params)
 
-eval_callback = SelfPlayCallback(
-    params,
-    best_model_save_path=LOGDIR,
-    log_path=LOGDIR,
-    eval_freq=EVAL_FREQ,
-    n_eval_episodes=EVAL_EPISODES,
-    deterministic=False
-)
+    start_model_copy = model.load(starting_model_filepath,
+                                  device=device)
+    env.envs[0].unwrapped.change_to_latest_agent(start_model_copy)
 
-model.learn(total_timesteps=NUM_TIMESTEPS,
-            log_interval=100,
-            callback=eval_callback)
+    callback_params = {
+        'eval_env': env,
+        'LOGDIR': LOGDIR,
+        'BEST_THRESHOLD': BEST_THRESHOLD
+    }
+
+    eval_callback = SelfPlayCallback(
+        callback_params,
+        best_model_save_path=LOGDIR,
+        log_path=LOGDIR,
+        eval_freq=EVAL_FREQ,
+        n_eval_episodes=EVAL_EPISODES,
+        deterministic=False
+    )
+
+    model.learn(total_timesteps=NUM_TIMESTEPS,
+                log_interval=100,
+                callback=eval_callback)

@@ -23,7 +23,7 @@ from sb3_contrib.trpo.trpo import TRPO
 
 from stable_baselines3.common.distributions import CategoricalDistribution
 from stable_baselines3.common.monitor import Monitor
-from scripts.rl.old_game_env import OthelloEnv, SelfPlayCallback
+from scripts.rl.old_game_env import OthelloEnv, SelfPlayCallback, ReversiCNN
 
 import stable_baselines3.common.callbacks as callbacks_module
 from sb3_contrib.common.maskable.evaluation import evaluate_policy as masked_evaluate_policy
@@ -74,31 +74,6 @@ class CustomMlpPolicy(ActorCriticPolicy):
     def _predict(self, observation: th.Tensor, action_masks=None, deterministic: bool = False) -> th.Tensor:
         actions, values, log_prob = self.forward(observation, action_masks, deterministic)
         return actions
-        # if deterministic:
-        #     return th.argmax(actions, dim=1)
-        # else:
-        #     probabilities = th.softmax(actions, dim=1)
-        #     return th.multinomial(probabilities, num_samples=1).squeeze(1)
-
-
-
-    # def _predict(self, observation: PyTorchObs, deterministic: bool = False) -> th.Tensor:
-    #     return self.get_distribution(observation).get_actions(deterministic=deterministic)
-
-    # def _predict(self, observation, action_masks=None, deterministic=False):
-    #     # Call the parent class to get the logits
-    #     distribution = super()._predict(observation, deterministic)
-    #
-    #     # Apply the action mask
-    #     valid_actions = action_masks
-    #     logits = distribution.distribution.logits
-    #     logits[~valid_actions] = float('-inf')
-    #
-    #     # Create a new distribution with the masked logits
-    #     masked_distribution = CategoricalDistribution(self.action_space.n)
-    #     masked_distribution.distribution = torch.distributions.Categorical(logits=logits)
-    #
-    #     return masked_distribution
 
     def predict(
             self,
@@ -160,91 +135,11 @@ class CustomMlpPolicy(ActorCriticPolicy):
         return actions, state  # type: ignore[return-value]
 
 
-# class CustomLinearPolicy(LinearPolicy):
-#     def __init__(self, *args, **kwargs):
-#         super().__init__(*args, **kwargs)
-#
-#     def forward(self, obs) -> th.Tensor:
-#         features = self.extract_features(obs, self.features_extractor)
-#         if isinstance(self.action_space, spaces.Box):
-#             raise Exception('Action masking only for discrete action space !!!')
-#         # return self.action_net(features)
-#         elif isinstance(self.action_space, spaces.Discrete):
-#             return self.action_net(features)
-#             # logits = self.action_net(features)
-#             # return th.argmax(logits, dim=1)
-#         else:
-#             raise NotImplementedError()
-#
-#     def _predict(self, observation: th.Tensor, action_masks=None, deterministic: bool = False) -> th.Tensor:
-#         if action_masks is None:
-#             raise Exception("Needs to have actio masks!!")
-#         logits = self.forward(observation)
-#         masked_logits = logits + (1.0 - action_masks) * -10e6
-#         if deterministic:
-#             return th.argmax(masked_logits, dim=1)
-#         else:
-#             probabilities = th.softmax(masked_logits, dim=1)
-#             return th.multinomial(probabilities, num_samples=1).squeeze(1)
-#
-#     def predict(
-#             self,
-#             observation: Union[np.ndarray, Dict[str, np.ndarray]],
-#             state: Optional[Tuple[np.ndarray, ...]] = None,
-#             episode_start: Optional[np.ndarray] = None,
-#             action_masks=None,
-#             deterministic: bool = False,
-#     ) -> Tuple[np.ndarray, Optional[Tuple[np.ndarray, ...]]]:
-#         """
-#         Get the policy action from an observation (and optional hidden state).
-#         Includes sugar-coating to handle different observations (e.g. normalizing images).
-#
-#         :param observation: the input observation
-#         :param state: The last hidden states (can be None, used in recurrent policies)
-#         :param episode_start: The last masks (can be None, used in recurrent policies)
-#             this correspond to beginning of episodes,
-#             where the hidden states of the RNN must be reset.
-#         :param deterministic: Whether or not to return deterministic actions.
-#         :return: the model's action and the next hidden state
-#             (used in recurrent policies)
-#         """
-#         # Switch to eval mode (this affects batch norm / dropout)
-#         self.set_training_mode(False)
-#
-#         # Check for common mistake that the user does not mix Gym/VecEnv API
-#         # Tuple obs are not supported by SB3, so we can safely do that check
-#         if isinstance(observation, tuple) and len(observation) == 2 and isinstance(observation[1], dict):
-#             raise ValueError(
-#                 "You have passed a tuple to the predict() function instead of a Numpy array or a Dict. "
-#                 "You are probably mixing Gym API with SB3 VecEnv API: `obs, info = env.reset()` (Gym) "
-#                 "vs `obs = vec_env.reset()` (SB3 VecEnv). "
-#                 "See related issue https://github.com/DLR-RM/stable-baselines3/issues/1694 "
-#                 "and documentation for more information: https://stable-baselines3.readthedocs.io/en/master/guide/vec_envs.html#vecenv-api-vs-gym-api"
-#             )
-#
-#         obs_tensor, vectorized_env = self.obs_to_tensor(observation)
-#
-#         with th.no_grad():
-#             actions = self._predict(obs_tensor, action_masks=action_masks, deterministic=deterministic)
-#         # Convert to numpy, and reshape to the original action shape
-#         actions = actions.cpu().numpy().reshape((-1, *self.action_space.shape))  # type: ignore[misc, assignment]
-#
-#         if isinstance(self.action_space, spaces.Box):
-#             if self.squash_output:
-#                 # Rescale to proper domain when using squashing
-#                 actions = self.unscale_action(actions)  # type: ignore[assignment, arg-type]
-#             else:
-#                 # Actions could be on arbitrary scale, so clip the actions to avoid
-#                 # out of bound error (e.g. if sampling from a Gaussian distribution)
-#                 actions = np.clip(actions, self.action_space.low,
-#                                   self.action_space.high)  # type: ignore[assignment, arg-type]
-#
-#         # Remove batch dimension if needed
-#         if not vectorized_env:
-#             assert isinstance(actions, np.ndarray)
-#             actions = actions.squeeze(axis=0)
-#
-#         return actions, state  # type: ignore[return-value]
+class CustomCnnTRPOPolicy(CustomMlpPolicy):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs,
+                         features_extractor_class=ReversiCNN,
+                         features_extractor_kwargs=dict(features_dim=512))
 
 
 class MaskableTrpo(TRPO):
@@ -298,7 +193,7 @@ class MaskableTrpo(TRPO):
             with th.no_grad():
                 # Convert to pytorch tensor or to TensorDict
                 obs_tensor = obs_as_tensor(self._last_obs, self.device)
-                action_mask = self.env.env_method('action_masks')
+                action_mask = self.env.env_method('action_masks')[0]
                 actions, values, log_probs = self.policy(obs_tensor, action_masks=action_mask)
             actions = actions.cpu().numpy()
 
@@ -368,14 +263,14 @@ class MaskableTrpo(TRPO):
         return True
 
 
-def get_env(env_factory):
-    monitor = Monitor(env=env_factory())
+def get_env(env_factory, use_cnn=False):
+    monitor = Monitor(env=env_factory(use_cnn))
     return DummyVecEnv([lambda: monitor])
 
 
 if __name__ == '__main__':
     # Settings
-    # SEED = 19  # NOT USED
+    SEED = 13  # NOT USED
     NUM_TIMESTEPS = int(300_000)
     EVAL_FREQ = int(10_000)
     EVAL_EPISODES = int(100)
@@ -383,44 +278,51 @@ if __name__ == '__main__':
     RENDER_MODE = False  # set this to false if you plan on running for full 1000 trials.
     # LOGDIR = 'scripts/rl/test-working/ppo/v1/'  # "ppo_masked/test/"
     LOGDIR = 'scripts/rl/test-working/trpo/test/'  # "ppo_masked/test/"
+    CNN_POLICY = True
+    CONTINUE_FROM_MODEL = None
+
+    policy_kwargs = dict(
+        net_arch=[64] * 8
+    )
+
+    params = {
+        'learning_rate': 0.0001,
+        'n_steps': 2048 * 10,
+        'batch_size': 128,
+        'gamma': 0.99,
+        'verbose': 100,
+        'seed': SEED,
+    }
 
     print(f'CUDA available: {torch.cuda.is_available()}')
     device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
     env = OthelloEnv
-    env = get_env(env)
+    if CNN_POLICY:
+        env = get_env(env, use_cnn=True)
+        policy_class = CustomCnnTRPOPolicy
+    else:
+        env = get_env(env)
+        policy_class = CustomMlpPolicy
 
-    # --------------------------------------------
-    # policy_kwargs = dict(
-    #     net_arch=[64] * 8
-    # )
-    #
-    model = MaskableTrpo(policy=CustomMlpPolicy,
-                         env=env,
-                         device=device,
-                         learning_rate=1e-4,
-                         verbose=2)
-    # policy_kwargs=policy_kwargs)
-    # --------------------------------------------------
-    import os
+    if CONTINUE_FROM_MODEL is None:
+        params['policy_kwargs'] = policy_kwargs
+        model = MaskableTrpo(policy=policy_class,
+                             env=env,
+                             device=device,
+                             **params)
+        starting_model_filepath = LOGDIR + 'random_start_model'
+        model.save(starting_model_filepath)
+    else:
+        starting_model_filepath = CONTINUE_FROM_MODEL
+        # params['exploration_rate'] = 1.0  # to reset exploration rate !!!
+        model = MaskableTrpo.load(starting_model_filepath,
+                                  env=env,
+                                  device=device,
+                                  custom_objects=params)
 
-    print(os.getcwd())
-    starting_model_filepath = LOGDIR + 'random_start_model'
-    # starting_model_filepath = 'ppo_masked/cloud/v2/history_0299'
-    # starting_model_filepath = 'scripts/rl/test-working/ars/1/history_0004'
-
-    # model = MaskablePPO.load(starting_model_filepath, env=env, device=device,
-    #                          learning_rate=0.0001,
-    #                          n_steps=2048*2,
-    #                          clip_range=0.15,
-    #                          batch_size=128,
-    #                          ent_coef=0.01,
-    #                          gamma=0.99,
-    #
-    #                          )
-    model.save(starting_model_filepath)
-
-    start_model_copy = model.load(starting_model_filepath)
+    start_model_copy = model.load(starting_model_filepath,
+                                  device=device)
     env.envs[0].unwrapped.change_to_latest_agent(start_model_copy)
 
     params = {

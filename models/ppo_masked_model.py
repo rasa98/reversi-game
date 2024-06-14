@@ -187,14 +187,19 @@ class MaskedPPOWrapper64_2_1(ModelInterface):
 
 
 class MaskedPPOWrapperNew(ModelInterface):
-    def __init__(self, name, model):
+    def __init__(self, name, model, use_cnn=False):
         super().__init__(name)
+        self.use_cnn = use_cnn
         self.model: MaskablePPO = model
-        self.obs_space = Box(low=0, high=1, shape=(64 * 3,), dtype=np.float32)
+        if use_cnn:
+            self.obs_space = Box(low=0, high=255, shape=(3, 8, 8), dtype=np.uint8)
+        else:
+            self.obs_space = Box(low=0, high=1, shape=(64 * 3,), dtype=np.float32)
 
     def predict_best_move(self, game: Othello):
-        encoded_state = game.get_encoded_state().reshape(-1)
-
+        encoded_state = game.get_encoded_state()
+        if not self.use_cnn:
+            encoded_state = encoded_state.reshape(-1)  #  for Mlp
         action, _ = self.model.predict(encoded_state,
                                        action_masks=action_masks(game),
                                        deterministic=self.deterministic)

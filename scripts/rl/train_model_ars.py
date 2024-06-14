@@ -50,6 +50,7 @@ class CustomLinearPolicy(LinearPolicy):
         if action_masks is None:
             raise Exception("Needs to have actio masks!!")
         logits = self.forward(observation)
+        action_masks = th.tensor(action_masks, dtype=th.float32, device=self.device)
         masked_logits = logits + (1.0 - action_masks) * -10e6
         if deterministic:
             return th.argmax(masked_logits, dim=1)
@@ -137,6 +138,7 @@ class CustomMlpPolicy(MlpPolicy):
         if action_masks is None:
             raise Exception("Needs to have actio masks!!")
         logits = self.forward(observation)
+        action_masks = th.tensor(action_masks, dtype=th.float32, device=self.device)
         masked_logits = logits + (1.0 - action_masks) * -10e6
         if deterministic:
             return th.argmax(masked_logits, dim=1)
