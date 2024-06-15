@@ -47,6 +47,15 @@ class Node:
         exploration_term = c * math.sqrt(logged_parent_visits / self.visited)
         return avg_val + exploration_term
 
+    # def select_highest_ucb_child(self, c):
+    #     max_child = max(self.move_to_child.values(), key=lambda ch: ch.get_uct(c, self.visited))
+    #     return max_child
+    #
+    # def get_uct(self, c, par):
+    #     avg_val = ((self.value / self.visited) + 1) / 2
+    #     exploration_term = c * (math.sqrt(par) / self.visited)
+    #     return avg_val + exploration_term
+
     def simulate_game(self):
         game_copy = self.game.get_snapshot()
         winner = ai_vs_ai_cli(ai_random, ai_random, game_copy)  # 1, 2, or 0
@@ -158,9 +167,9 @@ class MCTS(ModelInterface):
 
 
 time_limit = 1
-iter_limit = 500  # math.inf
-verbose = 1  # 0 means no logging
-mcts_model = MCTS(f'mcts {time_limit}s',
+iter_limit = 30  # math.inf
+verbose = 0  # 0 means no logging
+mcts_model = MCTS(f'mcts iter_limit {iter_limit}',
                   max_time=time_limit,
                   max_iter=iter_limit,
                   verbose=verbose)

@@ -29,6 +29,7 @@ class OthelloEnv(gym.Env):
         self.reset_othello_gen = self.reset_othello()
         self.episodes = 0
 
+
     def reset_othello(self):
         '''resets game to starting position
            and also changes starting player alternatively'''
@@ -38,8 +39,8 @@ class OthelloEnv(gym.Env):
             model_turn = next(infinite_player_turn)
             yield game, model_turn
 
-    def change_to_latest_agent(self, agent):
-        self.other_agent = agent
+    def change_to_latest_agent(self, agent_class, agent_file_path):
+        self.other_agent = agent_class.load(agent_file_path)
 
     def get_obs(self):
         encoded_board = self.game.get_encoded_state().reshape(-1)
@@ -130,10 +131,20 @@ class SelfPlayCallback(EvalCallback):
         self.generation = 0
         self.params = params
         # self.train_env = params['train_env']
-        self.eval_env = params['eval_env']  # same as train env
+
+        #self.eval_env = params['eval_env']  # same as train env
+
+    def set_eval(self):
+        for env in self.eval_env.envs:
+            env.unwrapped.set_eval()
+
+    def set_train(self):
+        for env in self.eval_env.envs:
+            env.unwrapped.set_train()
 
     def _on_step(self) -> bool:
         # result = super()._on_step() #  eval needs to be masked, its less efficient
+
         result = super()._on_step()
 
         if result and self.best_mean_reward > self.params['BEST_THRESHOLD']:
@@ -144,9 +155,9 @@ class SelfPlayCallback(EvalCallback):
             backup_file = os.path.join(self.log_dir, "history_" + str(self.generation).zfill(4) + ".zip")
             copyfile(source_file, backup_file)
             self.best_mean_reward = self.params['BEST_THRESHOLD']
-            agent = self.model.load(source_file)
-            agent.env = self.model.env
-            print(f'inner_agent id: {id(agent)}')
+            # agent = self.model.load(source_file)
+            # agent.env = self.model.env
             # self.train_env.unwrapped.change_to_latest_agent(agent)
-            self.eval_env.envs[0].unwrapped.change_to_latest_agent(agent)
+            self.eval_env.env_method('change_to_latest_agent', self.model.__class__, source_file)
+
         return result

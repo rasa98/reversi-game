@@ -28,15 +28,15 @@ class Node:
         self.prior = prior
         # self.move_to_child = {}
         self.parent = parent_node
-        self.valid_moves = list(game_copy.valid_moves_to_reverse)
+        # self.valid_moves = list(game_copy.valid_moves_to_reverse)
         self.is_final_state = self.game.is_game_over()
 
     # def get_all_next_move_counter(self):
     #     """for debug"""
     #     return Counter({move: child.visited for move, child in self.move_to_child.items()})
 
-    def explored_OLD(self):
-        return len(self.valid_moves) == 0
+    # def explored_OLD(self):
+    #     return len(self.valid_moves) == 0
 
     def explored(self):
         return len(self.children) > 0
@@ -50,12 +50,61 @@ class Node:
                 child_node = Node(game_copy, move, parent_node=self, prior=prob)
                 self.children.append(child_node)
 
+    # def select_highest_ucb_child(self, c):
+    #     log_visited = math.log(self.visited)
+    #     max_child = max(self.children, key=lambda ch: ch.get_uct(c, log_visited)[0])
+    #     mapped_children_DEBUG = list(map(lambda ch: ch.get_uct(c, log_visited)[1], self.children))
+    #     return max_child
+    #
+    # def get_uct(self, c, log_visited):
+    #     if self.visited == 0:
+    #         q_value = 0
+    #     else:
+    #         # q_value = self.value / self.visited
+    #         avg_value = self.value / self.visited
+    #         q_value = avg_value * 4
+    #     exploration_term = c * math.sqrt(log_visited / (1 + self.visited))#(math.sqrt(parent_visits) / (self.visited + 1))
+    #     # q_value *= (self.prior + 0.5)
+    #     exploration_term *= (self.prior + 0.075)
+    #     # explo_biased = exploration_term * (self.prior + 0.5)
+    #
+    #     return q_value + exploration_term, {'value': self.value,
+    #                                         'visited': self.visited,
+    #                                         'q_value': q_value,
+    #                                         'exploration_term': exploration_term,
+    #                                         'prior': self.prior}
+
+    # def select_highest_ucb_child(self, c):
+    #     max_child = max(self.children, key=lambda ch: ch.get_uct(c, self.visited)[0])
+    #     mapped_children_DEBUG = list(map(lambda ch: ch.get_uct(c, self.visited)[1], self.children))
+    #     return max_child
+    #
+    # def get_uct(self, c, parent_visits):
+    #     if self.visited == 0:
+    #         q_value = 0
+    #     else:
+    #         # q_value = self.value / self.visited
+    #         avg_value = self.value / self.visited
+    #         q_value = avg_value * 4
+    #     exploration_term = c * (math.sqrt(parent_visits) / (self.visited + 1))
+    #     # q_value *= (self.prior + 0.5)
+    #     exploration_term *= (self.prior + 0.075)
+    #     # explo_biased = exploration_term * (self.prior + 0.5)
+    #
+    #     return q_value + exploration_term, {'value': self.value,
+    #                                         'visited': self.visited,
+    #                                         'q_value': q_value,
+    #                                         'exploration_term': exploration_term,
+    #                                         'prior': self.prior}
+
     def select_highest_ucb_child(self, c):
-        if self.visited > 3 * len(self.children):
+        if self.visited > 2 * len(self.children):
             log_visited = math.log(self.visited)
-            max_child = max(self.children, key=lambda ch: ch.get_uct_log(c, log_visited))            
+            max_child = max(self.children, key=lambda ch: ch.get_uct_log(c, log_visited))
+            # mapped_children_DEBUG = list(map(lambda ch: ch.get_uct_log_debug(c, log_visited)[1], self.children))
         else:
-            max_child = max(self.children, key=lambda ch: ch.get_uct(c, self.visited))            
+            max_child = max(self.children, key=lambda ch: ch.get_uct(c, self.visited))
+            # mapped_children_DEBUG = list(map(lambda ch: ch.get_uct_debug(c, self.visited)[1], self.children))
         return max_child
 
     def get_uct_log(self, c, log_visited):
@@ -65,8 +114,8 @@ class Node:
             avg_value = self.value / self.visited
             q_value = avg_value * 4
         exploration_term = c * (math.sqrt(log_visited / (self.visited + 1)))
-        exploration_term *= (self.prior + 0.5)
 
+        exploration_term *= (self.prior + 0.075)
         return q_value + exploration_term
 
     def get_uct(self, c, parent_visits):
@@ -76,14 +125,39 @@ class Node:
             avg_value = self.value / self.visited
             q_value = avg_value
         exploration_term = c * (math.sqrt(parent_visits) / (self.visited + 1))
-        exploration_term *= (self.prior + 0.5)
 
+        exploration_term *= (self.prior + 0.075)
         return q_value + exploration_term
 
-    def simulate_game(self):
-        game_copy = self.game.get_snapshot()
-        winner = ai_vs_ai_cli(ai_random, ai_random, game_copy)  # 1, 2, or 0
-        return winner
+    def get_uct_log_debug(self, c, log_visited):
+        if self.visited == 0:
+            q_value = 0
+        else:
+            avg_value = self.value / self.visited
+            q_value = avg_value * 4
+        exploration_term = c * (math.sqrt(log_visited / (self.visited + 1)))
+
+        exploration_term *= (self.prior + 0.075)
+        return q_value + exploration_term, {'value': self.value,
+                                            'visited': self.visited,
+                                            'q_value': q_value,
+                                            'exploration_term': exploration_term,
+                                            'prior': self.prior}
+
+    def get_uct_debug(self, c, parent_visits):
+        if self.visited == 0:
+            q_value = 0
+        else:
+            avg_value = self.value / self.visited
+            q_value = avg_value
+        exploration_term = c * (math.sqrt(parent_visits) / (self.visited + 1))
+
+        exploration_term *= (self.prior + 0.075)
+        return q_value + exploration_term, {'value': self.value,
+                                            'visited': self.visited,
+                                            'q_value': q_value,
+                                            'exploration_term': exploration_term,
+                                            'prior': self.prior}
 
 
 class MCTS(ModelInterface):
@@ -241,6 +315,15 @@ class MCTS(ModelInterface):
             # Perform MCTS steps: selection, expansion, simulation, backpropagation
             self.mcts_iter()
             iterations += 1
+
+            if iterations > 80 and self.root.game.turn > 51:
+                pass
+
+            if iterations > 83 and self.root.game.turn > 53:
+                pass
+
+            if iterations > 86 and self.root.game.turn > 55:
+                pass
 
             # Check termination conditions
             check_time = time.perf_counter()

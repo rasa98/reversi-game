@@ -92,7 +92,7 @@ class ResBlock(nn.Module):
 
 
 class AlphaZero:
-    def __init__(self, model, optimizer, scheduler,params, mcts_params):
+    def __init__(self, model, optimizer, scheduler, params, mcts_params):
         self.model = model
         self.optimizer = optimizer
         self.scheduler = scheduler
@@ -104,8 +104,12 @@ class AlphaZero:
         self.test_agent = self.load_test_agent()
         self.mcts = MCTS("alpha-mcts", model, **mcts_params)
         self.model_iteration = 0
+
         self.model_subsequent_fail = 0
         self.max_fail_times = params['model_subsequent_fail']
+
+        self.scheduler = scheduler
+
 
         self.copy_model()
 
@@ -129,9 +133,8 @@ class AlphaZero:
     def copy_model(self):
         self.best_model = copy.deepcopy(self.model)
         self.best_models_optimizer = torch.optim.Adam(self.best_model.parameters())
-    
-        # Copy the state of the old optimizer to the new one
         self.best_models_optimizer.load_state_dict(self.optimizer.state_dict())
+
 
     @staticmethod
     def bench_agents(a1, a2, times=10):
@@ -244,7 +247,7 @@ class AlphaZero:
             loss.backward()
             self.optimizer.step()
 
-        self.scheduler.step()        
+        self.scheduler.step()
 
         train_policy_loss /= len(data) // self.params['batch_size']
         train_value_loss /= len(data) // self.params['batch_size']
@@ -314,6 +317,7 @@ class AlphaZero:
                 self.model_subsequent_fail += 1
                 if self.model_subsequent_fail > self.max_fail_times:
                     print(f'FAILED TO SATISFY BENCHMARKS {self.max_fail_times} times in a row. Reseting to earlier best model...')
+
                     self.model = self.best_model
                     self.optimizer = self.best_models_optimizer
                     self.model_subsequent_fail = 0
@@ -329,7 +333,7 @@ def load_model_and_optimizer(params, model_state_path, optimizer_state_path, dev
     if model_state_path is not None:
         model.load_state_dict(torch.load(model_state_path, map_location=device))
         optimizer.load_state_dict(torch.load(optimizer_state_path, map_location=device))
-        
+
         for param_group in optimizer.param_groups:
             param_group['lr'] = params['lr']
             param_group['weight_decay'] = params['weight_decay']
@@ -348,6 +352,8 @@ class SPG:
 
 
 if __name__ == "__main__":
+    if os.environ['USER'] == 'rasa':
+        os.chdir('../')
 
     params = {
         'res_blocks': 16,

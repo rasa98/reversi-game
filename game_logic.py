@@ -278,6 +278,10 @@ class Othello:
 
         return encoded_state
 
+    def get_encoded_state_as_img(self):
+        """ from_perspective can be: 1 or 2 """
+        return self.get_encoded_state().astype(np.uint8)
+
     def __repr__(self):
         temp_board = np.copy(self.board)
 
