@@ -355,25 +355,25 @@ if __name__ == "__main__":
         'lr': 1e-4,
         'weight_decay': 0.01,
         'num_iterations': 200,
-        'num_self_play_iterations': 200,
+        'num_self_play_iterations': 100,
         'num_epochs': 10,
         'batch_size': 128,
-        'temp': 1.1,
+        'temp': 1,
         'num_parallel_games': 50,
         'model_subsequent_fail': 200,
         'scheduler_step_size': 10, 
-        'scheduler_gamma':0.99,
-        'model_output': 'models_output/alpha-zero/res16layer64v1'
+        'scheduler_gamma':0.9,
+        'model_output': 'models_output/alpha-zero/res16layer64'
     }
     mcts_params = {
-        'uct_exploration_const': 1.3,
+        'uct_exploration_const': 1.2,
         'max_iter': 125,
         # these are flexible dirichlet epsilon for noise
         # favor exploration more in the beginning
-        'dirichlet_epsilon': 0.15,
-        'initial_alpha': 0.4,
+        'dirichlet_epsilon': 0.2,
+        'initial_alpha': 0.40,
         'final_alpha': 0.05,
-        'decay_steps': 130
+        'decay_steps': 80
     }
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
