@@ -15,10 +15,10 @@ import sys
 import copy
 import os
 
-#import logging
-#logging.getLogger('tensorflow').disabled = True
-#os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
-#os.environ['TF_FORCE_GPU_ALLOW_GROWTH'] = 'true'
+# import logging
+# logging.getLogger('tensorflow').disabled = True
+# os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+# os.environ['TF_FORCE_GPU_ALLOW_GROWTH'] = 'true'
 
 if os.environ['USER'] == 'rasa':
     source_dir = os.path.abspath(os.path.join(os.getcwd(), '../'))
@@ -38,35 +38,41 @@ ALL_FIELDS_SIZE = GAME_ROW_COUNT * GAME_COLUMN_COUNT
 
 
 class ResNet(nn.Module):
-    def __init__(self, num_resBlocks, num_hidden, device):
+    def __init__(self, num_hidden, device):
         super().__init__()
         self.device = device
         self.iterations_trained = 0
 
+        self.device = device
+
         self.startBlock = nn.Sequential(
             nn.Conv2d(3, num_hidden, kernel_size=3, padding=1),
-            nn.BatchNorm2d(num_hidden),
-            nn.ReLU()
+            nn.ReLU(),
+            nn.Dropout(p=0.3)  # Dropout layer
         )
 
-        self.backBone = nn.ModuleList(
-            [ResBlock(num_hidden) for i in range(num_resBlocks)]
+        self.sharedConv = nn.Sequential(
+            nn.Conv2d(num_hidden, 128, kernel_size=3, padding=1),
+            nn.ReLU(),
+            nn.Dropout(p=0.3),  # Dropout layer
+            nn.Conv2d(128, 256, kernel_size=3, padding=1),
+            nn.ReLU(),
+            nn.Dropout(p=0.3)  # Dropout layer
+
         )
 
         self.policyHead = nn.Sequential(
-            nn.Conv2d(num_hidden, 32, kernel_size=3, padding=1),
-            nn.BatchNorm2d(32),
+            nn.Conv2d(256, 512, kernel_size=3, padding=1),
             nn.ReLU(),
             nn.Flatten(),
-            nn.Linear(32 * GAME_ROW_COUNT * GAME_COLUMN_COUNT, ALL_FIELDS_SIZE)
+            nn.Linear(512 * GAME_ROW_COUNT * GAME_COLUMN_COUNT, ALL_FIELDS_SIZE)
         )
 
         self.valueHead = nn.Sequential(
-            nn.Conv2d(num_hidden, 3, kernel_size=3, padding=1),
-            nn.BatchNorm2d(3),
+            nn.Conv2d(256, 128, kernel_size=3, padding=1),
             nn.ReLU(),
             nn.Flatten(),
-            nn.Linear(3 * GAME_ROW_COUNT * GAME_COLUMN_COUNT, 1),
+            nn.Linear(128 * GAME_ROW_COUNT * GAME_COLUMN_COUNT, 1),
             nn.Tanh()
         )
 
@@ -74,28 +80,10 @@ class ResNet(nn.Module):
 
     def forward(self, x):
         x = self.startBlock(x)
-        for resBlock in self.backBone:
-            x = resBlock(x)
-        policy = self.policyHead(x)
-        value = self.valueHead(x)
+        shared_out = self.sharedConv(x)
+        policy = self.policyHead(shared_out)
+        value = self.valueHead(shared_out)
         return policy, value
-
-
-class ResBlock(nn.Module):
-    def __init__(self, num_hidden):
-        super().__init__()
-        self.conv1 = nn.Conv2d(num_hidden, num_hidden, kernel_size=3, padding=1)
-        self.bn1 = nn.BatchNorm2d(num_hidden)
-        self.conv2 = nn.Conv2d(num_hidden, num_hidden, kernel_size=3, padding=1)
-        self.bn2 = nn.BatchNorm2d(num_hidden)
-
-    def forward(self, x):
-        residual = x
-        x = F.relu(self.bn1(self.conv1(x)))
-        x = self.bn2(self.conv2(x))
-        x += residual
-        x = F.relu(x)
-        return x
 
 
 class AlphaZero:
@@ -104,24 +92,27 @@ class AlphaZero:
         self.optimizer = optimizer
         self.scheduler = scheduler
         self.params = params
+        self.mcts_params = mcts_params
         self.model_output = params['model_output']
 
         self.best_model = None
         self.best_models_optimizer = None
         self.test_agent = self.load_test_agent()
         self.mcts = MCTS("alpha-mcts", model, **mcts_params)
-        self.mcts_params = mcts_params
         self.model_iteration = 0
+
         self.model_subsequent_fail = 0
         self.max_fail_times = params['model_subsequent_fail']
 
+        self.scheduler = scheduler
         self.copy_model()
 
     @staticmethod
     def load_test_agent():
         ppo_18_big_rollouts = (
-            load_model_new('18 big rollout',
-                           'scripts/rl/ppo_masked/local/history_0018'))
+            load_model_new('strong 17 ppo',
+                           'scripts/rl/output/v3v3/history_0017'))
+
         return ppo_18_big_rollouts
 
     def load_azero_agent(self, name, model):
@@ -137,8 +128,6 @@ class AlphaZero:
     def copy_model(self):
         self.best_model = copy.deepcopy(self.model)
         self.best_models_optimizer = torch.optim.Adam(self.best_model.parameters())
-
-        # Copy the state of the old optimizer to the new one
         self.best_models_optimizer.load_state_dict(self.optimizer.state_dict())
 
     @staticmethod
@@ -255,16 +244,22 @@ class AlphaZero:
             raise Exception("Model output already exists. You probably need to update it!!!")
         os.makedirs(folder, exist_ok=True)
 
+        self.model.share_memory()
+
         for iteration in range(self.params['num_iterations']):
-            print(f'Learning Iteration - {iteration}')
             memory = []
 
             self.model.eval()
-            self.model.share_memory()
+
             times = ((self.params['num_self_play_iterations'] // self.params['num_parallel_games']) // num_cores)
             for _ in trange(1):
-                unflattened_memory = pool.starmap(parallel_fun, [(times, self.params, self.model, self.mcts_params)] * num_cores)
-            memory = [item for sublist in unflattened_memory for item in sublist]
+                unflattened_memory = pool.starmap(parallel_fun,
+                                                  [(times, self.params, self.model, self.mcts_params)] * num_cores)
+
+            for data in unflattened_memory:
+                memory.extend(data)
+
+
             print(flush=True)
 
             self.model.train()
@@ -289,12 +284,12 @@ class AlphaZero:
 
 
 def load_model_and_optimizer(params, model_state_path, optimizer_state_path, device):
-    model = ResNet(params['res_blocks'], params['hidden_layer'], device)
+    model = ResNet(params['hidden_layer'], device)
     optimizer = torch.optim.Adam(model.parameters(), lr=params['lr'], weight_decay=params['weight_decay'])
 
     if model_state_path is not None:
         model.load_state_dict(torch.load(model_state_path, map_location=device))
-        optimizer.load_state_dict(torch.load(optimizer_state_path, map_location=device))
+        optimizer.load_state_dict(torch.load(optimizer_state_path))
 
         for param_group in optimizer.param_groups:
             param_group['lr'] = params['lr']
@@ -319,7 +314,6 @@ def parallel_fun(times, params, model, mcts_params):
     for _ in range(times):
         res += self_play_function(params, mcts)
     return res
-
 
 
 def self_play_function(params, mcts):
@@ -374,38 +368,40 @@ if __name__ == "__main__":
     if os.environ['USER'] == 'rasa':
         print('running on local node')
         os.chdir('../')
+        num_cores = 2
+    else:
+        num_cores = int(os.environ['SLURM_CPUS_ON_NODE']) // 2
 
-    num_cores = int(os.environ['SLURM_CPUS_ON_NODE']) // 2
     print(f'number of cores used for pool: {num_cores}')
 
     params = {
-        'res_blocks': 4,
+        # 'res_blocks': 4,
         'hidden_layer': 16,
-        'lr': 1e-4,
-        'weight_decay': 0.01,
-        'num_iterations': 2,
-        'num_self_play_iterations': 8,
-        'num_epochs': 10,
+        'lr': 7e-5,
+        'weight_decay': 1e-4,
+        'num_iterations': 50,
+        'num_self_play_iterations': 100,
+        'num_epochs': 6,
         'batch_size': 128,
-        'temp': 0.8,
-        'num_parallel_games': 2,
-        'model_subsequent_fail': 200,
-        'scheduler_step_size': 10,
-        'scheduler_gamma': 0.9,
-        'model_output': 'models_output/alpha-zero/res16layer64vFull1'
+        'temp': 1.1,
+        'num_parallel_games': 50,
+        'model_subsequent_fail': 5,
+        'scheduler_step_size': 12,
+        'scheduler_gamma': 0.97,
+        'model_output': 'models_output/alpha-zero/FINAL/del/'
     }
     mcts_params = {
-        'uct_exploration_const': 1.3,
-        'max_iter': 5,
+        'uct_exploration_const': 1.4,
+        'max_iter': 15,
         # these are flexible dirichlet epsilon for noise
         # favor exploration more in the beginning
-        'dirichlet_epsilon': 0.4,
-        'initial_alpha': 0.8,
-        'final_alpha': 0.05,
-        'decay_steps': 130
+        'dirichlet_epsilon': 0.25,
+        'initial_alpha': 0.4,
+        'final_alpha': 0.15,
+        'decay_steps': 30
     }
 
-    device = torch.device('cuda')
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     model_state_path = None
     optimizer_state_path = None
@@ -424,6 +420,6 @@ if __name__ == "__main__":
 
     azero = AlphaZero(model, optimizer, scheduler, params, mcts_params)
 
-    mp.set_start_method('spawn')
+    mp.set_start_method('forkserver')
     with mp.Pool(processes=num_cores) as pool:
         azero.learn()
