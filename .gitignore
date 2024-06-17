@@ -2,6 +2,7 @@ __pycache__/
 .idea/
 *.zip
 *.pt
+*.npz
 training/
 game-venv/
 models/alpha-zero/

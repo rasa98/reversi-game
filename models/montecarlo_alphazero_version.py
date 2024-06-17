@@ -98,29 +98,8 @@ class Node:
     #                                         'prior': self.prior}
 
     def select_highest_ucb_child(self, c):
-        if self.visited > 2 * len(self.children):
-            log_visited = math.log(self.visited)
-            max_child = max(self.children, key=lambda ch: ch.get_uct_log(c, log_visited)[0])
-            mapped_children_DEBUG = list(map(lambda ch: ch.get_uct_log(c, log_visited)[1], self.children))
-        else:
-            max_child = max(self.children, key=lambda ch: ch.get_uct(c, self.visited)[0])
-            mapped_children_DEBUG = list(map(lambda ch: ch.get_uct(c, self.visited)[1], self.children))
+        max_child = max(self.children, key=lambda ch: ch.get_uct(c, self.visited))
         return max_child
-
-    def get_uct_log(self, c, log_visited):
-        if self.visited == 0:
-            q_value = 0
-        else:
-            avg_value = self.value / self.visited
-            q_value = avg_value * 4
-        exploration_term = c * (math.sqrt(log_visited / (self.visited + 1)))
-        exploration_term *= (self.prior + 0.075)
-
-        return q_value + exploration_term, {'value': self.value,
-                                            'visited': self.visited,
-                                            'q_value': q_value,
-                                            'exploration_term': exploration_term,
-                                            'prior': self.prior}
 
     def get_uct(self, c, parent_visits):
         if self.visited == 0:
@@ -131,16 +110,7 @@ class Node:
         exploration_term = c * (math.sqrt(parent_visits) / (self.visited + 1))
         exploration_term *= (self.prior + 0.075)
 
-        return q_value + exploration_term, {'value': self.value,
-                                            'visited': self.visited,
-                                            'q_value': q_value,
-                                            'exploration_term': exploration_term,
-                                            'prior': self.prior}
-
-    # def simulate_game(self):
-    #     game_copy = self.game.get_snapshot()
-    #     winner = ai_vs_ai_cli(ai_random, ai_random, game_copy)  # 1, 2, or 0
-    #     return winner
+        return q_value + exploration_term
 
 
 class MCTS(ModelInterface):
@@ -245,9 +215,12 @@ class MCTS(ModelInterface):
 
     def backprop(self, node: Node, value: float):
         from_perspective_of = node.game.last_turn
+        if node.game.player_turn != node.game.last_turn:
+            value = -value
+
         while node is not None:
             node.visited += 1
-            if from_perspective_of == node.game.last_turn:
+            if from_perspective_of == node.game.last_turn:  # node.game.last_turn
                 node.value += value
             else:
                 node.value -= value
@@ -298,15 +271,6 @@ class MCTS(ModelInterface):
             # Perform MCTS steps: selection, expansion, simulation, backpropagation
             self.mcts_iter()
             iterations += 1
-
-            if iterations > 80 and self.root.game.turn > 51:
-                pass
-
-            if iterations > 83 and self.root.game.turn > 53:
-                pass
-
-            if iterations > 86 and self.root.game.turn > 55:
-                pass
 
             # Check termination conditions
             check_time = time.perf_counter()

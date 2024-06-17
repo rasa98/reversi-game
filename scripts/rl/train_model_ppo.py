@@ -101,7 +101,7 @@ if __name__ == '__main__':
     else:
         starting_model_filepath = CONTINUE_FROM_MODEL
         # params['exploration_rate'] = 1.0  # to reset exploration rate !!!
-        model = MaskableDQN.load(starting_model_filepath,
+        model = MaskablePPO.load(starting_model_filepath,
                                  env=env,
                                  device=device,
                                  custom_objects=params)

@@ -272,22 +272,25 @@ if __name__ == '__main__':
     # Settings
     SEED = 13  # NOT USED
     NUM_TIMESTEPS = int(300_000)
-    EVAL_FREQ = int(10_000)
-    EVAL_EPISODES = int(100)
-    BEST_THRESHOLD = 0.3  # must achieve a mean score above this to replace prev best self
+    EVAL_FREQ = int(3_000)
+    EVAL_EPISODES = int(20)
+    BEST_THRESHOLD = 0.0  # must achieve a mean score above this to replace prev best self
     RENDER_MODE = False  # set this to false if you plan on running for full 1000 trials.
     # LOGDIR = 'scripts/rl/test-working/ppo/v1/'  # "ppo_masked/test/"
     LOGDIR = 'scripts/rl/test-working/trpo/test/'  # "ppo_masked/test/"
     CNN_POLICY = True
     CONTINUE_FROM_MODEL = None
 
-    policy_kwargs = dict(
-        net_arch=[64] * 8
-    )
+    policy_kwargs = {
+        'net_arch': {
+            'pi': [128, 128] * 4,
+            'vf': [64, 64] * 4
+        }
+    }
 
     params = {
         'learning_rate': 0.0001,
-        'n_steps': 2048 * 10,
+        'n_steps': 2048 * 1,
         'batch_size': 128,
         'gamma': 0.99,
         'verbose': 100,

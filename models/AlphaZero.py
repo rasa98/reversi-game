@@ -22,35 +22,38 @@ ALL_FIELDS_SIZE = GAME_ROW_COUNT * GAME_COLUMN_COUNT
 
 
 class ResNet(nn.Module):
-    def __init__(self, num_resBlocks, num_hidden, device):
+    def __init__(self, num_hidden, device):
         super().__init__()
         self.device = device
         self.iterations_trained = 0
 
+        self.device = device
+
         self.startBlock = nn.Sequential(
             nn.Conv2d(3, num_hidden, kernel_size=3, padding=1),
-            nn.BatchNorm2d(num_hidden),
             nn.ReLU()
         )
 
-        self.backBone = nn.ModuleList(
-            [ResBlock(num_hidden) for i in range(num_resBlocks)]
+        # Shared layers
+        self.sharedConv = nn.Sequential(
+            nn.Conv2d(num_hidden, 128, kernel_size=3, padding=1),
+            nn.ReLU(),
+            nn.Conv2d(128, 256, kernel_size=3, padding=1),
+            nn.ReLU()
         )
 
         self.policyHead = nn.Sequential(
-            nn.Conv2d(num_hidden, 32, kernel_size=3, padding=1),
-            nn.BatchNorm2d(32),
+            nn.Conv2d(256, 512, kernel_size=3, padding=1),
             nn.ReLU(),
             nn.Flatten(),
-            nn.Linear(32 * GAME_ROW_COUNT * GAME_COLUMN_COUNT, ALL_FIELDS_SIZE)
+            nn.Linear(512 * GAME_ROW_COUNT * GAME_COLUMN_COUNT, ALL_FIELDS_SIZE)
         )
 
         self.valueHead = nn.Sequential(
-            nn.Conv2d(num_hidden, 3, kernel_size=3, padding=1),
-            nn.BatchNorm2d(3),
+            nn.Conv2d(256, 128, kernel_size=3, padding=1),
             nn.ReLU(),
             nn.Flatten(),
-            nn.Linear(3 * GAME_ROW_COUNT * GAME_COLUMN_COUNT, 1),
+            nn.Linear(128 * GAME_ROW_COUNT * GAME_COLUMN_COUNT, 1),
             nn.Tanh()
         )
 
@@ -58,28 +61,10 @@ class ResNet(nn.Module):
 
     def forward(self, x):
         x = self.startBlock(x)
-        for resBlock in self.backBone:
-            x = resBlock(x)
-        policy = self.policyHead(x)
-        value = self.valueHead(x)
+        shared_out = self.sharedConv(x)
+        policy = self.policyHead(shared_out)
+        value = self.valueHead(shared_out)
         return policy, value
-
-
-class ResBlock(nn.Module):
-    def __init__(self, num_hidden):
-        super().__init__()
-        self.conv1 = nn.Conv2d(num_hidden, num_hidden, kernel_size=3, padding=1)
-        self.bn1 = nn.BatchNorm2d(num_hidden)
-        self.conv2 = nn.Conv2d(num_hidden, num_hidden, kernel_size=3, padding=1)
-        self.bn2 = nn.BatchNorm2d(num_hidden)
-
-    def forward(self, x):
-        residual = x
-        x = F.relu(self.bn1(self.conv1(x)))
-        x = self.bn2(self.conv2(x))
-        x += residual
-        x = F.relu(x)
-        return x
 
 
 class AlphaZero:
@@ -176,7 +161,6 @@ def gen_azero_model(model_location, params=None):
         params = {}
 
     hidden_layer = params.get('hidden_layer', 128)
-    res_blocks = params.get('res_block', 20)
     time_limit = params.get('mcts_time_limit', math.inf)
     iter_limit = params.get('mcts_iter_limit', 50)
     c = params.get('c', 1.41)
@@ -184,7 +168,7 @@ def gen_azero_model(model_location, params=None):
     verbose = params.get('verbose', 0)  # 0 means no logging
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    m = ResNet(res_blocks, hidden_layer, device)
+    m = ResNet(hidden_layer, device)
 
     m.load_state_dict(torch.load(model_location, map_location=device))
     m.eval()
@@ -299,23 +283,24 @@ if __name__ == "__main__":
 
     game = Othello()
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    model = ResNet(4, 64, device)
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.001, weight_decay=0.0001)
+    model = ResNet(64, device)
+    optimizer = torch.optim.Adam(model.parameters(), lr=1e-4, weight_decay=0.01)
     params = {
         'num_iterations': 200,
-        'num_self_play_iterations': 200,
-        'num_epochs': 20,
+        'num_self_play_iterations': 20,
+        'num_epochs': 10,
         'batch_size': 64,
         'temp': 1.1
     }
     mcts_params = {
-        'uct_exploration_const': 2,
-        'max_iter': 500,
+        'uct_exploration_const': 1.3,
+        'max_iter': 30,
         # these are flexible dirichlet epsilon for noise
         # favor exploration more in the beginning
-        'initial_alpha': 0.4,
-        'final_alpha': 0.1,
-        'decay_steps': 30
+        'dirichlet_epsilon': 0.40,
+        'initial_alpha': 0.6,
+        'final_alpha': 0.25,
+        'decay_steps': 200
     }
     azero = AlphaZero(model, optimizer, params, mcts_params)
 

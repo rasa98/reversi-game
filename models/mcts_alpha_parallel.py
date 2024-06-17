@@ -256,9 +256,12 @@ class MCTS():
 
     def backprop(self, node: Node, value: float):
         from_perspective_of = node.game.last_turn
+        if node.game.player_turn != node.game.last_turn:
+            value = -value
+
         while node is not None:
             node.visited += 1
-            if from_perspective_of == node.game.last_turn:
+            if from_perspective_of == node.game.last_turn: #node.game.last_turn
                 node.value += value
             else:
                 node.value -= value
@@ -315,10 +318,6 @@ class MCTS():
             # Perform MCTS steps: selection, expansion, simulation, backpropagation
             self.mcts_iter(spgs)
             iterations += 1
-
-            print(f'iteration {iterations} done!')
-            if iterations > 45 and spgs[0].game.turn > 45: # TODO delete DEBUG
-                pass
 
             # Check termination conditions
             check_time = time.perf_counter()
