@@ -96,6 +96,7 @@ class Node:
     #                                         'q_value': q_value,
     #                                         'exploration_term': exploration_term,
     #                                         'prior': self.prior}
+
     
     # -----------------------------------------
     #def select_highest_ucb_child(self, c):
@@ -131,7 +132,6 @@ class Node:
             avg_value = self.value / self.visited
             q_value = avg_value
         exploration_term = c * (math.sqrt(parent_visits) / (self.visited + 1))
-
         exploration_term *= (self.prior + 0.075)
         return q_value + exploration_term
 
@@ -164,6 +164,7 @@ class Node:
                                             'q_value': q_value,
                                             'exploration_term': exploration_term,
                                             'prior': self.prior}
+
 
 
 class MCTS(ModelInterface):
@@ -324,7 +325,7 @@ class MCTS(ModelInterface):
             # Perform MCTS steps: selection, expansion, simulation, backpropagation
             self.mcts_iter()
             iterations += 1
-            
+
             # Check termination conditions
             check_time = time.perf_counter()
             elapsed_time = check_time - start_time

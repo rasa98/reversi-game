@@ -48,7 +48,7 @@ if __name__ == '__main__':
 
     file_base_v3v3 = 'scripts/rl/output/v3v3/history_'
     multi_ppo_v3v3 = lambda: (load_model_new(f'ppo_{i}', f'{file_base_v3v3}{str(i).zfill(4)}')
-                              for i in [17, 18, 19, 20, 21, 22])
+                              for i in range(17, 33))
     it = multi_ppo_v3v3()
     best_ppo_yet = next(it)
     best_next_18 = next(it)
@@ -59,7 +59,7 @@ if __name__ == '__main__':
 
     file_base_v4 = 'scripts/rl/output/v4/history_'
     multi_ppo_v4 = lambda: (load_model_new(f'ppo_{i}', f'{file_base_v4}{str(i).zfill(4)}')
-                            for i in [37, 38, 39, 40, 41])
+                            for i in range(42, 49))
 
     file_base = 'scripts/rl/output/paral/base/v0/history_'
     multi_ppo_paral_v0 = (load_model_new(f'ppo_{i}', f'{file_base}{str(i).zfill(4)}')
@@ -138,6 +138,10 @@ if __name__ == '__main__':
 
     from scripts.rl.train_model_ars import MaskableArs
     from scripts.rl.train_model_dqn import MaskableDQN
+    from scripts.rl.train_model_trpo import MaskableTrpo, CustomMlpPolicy as CustomMlpTrpoPolicy
+
+    from scripts.rl.train_model_ppo import CustomCnnPPOPolicy
+    from sb3_contrib.ppo_mask import MaskablePPO
 
     file_base_ars = 'scripts/rl/scripts/rl/test-working/ars/del2/history_'
     multi_ars = lambda: (load_model_new(f'ars_{i}',
@@ -153,16 +157,41 @@ if __name__ == '__main__':
 
     file_base_ppo_cnn = 'scripts/rl/scripts/rl/test-working/ppo/1/history_'
     multi_ppo_cnn_paral_v0 = lambda: (load_model_new(f'ppo_{i}',
-                                                     f'{file_base}{str(i).zfill(4)}')
+                                                     f'{file_base}{str(i).zfill(4)}',
+                                                     cnn=True)
                                       for i in [1, 2, 3, 4])
 
-    # l1 = list(multi_dqn())
-    for agent in multi_ppo_cnn_paral_v0():
+    file_base_trpo_cnn = 'scripts/rl/scripts/rl/test-working/trpo/test/history_'
+    multi_trpo_cnn = lambda: (load_model_new(f'trpo_{i}',
+                                             f'{file_base_trpo_cnn}{str(i).zfill(4)}',
+                                             MaskableTrpo,
+                                             cnn=True)
+                              for i in range(1, 9))
+
+    file_ppo_base2_cnn = 'scripts/rl/ppo_masked/cnn/base2/history_'
+    ppo_base2_cnn = lambda: (load_model_new(f'ppo_cnn{i}',
+                                            f'{file_ppo_base2_cnn}{str(i).zfill(4)}',
+                                            cnn=True,
+                                            policy_cls=CustomCnnPPOPolicy)
+                             for i in [62])  # range(1, 52))
+
+    file_base_trpo = 'scripts/rl/trpo/mlp/first run/history_'
+    multi_trpo = lambda: (load_model_new(f'trpo_mlp{i}',
+                                         f'{file_base_trpo}{str(i).zfill(4)}',
+                                         MaskableTrpo,
+                                         cnn=False,
+                                         policy_cls=CustomMlpTrpoPolicy)
+                          for i in range(86, 92))
+
+    l1 = list([best_ppo_yet])
+    # l2 = list(ppo_base2_cnn())
+
+    for agent2 in multi_trpo():
         bench_both_sides(
-            ga_vpn_5,
+            agent2.set_deterministic(False),
             # best_ppo_yet.set_deterministic(False),
             # ga_vpn_5,
-            agent.set_deterministic(False),
+            best_ppo_yet.set_deterministic(False),
             # ppo_del2.set_deterministic(False),#agent,
             times=100,
             timed=True,

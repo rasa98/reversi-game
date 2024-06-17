@@ -117,8 +117,7 @@ if __name__ == '__main__':
         model.save(starting_model_filepath)
     else:
         starting_model_filepath = CONTINUE_FROM_MODEL
-        # params['exploration_rate'] = 1.0  # to reset exploration rate !!!
-        params['policy_class'] = CustomCnnPPOPolicy
+        params['policy_class'] = CustomCnnPPOPolicy  #  trained on different version libs...
         model = MaskablePPO.load(starting_model_filepath,
                                  env=env,
                                  device=device,

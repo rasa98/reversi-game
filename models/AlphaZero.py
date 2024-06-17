@@ -163,7 +163,6 @@ def gen_azero_model(model_location, params=None):
         params = {}
 
     hidden_layer = params.get('hidden_layer', 128)
-    res_blocks = params.get('res_block', 20)
     time_limit = params.get('mcts_time_limit', math.inf)
     iter_limit = params.get('mcts_iter_limit', 50)
     c = params.get('c', 1.41)
@@ -173,7 +172,7 @@ def gen_azero_model(model_location, params=None):
     dirichlet_epsilon = params.get('dirichlet_epsilon', 0)
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    m = ResNet(res_blocks, hidden_layer, device)
+    m = ResNet(hidden_layer, device)
 
     m.load_state_dict(torch.load(model_location, map_location=device))
     m.eval()
@@ -289,23 +288,24 @@ if __name__ == "__main__":
 
     game = Othello()
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    model = ResNet(4, 64, device)
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.001, weight_decay=0.0001)
+    model = ResNet(64, device)
+    optimizer = torch.optim.Adam(model.parameters(), lr=1e-4, weight_decay=0.01)
     params = {
         'num_iterations': 200,
-        'num_self_play_iterations': 200,
-        'num_epochs': 20,
+        'num_self_play_iterations': 20,
+        'num_epochs': 10,
         'batch_size': 64,
         'temp': 1.1
     }
     mcts_params = {
-        'uct_exploration_const': 2,
-        'max_iter': 500,
+        'uct_exploration_const': 1.3,
+        'max_iter': 30,
         # these are flexible dirichlet epsilon for noise
         # favor exploration more in the beginning
-        'initial_alpha': 0.4,
-        'final_alpha': 0.1,
-        'decay_steps': 30
+        'dirichlet_epsilon': 0.40,
+        'initial_alpha': 0.6,
+        'final_alpha': 0.25,
+        'decay_steps': 200
     }
     azero = AlphaZero(model, optimizer, params, mcts_params)
 

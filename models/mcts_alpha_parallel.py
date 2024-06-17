@@ -285,7 +285,7 @@ class MCTS():
 
         while node is not None:
             node.visited += 1
-            if from_perspective_of == node.game.last_turn:  # node.game.last_turn
+            if from_perspective_of == node.game.last_turn:
                 node.value += value
             else:
                 node.value -= value
@@ -341,7 +341,7 @@ class MCTS():
         while True:
             # Perform MCTS steps: selection, expansion, simulation, backpropagation
             self.mcts_iter(spgs)
-            iterations += 1            
+            iterations += 1
 
             # Check termination conditions
             check_time = time.perf_counter()

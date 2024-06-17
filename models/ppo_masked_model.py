@@ -197,9 +197,10 @@ class MaskedPPOWrapperNew(ModelInterface):
             self.obs_space = Box(low=0, high=1, shape=(64 * 3,), dtype=np.float32)
 
     def predict_best_move(self, game: Othello):
-        encoded_state = game.get_encoded_state()
-        if not self.use_cnn:
-            encoded_state = encoded_state.reshape(-1)  #  for Mlp
+        if self.use_cnn:
+            encoded_state = game.get_encoded_state_as_img()
+        else:
+            encoded_state = game.get_encoded_state().reshape(-1)  #  for Mlp
         action, _ = self.model.predict(encoded_state,
                                        action_masks=action_masks(game),
                                        deterministic=self.deterministic)
@@ -209,15 +210,17 @@ class MaskedPPOWrapperNew(ModelInterface):
         return (move,), None
 
 
-
-def load_model_new(name, file, cls=MaskablePPO):  # TODO generalize this module
-    model = cls.load(file, custom_objects={'lr_schedule': lambda _: 0.0005,
-                                           'clip_range': 0.2,
-                                           'action_space': Discrete(64),
-                                           'seed': int(time.time())})
-
-
-    return MaskedPPOWrapperNew(name, model)
+def load_model_new(name, file, cls=MaskablePPO, cnn=False, policy_cls=None):  # TODO generalize this module
+    '''for ppo cnn it doesnt pickle policy class BUG, so you need to supply it'''
+    custom_objects = {'lr_schedule': lambda _: 0.0005,
+                      'clip_range': 0.2,
+                      'action_space': Discrete(64),
+                      'seed': int(time.time())
+                      }
+    if policy_cls is not None:
+        custom_objects['policy_class'] = policy_cls
+    model = cls.load(file, custom_objects=custom_objects)
+    return MaskedPPOWrapperNew(name, model, cnn)
 
 
 def load_model(name, file):
