@@ -96,15 +96,21 @@ class Node:
     #                                         'q_value': q_value,
     #                                         'exploration_term': exploration_term,
     #                                         'prior': self.prior}
-
-    def select_highest_ucb_child(self, c):
-        if self.visited > 2 * len(self.children):
-            log_visited = math.log(self.visited)
-            max_child = max(self.children, key=lambda ch: ch.get_uct_log(c, log_visited))
-            # mapped_children_DEBUG = list(map(lambda ch: ch.get_uct_log_debug(c, log_visited)[1], self.children))
-        else:
-            max_child = max(self.children, key=lambda ch: ch.get_uct(c, self.visited))
-            # mapped_children_DEBUG = list(map(lambda ch: ch.get_uct_debug(c, self.visited)[1], self.children))
+    
+    # -----------------------------------------
+    #def select_highest_ucb_child(self, c):
+    #    if self.visited > 2 * len(self.children):
+    #        log_visited = math.log(self.visited)
+    #        max_child = max(self.children, key=lambda ch: ch.get_uct_log(c, log_visited))
+    #        # mapped_children_DEBUG = list(map(lambda ch: ch.get_uct_log_debug(c, log_visited)[1], self.children))
+    #    else:
+    #        max_child = max(self.children, key=lambda ch: ch.get_uct(c, self.visited))
+    #        # mapped_children_DEBUG = list(map(lambda ch: ch.get_uct_debug(c, self.visited)[1], self.children))
+    #
+    #return max_child
+    #-------------------------------------------
+    def select_highest_ucb_child(self, c):        
+        max_child = max(self.children, key=lambda ch: ch.get_uct(c, self.visited))            
         return max_child
 
     def get_uct_log(self, c, log_visited):
@@ -262,9 +268,12 @@ class MCTS(ModelInterface):
 
     def backprop(self, node: Node, value: float):
         from_perspective_of = node.game.last_turn
+        if node.game.player_turn != node.game.last_turn:
+            value = -value
+
         while node is not None:
             node.visited += 1
-            if from_perspective_of == node.game.last_turn:
+            if from_perspective_of == node.game.last_turn:  # node.game.last_turn
                 node.value += value
             else:
                 node.value -= value
@@ -315,16 +324,7 @@ class MCTS(ModelInterface):
             # Perform MCTS steps: selection, expansion, simulation, backpropagation
             self.mcts_iter()
             iterations += 1
-
-            if iterations > 80 and self.root.game.turn > 51:
-                pass
-
-            if iterations > 83 and self.root.game.turn > 53:
-                pass
-
-            if iterations > 86 and self.root.game.turn > 55:
-                pass
-
+            
             # Check termination conditions
             check_time = time.perf_counter()
             elapsed_time = check_time - start_time

@@ -268,35 +268,51 @@ def get_env(env_factory, use_cnn=False):
     return DummyVecEnv([lambda: monitor])
 
 
+class LinearSchedule:
+    def __init__(self, initial_value):
+        self.initial_value = initial_value
+
+    def __call__(self, progress_remaining):
+        return progress_remaining * self.initial_value
+
+
 if __name__ == '__main__':
-    # Settings
-    SEED = 13  # NOT USED
-    NUM_TIMESTEPS = int(300_000)
-    EVAL_FREQ = int(10_000)
-    EVAL_EPISODES = int(100)
-    BEST_THRESHOLD = 0.3  # must achieve a mean score above this to replace prev best self
-    RENDER_MODE = False  # set this to false if you plan on running for full 1000 trials.
-    # LOGDIR = 'scripts/rl/test-working/ppo/v1/'  # "ppo_masked/test/"
-    LOGDIR = 'scripts/rl/test-working/trpo/test/'  # "ppo_masked/test/"
-    CNN_POLICY = True
-    CONTINUE_FROM_MODEL = None
-
-    policy_kwargs = dict(
-        net_arch=[64] * 8
-    )
-
-    params = {
-        'learning_rate': 0.0001,
-        'n_steps': 2048 * 10,
-        'batch_size': 128,
-        'gamma': 0.99,
-        'verbose': 100,
-        'seed': SEED,
-    }
-
     print(f'CUDA available: {torch.cuda.is_available()}')
     device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
+    # Settings
+    SEED = 13  # NOT USED
+    NUM_TIMESTEPS = int(30_000_000)
+    EVAL_FREQ = int(20_500 * 3)
+    EVAL_EPISODES = int(200)
+    BEST_THRESHOLD = 0.19  # must achieve a mean score above this to replace prev best self
+    RENDER_MODE = False  # set this to false if you plan on running for full 1000 trials.
+    # LOGDIR = 'scripts/rl/test-working/ppo/v1/'  # "ppo_masked/test/"
+    LOGDIR = 'scripts/rl/output/phase2/trpo/mlp/base2/'  # "ppo_masked/test/"
+    CNN_POLICY = False
+    CONTINUE_FROM_MODEL = 'scripts/rl/output/phase2/trpo/mlp/base/history_0092'
+
+    print(f'seed: {SEED} \nnum_timesteps: {NUM_TIMESTEPS} \neval_freq: {EVAL_FREQ}',
+          f'\neval_episoded: {EVAL_EPISODES} \nbest_threshold: {BEST_THRESHOLD}',
+          f'\nlogdir: {LOGDIR} \ncnn_policy: {CNN_POLICY} \ncontinueFrom_model: {CONTINUE_FROM_MODEL}', flush=True)
+
+    policy_kwargs = {
+        'net_arch': {
+            'pi': [128, 128] * 4,
+            'vf': [64, 64] * 4
+        }
+    }
+
+    params = {
+        'learning_rate': LinearSchedule(0.0001),
+        'n_steps': 2048 * 3,
+        'batch_size': 64,
+        #'gamma': 0.99,
+        'verbose': 100,
+        'seed': SEED,
+    }    
+
+    
     env = OthelloEnv
     if CNN_POLICY:
         env = get_env(env, use_cnn=True)
@@ -321,9 +337,12 @@ if __name__ == '__main__':
                                   device=device,
                                   custom_objects=params)
 
+    print(f'\nparams: {params}\n')
+
     start_model_copy = model.load(starting_model_filepath,
                                   device=device)
     env.envs[0].unwrapped.change_to_latest_agent(start_model_copy)
+
 
     params = {
         'eval_env': env,
@@ -341,5 +360,5 @@ if __name__ == '__main__':
     )
 
     model.learn(total_timesteps=NUM_TIMESTEPS,
-                log_interval=1,
+                log_interval=10,
                 callback=eval_callback)

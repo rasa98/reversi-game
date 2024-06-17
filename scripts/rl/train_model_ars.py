@@ -231,20 +231,32 @@ class MaskableArs(ars.ARS):
         return self.policy.predict(observation, state, episode_start, action_masks, deterministic)
 
 
+class LinearSchedule:
+    def __init__(self, initial_value):
+        self.initial_value = initial_value
+
+    def __call__(self, progress_remaining):
+        return progress_remaining * self.initial_value
+
+
 def get_env(env_factory):
     monitor = Monitor(env=env_factory())
     return DummyVecEnv([lambda: monitor])
 
 if __name__ == '__main__':
     # Settings
-    # SEED = 19  # NOT USED
+    SEED = 129  # NOT USED
     NUM_TIMESTEPS = int(10_000_000)
-    EVAL_FREQ = int(96124+100)
+    EVAL_FREQ = int(26000)
     EVAL_EPISODES = int(200)
     BEST_THRESHOLD = 0.3  # must achieve a mean score above this to replace prev best self
-    RENDER_MODE = False  # set this to false if you plan on running for full 1000 trials.
-    # LOGDIR = 'scripts/rl/test-working/ppo/v1/'  # "ppo_masked/test/"
-    LOGDIR = 'scripts/rl/test-working/ars/del2/'  # "ppo_masked/test/"
+    RENDER_MODE = False  # set this to false if you plan on running for full 1000 trials.    
+    LOGDIR = 'scripts/rl/output/phase2/ars/mlp/base/'  # "ppo_masked/test/"    
+    CONTINUE_FROM_MODEL = None
+
+    print(f'seed: {SEED} \nnum_timesteps: {NUM_TIMESTEPS} \neval_freq: {EVAL_FREQ}',
+          f'\neval_episoded: {EVAL_EPISODES} \nbest_threshold: {BEST_THRESHOLD}',
+          f'\nlogdir: {LOGDIR} \ncontinueFrom_model: {CONTINUE_FROM_MODEL}', flush=True)
 
     print(f'CUDA available: {torch.cuda.is_available()}')
     device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
@@ -252,40 +264,44 @@ if __name__ == '__main__':
     env = OthelloEnv
     env = get_env(env)
 
-    # --------------------------------------------
     policy_kwargs = dict(
         net_arch=[64] * 8
     )
-    #
-    model = MaskableArs(policy=CustomMlpPolicy,
-                        env=env,
-                        device=device,
-                        n_delta=16,
-                        n_top=6,
-                        zero_policy=False,
-                        n_eval_episodes=50,
-                        delta_std=0.05,
-                        learning_rate=1e-4,
-                        verbose=2,
-                        policy_kwargs=policy_kwargs)
-    # --------------------------------------------------
-    import os
 
-    print(os.getcwd())
-    starting_model_filepath = LOGDIR + 'random_start_model'
-    # starting_model_filepath = 'ppo_masked/cloud/v2/history_0299'
-    # starting_model_filepath = 'scripts/rl/test-working/ars/1/history_0004'
+    params = {        
+        'n_delta': 30,
+        'n_top': 12,
+        'zero_policy': False,
+        'n_eval_episodes': 10,
+        'delta_std': 0.05,
+        'learning_rate': LinearSchedule(4e-2),
+        'verbose': 2,
+        'seed': SEED,
+    }
 
-    # model = MaskablePPO.load(starting_model_filepath, env=env, device=device,
-    #                          learning_rate=0.0001,
-    #                          n_steps=2048*2,
-    #                          clip_range=0.15,
-    #                          batch_size=128,
-    #                          ent_coef=0.01,
-    #                          gamma=0.99,
-    #
-    #                          )
-    model.save(starting_model_filepath)
+    
+
+    
+    
+    
+    if CONTINUE_FROM_MODEL is None:
+        params['policy_kwargs'] = policy_kwargs
+        model = MaskableArs(policy=CustomMlpPolicy,
+                            env=env,
+                            device=device,
+                            **params)
+        starting_model_filepath = LOGDIR + 'random_start_model'
+        model.save(starting_model_filepath)
+    else:
+        starting_model_filepath = CONTINUE_FROM_MODEL
+        # params['exploration_rate'] = 1.0  # to reset exploration rate !!!        
+        model = MaskablePPO.load(starting_model_filepath,
+                                 env=env,
+                                 device=device,
+                                 custom_objects=params)
+
+    print(f'\nparams: {params}\n')
+
 
     start_model_copy = model.load(starting_model_filepath)
     env.envs[0].unwrapped.change_to_latest_agent(start_model_copy)

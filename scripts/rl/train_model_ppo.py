@@ -6,7 +6,6 @@ import numpy as np
 import random
 from gymnasium import spaces
 
-sys.path.append('/home/rasa/PycharmProjects/reversi-game/')
 import torch
 from stable_baselines3.common.vec_env import VecEnv, DummyVecEnv, sync_envs_normalization
 
@@ -32,6 +31,13 @@ callbacks_module.evaluate_policy = masked_evaluate_policy
 
 th = torch
 
+class LinearSchedule:
+    def __init__(self, initial_value):
+        self.initial_value = initial_value
+
+    def __call__(self, progress_remaining):
+        return progress_remaining * self.initial_value
+
 
 class CustomCnnPPOPolicy(MaskableActorCriticCnnPolicy):
     def __init__(self, *args, **kwargs):
@@ -46,37 +52,48 @@ def get_env(env_factory, use_cnn=False):
 
 
 if __name__ == '__main__':
+    print(f'CUDA available: {torch.cuda.is_available()}')
+    device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+
     # Settings
-    SEED = 19  # NOT USED
-    NUM_TIMESTEPS = int(30_000_000)
-    EVAL_FREQ = int(20_000)
+    SEED = 12  # NOT USED
+    NUM_TIMESTEPS = int(12_000_000)
+    EVAL_FREQ = int(20_500 * 3)
     EVAL_EPISODES = int(200)
-    BEST_THRESHOLD = 0.15  # must achieve a mean score above this to replace prev best self
+    BEST_THRESHOLD = 0.22  # must achieve a mean score above this to replace prev best self
     RENDER_MODE = False  # set this to false if you plan on running for full 1000 trials.
     # LOGDIR = 'scripts/rl/test-working/ppo/v1/'  # "ppo_masked/test/"
-    LOGDIR = 'scripts/rl/test-working/ppo/2cnn/'  # "ppo_masked/test/"
+    LOGDIR = 'scripts/rl/output/phase2/ppo/cnn/base-v3/'  # "ppo_masked/test/"
     CNN_POLICY = True
-    CONTINUE_FROM_MODEL = None
+    CONTINUE_FROM_MODEL = 'scripts/rl/output/phase2/ppo/cnn/base-v2/history_0062' #None
+
+    print(f'seed: {SEED} \nnum_timesteps: {NUM_TIMESTEPS} \neval_freq: {EVAL_FREQ}',
+          f'\neval_episoded: {EVAL_EPISODES} \nbest_threshold: {BEST_THRESHOLD}',
+          f'\nlogdir: {LOGDIR} \ncnn_policy: {CNN_POLICY} \ncontinueFrom_model: {CONTINUE_FROM_MODEL}', flush=True)
 
     params = {
-        'learning_rate': 0.0001,
-        'n_steps': 2048 * 10,
-        'n_epochs': 10,
-        'clip_range': 0.15,
+        'learning_rate': LinearSchedule(2e-4),
+        'n_steps': 2048 * 30,
+        'n_epochs': 5,
+        'clip_range': 0.18,
         'batch_size': 128,
         'ent_coef': 0.01,
-        'gamma': 0.99,
+        #'gamma': 0.99,
         'verbose': 100,
         'seed': SEED,
     }
 
-    print(f'CUDA available: {torch.cuda.is_available()}')
-    device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+    print(f'\nparams: {params}\n')
+
+    
 
     # --------------------------------------------
-    policy_kwargs = dict(
-        net_arch=[32] * 2
-    )
+    policy_kwargs = {
+        'net_arch': {
+            'pi': [128, 128] * 4,
+            'vf': [64, 64] * 4
+        }
+    }
 
     env = OthelloEnv
     if CNN_POLICY:
@@ -101,7 +118,8 @@ if __name__ == '__main__':
     else:
         starting_model_filepath = CONTINUE_FROM_MODEL
         # params['exploration_rate'] = 1.0  # to reset exploration rate !!!
-        model = MaskableDQN.load(starting_model_filepath,
+        params['policy_class'] = CustomCnnPPOPolicy
+        model = MaskablePPO.load(starting_model_filepath,
                                  env=env,
                                  device=device,
                                  custom_objects=params)
@@ -122,7 +140,7 @@ if __name__ == '__main__':
         log_path=LOGDIR,
         eval_freq=EVAL_FREQ,
         n_eval_episodes=EVAL_EPISODES,
-        deterministic=False
+        deterministic=True
     )
 
     model.learn(total_timesteps=NUM_TIMESTEPS,

@@ -66,7 +66,7 @@ class OthelloEnv(gym.Env):
         winner = self.game.get_winner()
         if winner is not None:
             self.episodes += 1
-            if self.episodes % 10 == 0:
+            if self.episodes % 1000 == 0:
                 print(f'Ep done - {self.episodes}.')
 
             done = True
@@ -167,9 +167,9 @@ class SelfPlayCallback(EvalCallback):
             print("SELFPLAY: new best model, bumping up generation to", self.generation)
             source_file = os.path.join(self.log_dir, "best_model.zip")
             backup_file = os.path.join(self.log_dir, "history_" + str(self.generation).zfill(4) + ".zip")
-            copyfile(source_file, backup_file)
+            copyfile(source_file, backup_file)            
             self.best_mean_reward = self.params['BEST_THRESHOLD']
-            agent = self.model.load(source_file, device=self.model.device)
+            agent = self.model.load(source_file, device=self.model.device)  
             # agent.env = self.eval_env.envs[0]  # important for action mask of inner agent
             self.eval_env.envs[0].unwrapped.change_to_latest_agent(agent)
         return result

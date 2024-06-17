@@ -1,0 +1,174 @@
+/bin/bash: /opt/miniconda/3.10/lib/libtinfo.so.6: no version information available (required by /bin/bash)
+CUDA Available: True
+CPU Model: Intel(R) Core(TM) i7-8700 CPU @ 3.20GHz
+GPU Model: NVIDIA GeForce RTX 2070 SUPER
+CUDA available: True
+seed: 13 
+num_timesteps: 30000000 
+eval_freq: 20000 
+eval_episoded: 200 
+best_threshold: 0.25 
+logdir: scripts/rl/output/phase2/trpo/mlp/base/ 
+cnn_policy: False 
+continueFrom_model: None
+/home/student/pantrasa/project/venv310/lib/python3.10/site-packages/stable_baselines3/common/save_util.py:284: UserWarning: Path 'scripts/rl/output/phase2/trpo/mlp/base' does not exist. Will create it.
+  warnings.warn(f"Path '{path.parent}' does not exist. Will create it.")
+/home/student/pantrasa/project/venv310/lib/python3.10/site-packages/gymnasium/core.py:311: UserWarning: [33mWARN: env.action_masks to get variables from other wrappers is deprecated and will be removed in v1.0, to get this variable you can do `env.unwrapped.action_masks` for environment variables or `env.get_wrapper_attr('action_masks')` that will search the reminding wrappers.[0m
+  logger.warn(
+Using cuda device
+
+params: {'learning_rate': 0.0002, 'n_steps': 20480, 'batch_size': 128, 'verbose': 100, 'seed': 13, 'policy_kwargs': {'net_arch': {'pi': [128, 128, 128, 128, 128, 128, 128, 128], 'vf': [64, 64, 64, 64, 64, 64, 64, 64]}}}
+
+Eval num_timesteps=20000, episode_reward=0.06 +/- 0.97
+Episode length: 29.91 +/- 0.60
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 29.9     |
+|    mean_reward     | 0.06     |
+| time/              |          |
+|    total_timesteps | 20000    |
+---------------------------------
+Ep done - 1000.
+Eval num_timesteps=40000, episode_reward=0.56 +/- 0.81
+Episode length: 30.09 +/- 0.59
+----------------------------------------
+| eval/                     |          |
+|    mean_ep_length         | 30.1     |
+|    mean_reward            | 0.56     |
+| time/                     |          |
+|    total_timesteps        | 40000    |
+| train/                    |          |
+|    explained_variance     | -0.429   |
+|    is_line_search_success | 1        |
+|    kl_divergence_loss     | 0.00356  |
+|    learning_rate          | 0.0002   |
+|    n_updates              | 1        |
+|    policy_objective       | 0.031    |
+|    value_loss             | 0.165    |
+----------------------------------------
+New best mean reward!
+SELFPLAY: mean_reward achieved: 0.56
+SELFPLAY: new best model, bumping up generation to 1
+Ep done - 2000.
+Eval num_timesteps=60000, episode_reward=0.70 +/- 0.70
+Episode length: 30.12 +/- 0.67
+----------------------------------------
+| eval/                     |          |
+|    mean_ep_length         | 30.1     |
+|    mean_reward            | 0.7      |
+| time/                     |          |
+|    total_timesteps        | 60000    |
+| train/                    |          |
+|    explained_variance     | 0.0893   |
+|    is_line_search_success | 1        |
+|    kl_divergence_loss     | 0.00328  |
+|    learning_rate          | 0.0002   |
+|    n_updates              | 2        |
+|    policy_objective       | 0.0234   |
+|    value_loss             | 0.154    |
+----------------------------------------
+New best mean reward!
+SELFPLAY: mean_reward achieved: 0.7
+SELFPLAY: new best model, bumping up generation to 2
+Ep done - 3000.
+Eval num_timesteps=80000, episode_reward=0.64 +/- 0.76
+Episode length: 30.06 +/- 0.64
+----------------------------------------
+| eval/                     |          |
+|    mean_ep_length         | 30.1     |
+|    mean_reward            | 0.635    |
+| time/                     |          |
+|    total_timesteps        | 80000    |
+| train/                    |          |
+|    explained_variance     | 0.134    |
+|    is_line_search_success | 1        |
+|    kl_divergence_loss     | 0.00406  |
+|    learning_rate          | 0.0002   |
+|    n_updates              | 3        |
+|    policy_objective       | 0.0245   |
+|    value_loss             | 0.158    |
+----------------------------------------
+New best mean reward!
+SELFPLAY: mean_reward achieved: 0.635
+SELFPLAY: new best model, bumping up generation to 3
+Ep done - 4000.
+Eval num_timesteps=100000, episode_reward=0.73 +/- 0.67
+Episode length: 30.06 +/- 0.58
+----------------------------------------
+| eval/                     |          |
+|    mean_ep_length         | 30.1     |
+|    mean_reward            | 0.735    |
+| time/                     |          |
+|    total_timesteps        | 100000   |
+| train/                    |          |
+|    explained_variance     | 0.211    |
+|    is_line_search_success | 1        |
+|    kl_divergence_loss     | 0.00324  |
+|    learning_rate          | 0.0002   |
+|    n_updates              | 4        |
+|    policy_objective       | 0.0212   |
+|    value_loss             | 0.154    |
+----------------------------------------
+New best mean reward!
+SELFPLAY: mean_reward achieved: 0.735
+SELFPLAY: new best model, bumping up generation to 4
+Ep done - 5000.
+Eval num_timesteps=120000, episode_reward=0.68 +/- 0.71
+Episode length: 29.87 +/- 1.46
+----------------------------------------
+| eval/                     |          |
+|    mean_ep_length         | 29.9     |
+|    mean_reward            | 0.675    |
+| time/                     |          |
+|    total_timesteps        | 120000   |
+| train/                    |          |
+|    explained_variance     | 0.174    |
+|    is_line_search_success | 1        |
+|    kl_divergence_loss     | 0.00361  |
+|    learning_rate          | 0.0002   |
+|    n_updates              | 5        |
+|    policy_objective       | 0.0227   |
+|    value_loss             | 0.162    |
+----------------------------------------
+New best mean reward!
+SELFPLAY: mean_reward achieved: 0.675
+SELFPLAY: new best model, bumping up generation to 5
+Ep done - 6000.
+Eval num_timesteps=140000, episode_reward=0.69 +/- 0.70
+Episode length: 29.91 +/- 0.55
+----------------------------------------
+| eval/                     |          |
+|    mean_ep_length         | 29.9     |
+|    mean_reward            | 0.695    |
+| time/                     |          |
+|    total_timesteps        | 140000   |
+| train/                    |          |
+|    explained_variance     | 0.166    |
+|    is_line_search_success | 1        |
+|    kl_divergence_loss     | 0.003    |
+|    learning_rate          | 0.0002   |
+|    n_updates              | 6        |
+|    policy_objective       | 0.0206   |
+|    value_loss             | 0.168    |
+----------------------------------------
+New best mean reward!
+SELFPLAY: mean_reward achieved: 0.695
+SELFPLAY: new best model, bumping up generation to 6
+Eval num_timesteps=160000, episode_reward=0.70 +/- 0.69
+Episode length: 30.05 +/- 0.60
+----------------------------------------
+| eval/                     |          |
+|    mean_ep_length         | 30       |
+|    mean_reward            | 0.7      |
+| time/                     |          |
+|    total_timesteps        | 160000   |
+| train/                    |          |
+|    explained_variance     | 0.152    |
+|    is_line_search_success | 1        |
+|    kl_divergence_loss     | 0.0029   |
+|    learning_rate          | 0.0002   |
+|    n_updates              | 7        |
+|    policy_objective       | 0.0211   |
+|    value_loss             | 0.17     |
+----------------------------------------
+slurmstepd-n16: error: *** JOB 696 ON n16 CANCELLED AT 2024-06-15T20:28:37 ***
