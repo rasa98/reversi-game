@@ -150,7 +150,7 @@ class AlphaZero:
         self.best_model = None
         self.best_models_optimizer = None
         self.test_agent = self.load_test_agent()
-        self.mcts = MCTS("alpha-mcts", model, **mcts_params)
+        self.mcts = MCTS(model, **mcts_params)
         self.model_iteration = 0
 
         self.model_subsequent_fail = 0

@@ -99,7 +99,7 @@ class AlphaZero:
         self.best_model = None
         self.best_models_optimizer = None
         self.test_agent = self.load_test_agent()
-        self.mcts = MCTS("alpha-mcts", model, **mcts_params)
+        self.mcts = MCTS(model, **mcts_params)
         self.model_iteration = 0
 
         self.model_subsequent_fail = 0
@@ -136,9 +136,14 @@ class AlphaZero:
         return a1_wins, a2_wins, a1_win_rate
 
     def save_if_passes_bench(self, folder, iteration):
-        params = self.mcts_params
-        current_agent = load_azero_agent("current", model=self.model, params=params)
-        best_agent = load_azero_agent('best yet', model=self.best_model, params=params)
+        params = dict(self.mcts_params)
+        params['max_iter'] = 30
+
+        assert params['max_iter'] != self.mcts_params['max_iter'], \
+            'You changed azero obj field mcts_params!!'
+
+        current_agent = load_azero_model("current", model=self.model, params=params)
+        best_agent = load_azero_model('best yet', model=self.best_model, params=params)
         test_agent = self.test_agent
 
         print(f'\n×××××  benchmarking model after training  ×××××')
@@ -155,7 +160,7 @@ class AlphaZero:
         #     if a1_winrate < 0.65:
         #         return False
         _, _, a1_winrate = self.bench_agents(current_agent, best_agent, det=False)
-        if a1_winrate < 0.75:
+        if a1_winrate < 0.6:
             return False
         print('++++ +++++++++ ++++New model Save!!!++++ +++++++++ ++++')
         torch.save(self.model.state_dict(), f"{folder}/model_{iteration}.pt")
@@ -253,7 +258,8 @@ class AlphaZero:
             times = ((self.params['num_self_play_iterations'] // self.params['num_parallel_games']) // num_cores)
             for _ in trange(1):  # just to time it
                 unflattened_memory = pool.starmap(parallel_fun,
-                                                  [(rank, times, self.params, self.model, self.mcts_params) for rank in range(num_cores)])
+                                                  [(rank, times, self.params, self.model, self.mcts_params) for rank in
+                                                   range(num_cores)])
 
             for data in unflattened_memory:
                 memory.extend(data)
@@ -306,36 +312,43 @@ class SPG:
         # self.node = None
 
 
+lock = None
+
+
+def init(_lock):
+    global lock
+    lock = _lock
+
+
 def parallel_fun(rank, times, params, model, mcts_params):
     random_data = os.urandom(8)
     seed = int.from_bytes(random_data, byteorder="big")
-    seed += rank 
-    seed = seed % (2**32 - 1)
+    seed += rank
+    seed = seed % (2 ** 32 - 1)
 
     random.seed(seed)
     np.random.seed(seed)
 
     res = []
-    
-    device = torch.device(f'cuda' if torch.cuda.is_available() else 'cpu')
-    model = model.to(device)    
-    if str(model.device) not in {'cuda'}:        
-       raise Exception('Not running on CUDA !!!!')  
 
-    mcts = MCTS("alpha-mcts", model, seed=seed, **mcts_params)
+    device = torch.device(f'cuda' if torch.cuda.is_available() else 'cpu')
+    model = model.to(device)
+    if str(model.device) not in {'cuda'}:
+        raise Exception('Not running on CUDA !!!!')
+
+    mcts = MCTS(model, seed=seed, lock=lock, **mcts_params)
 
     for _ in range(times):
         res += self_play_function(params, mcts)
     return res
 
 
-def self_play_function(params, mcts):    
+def self_play_function(params, mcts):
     data_to_return = []
     spGames = [SPG() for _ in range(params['num_parallel_games'])]
 
-    #if str(mcts.model.device) not in {'cuda', 'cuda:0', 'cuda:1'}:
+    # if str(mcts.model.device) not in {'cuda', 'cuda:0', 'cuda:1'}:
     #    raise Exception('Not running on CUDA !!!!')
-
 
     while len(spGames) > 0:
         action_probs = mcts.predict_best_move(spGames)
@@ -382,7 +395,7 @@ if __name__ == "__main__":
     if os.environ['USER'] == 'rasa':
         print('running on local node')
         os.chdir('../')
-        num_cores = 1
+        num_cores = 2
     else:
         num_cores = int(os.environ['SLURM_CPUS_ON_NODE']) // 2
 
@@ -399,8 +412,8 @@ if __name__ == "__main__":
         'temp': 1.2,
         'num_parallel_games': 100,
         'model_subsequent_fail': 5,
-        'scheduler_step_size': 12, 
-        'scheduler_gamma':0.97,
+        'scheduler_step_size': 12,
+        'scheduler_gamma': 0.97,
         'model_output': 'models_output/alpha-zero/FINAL/layer128-v3/'
     }
     mcts_params = {
@@ -434,5 +447,7 @@ if __name__ == "__main__":
     azero = AlphaZero(model, optimizer, scheduler, params, mcts_params)
 
     mp.set_start_method('forkserver')
-    with mp.Pool(processes=num_cores) as pool:
+    lock = mp.Lock()
+
+    with mp.Pool(processes=num_cores, initializer=init, initargs=(lock,)) as pool:
         azero.learn()

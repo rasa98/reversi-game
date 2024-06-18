@@ -167,11 +167,10 @@ class Node:
 
 class MCTS():
 
-    def __init__(self, name, model, max_iter=math.inf, max_time=math.inf,
+    def __init__(self, model, max_iter=math.inf, max_time=math.inf,
                  uct_exploration_const=2.0, verbose=0, dirichlet_epsilon=0.2,
-                 initial_alpha=0.4, final_alpha=0.1, decay_steps=50, seed=None):
-        # super().__init__(name)
-        # self.root = None
+                 initial_alpha=0.4, final_alpha=0.1, decay_steps=50,
+                 seed=None, lock=None):
         self.model = model
         self.rng = np.random.default_rng(seed=seed)
 
@@ -188,6 +187,9 @@ class MCTS():
         self.decay_steps = decay_steps
 
         self.uct_exploration_const = uct_exploration_const
+        self.lock = lock
+        if lock:
+            self.run_model = self.run_model_lock
 
     def iter_per_cycle(self):
         if self.last_cycle_time != 0:
@@ -311,6 +313,29 @@ class MCTS():
             policy = policy * (1 - self.dirichlet_epsilon) + self.dirichlet_epsilon \
                      * self.rng.dirichlet([self.get_dirichlet_alpha()] * ALL_FIELDS_SIZE,
                                            size=policy.shape[0])
+
+        for i, game in enumerate(games):
+            valid_moves = game.valid_moves_encoded()  # TODO mozda spg.root.game ???
+            policy[i] *= valid_moves
+            policy[i] /= np.sum(policy[i])
+
+        return policy, value
+
+    @torch.no_grad()
+    def run_model_lock(self, games, add_noise=False):
+        states = np.stack([game.get_encoded_state() for game in games])
+
+        with self.lock:
+            policy, value = self.model(
+                torch.tensor(states, device=self.model.device, dtype=torch.float32)
+            )
+            policy = torch.softmax(policy, dim=1).cpu().numpy()
+            value = value.cpu().numpy()
+
+        if add_noise:
+            policy = policy * (1 - self.dirichlet_epsilon) + self.dirichlet_epsilon \
+                     * self.rng.dirichlet([self.get_dirichlet_alpha()] * ALL_FIELDS_SIZE,
+                                          size=policy.shape[0])
 
         for i, game in enumerate(games):
             valid_moves = game.valid_moves_encoded()  # TODO mozda spg.root.game ???
