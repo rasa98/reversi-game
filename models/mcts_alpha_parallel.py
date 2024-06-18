@@ -169,10 +169,11 @@ class MCTS():
 
     def __init__(self, name, model, max_iter=math.inf, max_time=math.inf,
                  uct_exploration_const=2.0, verbose=0, dirichlet_epsilon=0.2,
-                 initial_alpha=0.4, final_alpha=0.1, decay_steps=50):
+                 initial_alpha=0.4, final_alpha=0.1, decay_steps=50, seed=None):
         # super().__init__(name)
         # self.root = None
         self.model = model
+        self.rng = np.random.default_rng(seed=seed)
 
         self.last_cycle_iteration = 0
         self.last_cycle_time = 0
@@ -308,7 +309,7 @@ class MCTS():
 
         if add_noise:
             policy = policy * (1 - self.dirichlet_epsilon) + self.dirichlet_epsilon \
-                     * np.random.dirichlet([self.get_dirichlet_alpha()] * ALL_FIELDS_SIZE,
+                     * self.rng.dirichlet([self.get_dirichlet_alpha()] * ALL_FIELDS_SIZE,
                                            size=policy.shape[0])
 
         for i, game in enumerate(games):

@@ -147,18 +147,21 @@ class AlphaZero:
         test_agent = self.test_agent
 
         print(f'\n×××××  benchmarking model after training  ×××××')
-        _, _, a1_winrate = self.bench_agents(current_agent, ai_random)
+        #_, _, a1_winrate = self.bench_agents(current_agent, ai_random)
+        #if a1_winrate < 0.8:
+        #    return False
+
+        #if self.model_iteration > 4:
+        #    current_wins, test_wins, _ = self.bench_agents(current_agent, test_agent)
+        #    if current_wins <= test_wins:
+        #        return False
+
+        #    _, _, a1_winrate = self.bench_agents(current_agent, best_agent)
+        #    if a1_winrate < 0.8:
+        #        return False
+        _, _, a1_winrate = self.bench_agents(current_agent, best_agent)
         if a1_winrate < 0.8:
             return False
-
-        if self.model_iteration > 4:
-            current_wins, test_wins, _ = self.bench_agents(current_agent, test_agent)
-            if current_wins <= test_wins:
-                return False
-
-            _, _, a1_winrate = self.bench_agents(current_agent, best_agent)
-            if a1_winrate < 0.6:
-                return False
         torch.save(self.model.state_dict(), f"{folder}/model_{iteration}.pt")
         torch.save(self.optimizer.state_dict(), f"{folder}/optimizer_{iteration}.pt")
         self.copy_model()
@@ -254,11 +257,10 @@ class AlphaZero:
             times = ((self.params['num_self_play_iterations'] // self.params['num_parallel_games']) // num_cores)
             for _ in trange(1):
                 unflattened_memory = pool.starmap(parallel_fun,
-                                                  [(times, self.params, self.model, self.mcts_params)] * num_cores)
+                                                  [(rank, times, self.params, self.model, self.mcts_params) for rank in range(num_cores)])
 
             for data in unflattened_memory:
                 memory.extend(data)
-
 
             print(flush=True)
 
@@ -308,21 +310,32 @@ class SPG:
         # self.node = None
 
 
-def parallel_fun(times, params, model, mcts_params):
+def parallel_fun(rank, times, params, model, mcts_params):
+    random_data = os.urandom(8)
+    seed = int.from_bytes(random_data, byteorder="big")
+    seed += rank 
+    seed = seed % (2**32 - 1)
+
+    random.seed(seed)
+    np.random.seed(seed)
+
     res = []
-    mcts = MCTS("alpha-mcts", model, **mcts_params)
+    
+    device = torch.device(f'cuda' if torch.cuda.is_available() else 'cpu')
+    model = model.to(device)    
+    if str(model.device) not in {'cuda'}:        
+       raise Exception('Not running on CUDA !!!!')  
+
+    mcts = MCTS("alpha-mcts", model, seed=seed, **mcts_params)
     for _ in range(times):
         res += self_play_function(params, mcts)
     return res
 
 
-def self_play_function(params, mcts):
+def self_play_function(params, mcts):    
     data_to_return = []
-    # game = Othello()
     spGames = [SPG() for _ in range(params['num_parallel_games'])]
-    print(f'cuda: {mcts.model.device}', flush=True)
 
-    # while True:
     while len(spGames) > 0:
         action_probs = mcts.predict_best_move(spGames)
         for i in range(len(spGames) - 1, -1, -1):
@@ -375,30 +388,29 @@ if __name__ == "__main__":
     print(f'number of cores used for pool: {num_cores}')
 
     params = {
-        # 'res_blocks': 4,
-        'hidden_layer': 16,
-        'lr': 7e-5,
-        'weight_decay': 1e-4,
+        'hidden_layer': 128,
+        'lr': 5e-5,
+        'weight_decay': 7e-5,
         'num_iterations': 50,
-        'num_self_play_iterations': 100,
-        'num_epochs': 6,
-        'batch_size': 128,
-        'temp': 1.1,
-        'num_parallel_games': 50,
+        'num_self_play_iterations': 200 * 6,
+        'num_epochs': 4,
+        'batch_size': 256,
+        'temp': 1.2,
+        'num_parallel_games': 100,
         'model_subsequent_fail': 5,
-        'scheduler_step_size': 12,
-        'scheduler_gamma': 0.97,
-        'model_output': 'models_output/alpha-zero/FINAL/del/'
+        'scheduler_step_size': 12, 
+        'scheduler_gamma':0.97,
+        'model_output': 'models_output/alpha-zero/FINAL/layer128-v3/'
     }
     mcts_params = {
-        'uct_exploration_const': 1.4,
-        'max_iter': 15,
+        'uct_exploration_const': 1.7,
+        'max_iter': 70,
         # these are flexible dirichlet epsilon for noise
         # favor exploration more in the beginning
         'dirichlet_epsilon': 0.25,
-        'initial_alpha': 0.4,
-        'final_alpha': 0.15,
-        'decay_steps': 30
+        'initial_alpha': 0.5,
+        'final_alpha': 0.20,
+        'decay_steps': 20
     }
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
