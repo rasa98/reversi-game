@@ -97,9 +97,8 @@ class Node:
     #                                         'exploration_term': exploration_term,
     #                                         'prior': self.prior}
 
-    
     # -----------------------------------------
-    #def select_highest_ucb_child(self, c):
+    # def select_highest_ucb_child(self, c):
     #    if self.visited > 2 * len(self.children):
     #        log_visited = math.log(self.visited)
     #        max_child = max(self.children, key=lambda ch: ch.get_uct_log(c, log_visited))
@@ -108,10 +107,10 @@ class Node:
     #        max_child = max(self.children, key=lambda ch: ch.get_uct(c, self.visited))
     #        # mapped_children_DEBUG = list(map(lambda ch: ch.get_uct_debug(c, self.visited)[1], self.children))
     #
-    #return max_child
-    #-------------------------------------------
-    def select_highest_ucb_child(self, c):        
-        max_child = max(self.children, key=lambda ch: ch.get_uct(c, self.visited))            
+    # return max_child
+    # -------------------------------------------
+    def select_highest_ucb_child(self, c):
+        max_child = max(self.children, key=lambda ch: ch.get_uct(c, self.visited))
         return max_child
 
     def get_uct_log(self, c, log_visited):
@@ -166,13 +165,11 @@ class Node:
                                             'prior': self.prior}
 
 
+class MCTS:
 
-class MCTS(ModelInterface):
-
-    def __init__(self, name, model, max_iter=math.inf, max_time=math.inf,
+    def __init__(self, model, max_iter=math.inf, max_time=math.inf,
                  uct_exploration_const=2.0, verbose=0, dirichlet_epsilon=0.2,
                  initial_alpha=0.4, final_alpha=0.1, decay_steps=50):
-        super().__init__(name)
         self.root = None  # Node(game.get_snapshot())
         self.model = model
 
@@ -203,14 +200,28 @@ class MCTS(ModelInterface):
         self.root = Node(game_copy, None, visited=1)
         self.root.explore_all_children(policy)
 
-    def predict_best_move(self, game: Othello, deterministic=True):
+    # def predict_best_move(self, game: Othello, deterministic=True):
+    #     self.set_root_new(game)
+    #     self.mcts_search()
+    #     # print(f'\nafter simulating: {dict(self.root.get_all_next_move_counter())}')
+    #     gc.collect()
+    #
+    #     if deterministic:
+    #         return self.best_moves(), None
+    #
+    #     action_probs = np.zeros(ALL_FIELDS_SIZE)
+    #     for child in self.root.children:
+    #         move = child.move
+    #         encoded_move = Othello.get_encoded_field(move)
+    #         action_probs[encoded_move] = child.visited
+    #     action_probs /= np.sum(action_probs)
+    #     return action_probs
+
+    def simulate(self, game: Othello):
         self.set_root_new(game)
         self.mcts_search()
         # print(f'\nafter simulating: {dict(self.root.get_all_next_move_counter())}')
         gc.collect()
-
-        if deterministic:
-            return self.best_moves(), None
 
         action_probs = np.zeros(ALL_FIELDS_SIZE)
         for child in self.root.children:

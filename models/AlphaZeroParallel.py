@@ -14,9 +14,6 @@ from torch.optim.lr_scheduler import StepLR
 import sys
 import copy
 import os
-
-source_dir = os.path.abspath(os.path.join(os.getcwd(), '../'))
-sys.path.append(source_dir)
 # ---------------------
 from game_logic import Othello
 from models.mcts_alpha_parallel import MCTS
@@ -25,6 +22,7 @@ from models.ppo_masked_model import load_model_new
 from bench_agent import bench_both_sides
 from models.montecarlo_alphazero_version import MCTS as MCTS1
 from models.model_interface import ai_random
+from models.AlphaZeroModel import load_azero_model
 
 GAME_ROW_COUNT = 8
 GAME_COLUMN_COUNT = 8
@@ -169,16 +167,6 @@ class AlphaZero:
 
         return ppo_18_big_rollouts
 
-    def load_azero_agent(self, name, model):
-        model.eval()
-        return MCTS1(f'alpha-mcts - {name}',
-                     model,
-                     max_time=self.mcts.max_time,
-                     max_iter=self.mcts.max_iter,
-                     uct_exploration_const=1.41,
-                     dirichlet_epsilon=0,
-                     verbose=0)
-
     def copy_model(self):
         self.best_model = copy.deepcopy(self.model)
         self.best_models_optimizer = torch.optim.Adam(self.best_model.parameters())
@@ -196,8 +184,8 @@ class AlphaZero:
         return a1_wins, a2_wins, a1_win_rate
 
     def save_if_passes_bench(self, folder, iteration):
-        current_agent = self.load_azero_agent("current", self.model)
-        best_agent = self.load_azero_agent('best yet', self.best_model)
+        current_agent = load_azero_agent("current", model=self.model, params=params)
+        best_agent = load_azero_agent('best yet', model=self.best_model, params=params)
         test_agent = self.test_agent
 
         print(f'\n×××××  benchmarking model after training  ×××××')
@@ -400,6 +388,8 @@ class SPG:
 
 if __name__ == "__main__":
     if os.environ['USER'] == 'rasa':
+        source_dir = os.path.abspath(os.path.join(os.getcwd(), '../'))
+        sys.path.append(source_dir)
         os.chdir('../')
 
     params = {

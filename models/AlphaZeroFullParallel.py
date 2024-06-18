@@ -31,6 +31,7 @@ from models.ppo_masked_model import load_model_new
 from bench_agent import bench_both_sides
 from models.montecarlo_alphazero_version import MCTS as MCTS1
 from models.model_interface import ai_random
+from models.AlphaZeroModel import load_azero_model
 
 GAME_ROW_COUNT = 8
 GAME_COLUMN_COUNT = 8
@@ -115,23 +116,16 @@ class AlphaZero:
 
         return ppo_18_big_rollouts
 
-    def load_azero_agent(self, name, model):
-        model.eval()
-        return MCTS1(f'alpha-mcts - {name}',
-                     model,
-                     max_time=self.mcts.max_time,
-                     max_iter=self.mcts.max_iter,
-                     uct_exploration_const=1.41,
-                     dirichlet_epsilon=0,
-                     verbose=0)
-
     def copy_model(self):
         self.best_model = copy.deepcopy(self.model)
         self.best_models_optimizer = torch.optim.Adam(self.best_model.parameters())
         self.best_models_optimizer.load_state_dict(self.optimizer.state_dict())
 
     @staticmethod
-    def bench_agents(a1, a2, times=10):
+    def bench_agents(a1, a2, times=10, det=True):
+        a1.set_deterministic(det)
+        a2.set_deterministic(det)
+
         a1_wins, a2_wins = bench_both_sides(
             a1,
             a2,
@@ -142,26 +136,28 @@ class AlphaZero:
         return a1_wins, a2_wins, a1_win_rate
 
     def save_if_passes_bench(self, folder, iteration):
-        current_agent = self.load_azero_agent("current", self.model)
-        best_agent = self.load_azero_agent('best yet', self.best_model)
+        params = self.mcts_params
+        current_agent = load_azero_agent("current", model=self.model, params=params)
+        best_agent = load_azero_agent('best yet', model=self.best_model, params=params)
         test_agent = self.test_agent
 
         print(f'\n×××××  benchmarking model after training  ×××××')
-        #_, _, a1_winrate = self.bench_agents(current_agent, ai_random)
-        #if a1_winrate < 0.8:
-        #    return False
-
-        #if self.model_iteration > 4:
-        #    current_wins, test_wins, _ = self.bench_agents(current_agent, test_agent)
-        #    if current_wins <= test_wins:
-        #        return False
-
-        #    _, _, a1_winrate = self.bench_agents(current_agent, best_agent)
-        #    if a1_winrate < 0.8:
-        #        return False
-        _, _, a1_winrate = self.bench_agents(current_agent, best_agent)
-        if a1_winrate < 0.8:
+        # _, _, a1_winrate = self.bench_agents(current_agent, ai_random)
+        # if a1_winrate < 0.8:
+        #     return False
+        #
+        # if self.model_iteration > -1:
+        #     current_wins, test_wins, a1_winrate = self.bench_agents(current_agent, test_agent, det=False)
+        #     if a1_winrate < 0.8:
+        #         return False
+        #
+        #     _, _, a1_winrate = self.bench_agents(current_agent, best_agent, det=False)
+        #     if a1_winrate < 0.65:
+        #         return False
+        _, _, a1_winrate = self.bench_agents(current_agent, best_agent, det=False)
+        if a1_winrate < 0.75:
             return False
+        print('++++ +++++++++ ++++New model Save!!!++++ +++++++++ ++++')
         torch.save(self.model.state_dict(), f"{folder}/model_{iteration}.pt")
         torch.save(self.optimizer.state_dict(), f"{folder}/optimizer_{iteration}.pt")
         self.copy_model()
@@ -255,7 +251,7 @@ class AlphaZero:
             self.model.eval()
 
             times = ((self.params['num_self_play_iterations'] // self.params['num_parallel_games']) // num_cores)
-            for _ in trange(1):
+            for _ in trange(1):  # just to time it
                 unflattened_memory = pool.starmap(parallel_fun,
                                                   [(rank, times, self.params, self.model, self.mcts_params) for rank in range(num_cores)])
 
@@ -327,6 +323,7 @@ def parallel_fun(rank, times, params, model, mcts_params):
        raise Exception('Not running on CUDA !!!!')  
 
     mcts = MCTS("alpha-mcts", model, seed=seed, **mcts_params)
+
     for _ in range(times):
         res += self_play_function(params, mcts)
     return res
@@ -335,6 +332,10 @@ def parallel_fun(rank, times, params, model, mcts_params):
 def self_play_function(params, mcts):    
     data_to_return = []
     spGames = [SPG() for _ in range(params['num_parallel_games'])]
+
+    #if str(mcts.model.device) not in {'cuda', 'cuda:0', 'cuda:1'}:
+    #    raise Exception('Not running on CUDA !!!!')
+
 
     while len(spGames) > 0:
         action_probs = mcts.predict_best_move(spGames)
@@ -381,7 +382,7 @@ if __name__ == "__main__":
     if os.environ['USER'] == 'rasa':
         print('running on local node')
         os.chdir('../')
-        num_cores = 2
+        num_cores = 1
     else:
         num_cores = int(os.environ['SLURM_CPUS_ON_NODE']) // 2
 

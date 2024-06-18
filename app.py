@@ -13,8 +13,10 @@ from models.model_interface import ai_random
 from models.montecarlo import mcts_model
 from models.ParallelMCTS import PMCTS
 import models.AlphaZero
-from models.AlphaZero import (gen_azero_model,
-                              multi_folder_load_some_models)
+from models.AlphaZeroModel import (load_azero_model,
+                                   multi_folder_load_models,
+                                   multi_folder_load_some_models)
+#from models.AlphaZero import (multi_folder_load_some_models)
 from bench_agent import bench_both_sides
 
 from cProfile import Profile
@@ -82,12 +84,15 @@ if __name__ == '__main__':
                   iter_limit=1000
                   )
 
-    # model_location = f'models/alpha-zero/my_models/vF/model_329.pt'
-    # alpha_params = {'hidden_layer': 128, 'res_block': 20}
-    # alpha_329 = gen_azero_model(model_location, alpha_params)
+    azero_folder = f'models_output/alpha-zero/FINAL/layer128-v2/'
+    azero_model_location = f'{azero_folder}model_4.pt'
+    alpha_params = {'hidden_layer': 128, 'max_iter': 30}
+    alpha_329 = load_azero_model(f'model 4',
+                                 file=azero_model_location,
+                                 params=alpha_params)
 
-    # folder_params = [(f'models/alpha-zero/my_models/v17', alpha_params, range(38, 39))]
-    # many_zero_models = multi_folder_load_some_models(folder_params)
+    azero_folder_params = [(azero_folder, range(2, 4), alpha_params)]
+    many_zero_models = lambda: multi_folder_load_some_models(azero_folder_params)
 
     # with PMCTS.create_pool_manager(pmcts, num_processes=4):
     #     bench_both_sides(
@@ -104,15 +109,8 @@ if __name__ == '__main__':
     #                  # ga_vpn_5,
     #                  times=100)
 
-<<<<<<< HEAD
-    for agent in [ppo_del]:
-        bench_both_sides(
-            ppo_18_big_rollouts,
-            # mcts_model,
-            agent,
-            times=10,
-            timed=False,
-=======
+
+
     import random
     import numpy as np
     import time
@@ -195,5 +193,4 @@ if __name__ == '__main__':
             # ppo_del2.set_deterministic(False),#agent,
             times=100,
             timed=True,
->>>>>>> alpha
             verbose=1)

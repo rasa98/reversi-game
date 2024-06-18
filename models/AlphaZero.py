@@ -84,7 +84,7 @@ class AlphaZero:
         while True:
             player = game.player_turn  # !!! changed get_encoded_state
             encoded_perspective_state = game.get_encoded_state()
-            action_probs = self.mcts.predict_best_move(game, deterministic=False)
+            action_probs = self.mcts.simulate(game)
 
             data.append((encoded_perspective_state, action_probs, player))
 
@@ -158,129 +158,110 @@ class AlphaZero:
             self.model.iterations_trained += 1
 
 
-def gen_azero_model(model_location, params=None):
-    if params is None:
-        params = {}
+def load_model(model_path, hidden_layer_number, device=None):
+    if device is None:
+        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-    hidden_layer = params.get('hidden_layer', 128)
-    time_limit = params.get('mcts_time_limit', math.inf)
-    iter_limit = params.get('mcts_iter_limit', 50)
-    c = params.get('c', 1.41)
-    dirichlet_epsilon = params.get('dirichlet_epsilon', 0)
-    verbose = params.get('verbose', 0)  # 0 means no logging
-    c = params.get('c', 1.41)
-    dirichlet_epsilon = params.get('dirichlet_epsilon', 0)
+    model = ResNet(hidden_layer_number, device)
 
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    m = ResNet(hidden_layer, device)
-
-    m.load_state_dict(torch.load(model_location, map_location=device))
-    m.eval()
-
-    return MCTS(f'alpha-mcts - {model_location}',
-                m,
-                max_time=time_limit,
-                max_iter=iter_limit,
-                uct_exploration_const=c,
-                dirichlet_epsilon=dirichlet_epsilon,
-                verbose=verbose)
+    if model_path is not None:
+        model.load_state_dict(torch.load(model_path, map_location=device))
+    return model
 
 
-def model_generator(file_location, model_idxs, params):
-    for i in model_idxs:
-        model_location = f'{file_location}/model_{i}.pt'
-        try:
-            model = gen_azero_model(model_location, params)
-        except FileNotFoundError as e:
-            print(e)
-            break
-        yield model
+# def gen_azero_model(model_location, params=None):
+#     if params is None:
+#         params = {}
+#
+#     hidden_layer = params.get('hidden_layer', 128)
+#     time_limit = params.get('mcts_time_limit', math.inf)
+#     iter_limit = params.get('mcts_iter_limit', 50)
+#     verbose = params.get('verbose', 0)  # 0 means no logging
+#     c = params.get('c', 1.41)
+#     dirichlet_epsilon = params.get('dirichlet_epsilon', 0)
+#
+#     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+#     m = ResNet(hidden_layer, device)
+#
+#     m.load_state_dict(torch.load(model_location, map_location=device))
+#     m.eval()
+#
+#     return MCTS(f'alpha-mcts - {model_location}',
+#                 m,
+#                 max_time=time_limit,
+#                 max_iter=iter_limit,
+#                 uct_exploration_const=c,
+#                 dirichlet_epsilon=dirichlet_epsilon,
+#                 verbose=verbose)
+#
+#
+# def model_generator(file_location, model_idxs, params):
+#     for i in model_idxs:
+#         model_location = f'{file_location}/model_{i}.pt'
+#         try:
+#             model = gen_azero_model(model_location, params)
+#         except FileNotFoundError as e:
+#             print(e)
+#             break
+#         yield model
+#
+#
+# def model_generator_all(file_location, params):
+#     cwd = os.getcwd()
+#     d = os.path.join(cwd, file_location)
+#     file_names = [f for f in os.listdir(d)
+#                   if os.path.isfile(os.path.join(d, f)) and f.startswith('model')]
+#
+#     # In the meantime if new models were created, also detect them
+#     previous_contents = set()
+#
+#     while True:
+#         current_contents = set(os.listdir(d))
+#         new_files = current_contents - previous_contents
+#         if new_files:
+#             for f in sorted(list(new_files)):
+#                 if os.path.isfile(os.path.join(d, f)) and f.startswith('model'):
+#                     model_location = f'{file_location}/{f}'
+#                     model = gen_azero_model(model_location, params)
+#                     yield model
+#         else:
+#             break
+#
+#         previous_contents = current_contents
+#
+#
+# def multi_folder_load_models(folder_params):
+#     for folder, params in folder_params:
+#         print(f'\n++++++++++++++++ TESTED FOLDER - {folder}++++++++++++++++\n')
+#         yield from model_generator_all(folder, params)
+#         print()
+#
+#
+# def multi_folder_load_some_models(folder_idxs_params):
+#     for folder, model_idxs, params in folder_idxs_params:
+#         print(f'\n++++++++++++++++ TESTED FOLDER - {folder}++++++++++++++++\n')
+#         yield from model_generator(folder, model_idxs, params)
+#         print()
 
 
-def model_generator_all(file_location, params):
-    cwd = os.getcwd()
-    d = os.path.join(cwd, file_location)
-    file_names = [f for f in os.listdir(d)
-                  if os.path.isfile(os.path.join(d, f)) and f.startswith('model')]
-
-    # In the meantime if new models were created, also detect them
-    previous_contents = set()
-
-    while True:
-        current_contents = set(os.listdir(d))
-        new_files = current_contents - previous_contents
-        if new_files:
-            for f in sorted(list(new_files)):
-                if os.path.isfile(os.path.join(d, f)) and f.startswith('model'):
-                    model_location = f'{file_location}/{f}'
-                    model = gen_azero_model(model_location, params)
-                    yield model
-        else:
-            break
-
-        previous_contents = current_contents
-
-
-def multi_folder_load_models(folder_params):
-    for folder, params in folder_params:
-        print(f'\n++++++++++++++++ TESTED FOLDER - {folder}++++++++++++++++\n')
-        yield from model_generator_all(folder, params)
-        print()
-
-
-def multi_folder_load_some_models(folder_idxs_params):
-    for folder, model_idxs, params in folder_idxs_params:
-        print(f'\n++++++++++++++++ TESTED FOLDER - {folder}++++++++++++++++\n')
-        yield from model_generator(folder, model_idxs, params)
-        print()
-
-
-if False:  # __name__ != "__main__":
-    iter_depth = 50
-    print(f'mcts iter depth: {iter_depth}')
-    # model_location = f'models/alpha-zero/my_models/v17/model_38.pt'
-
-    # model_location = f'alpha-zero/low_mcts_iter_training3/model_99.pt'
-    # model_location = f'alpha-zero/low_mcts_iter_training/model_66.pt'
-    # model_location = f'alpha-zero/model_34_n20+n01.pt'
-    params = {'hidden_layer': 128,
-              'res_block': 20}
-    mcts_model = gen_azero_model(model_location, params)
-
-    # model_location = 'alpha-zero/low_mcts_iter_training4_128layer' # [99, 40, 24, 25, 21, 20, 13, 12, 11, 9, 7] 11 best
-
-    #model_location = 'alpha-zero/low_mcts_iter_training4_128layer_v2'
-    #model_location = f'alpha-zero/low_mcts_iter_training4_128layer_v3'
-
-    folder_params = [(f'alpha-zero/low_mcts_iter_training4_128layer_v3', params, range(0, 1))]
-    many_models = multi_folder_load_some_models(folder_params)
-    
-    #folder_hiddenlayer = [(f'alpha-zero/low_mcts_iter_training4_128layer_v{i}', hid_layer, [11, 12, 13, 14, 15]) for i in [9, 10]]
-    #folder_hiddenlayer =[#('alpha-zero/low_mcts_iter_training4_128layer_v15', 128, [24]),
-                         #('alpha-zero/low_mcts_iter_training4_128layer_v17', 128, [38]),
-                         #('alpha-zero/low_mcts_iter_training4_128layer_v18', 128, [23, 53]),
-     #                    ('alpha-zero/low_mcts_iter_training4_128layer_v19', 128, [19])]
-    #many_models = multi_folder_load_some_models(folder_hiddenlayer) 
-
-
-def move_to_testing():
-    game = Othello()
-    game.play_move((2, 4))
-    game.play_move((2, 3))
-    # print(game)
-    encoded_state = game.get_encoded_state()
-
-    tensor_state = torch.tensor(encoded_state).unsqueeze(0)
-    model = ResNet(4, 64, torch.device('cpu'))
-    policy, value = model(tensor_state)
-    value = value.item()
-    policy = (torch.softmax(policy, dim=1).squeeze(0).detach()
-              .cpu()
-              .numpy())
-
-    # print(value, policy)
-    res = game.valid_moves_encoded() * policy
-    print(res / np.sum(res))
+# def move_to_testing():
+#     game = Othello()
+#     game.play_move((2, 4))
+#     game.play_move((2, 3))
+#     # print(game)
+#     encoded_state = game.get_encoded_state()
+#
+#     tensor_state = torch.tensor(encoded_state).unsqueeze(0)
+#     model = ResNet(4, 64, torch.device('cpu'))
+#     policy, value = model(tensor_state)
+#     value = value.item()
+#     policy = (torch.softmax(policy, dim=1).squeeze(0).detach()
+#               .cpu()
+#               .numpy())
+#
+#     # print(value, policy)
+#     res = game.valid_moves_encoded() * policy
+#     print(res / np.sum(res))
 
 
 if __name__ == "__main__":
