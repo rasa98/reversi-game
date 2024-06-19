@@ -6,6 +6,9 @@ from itertools import count
 
 DIRECTIONS = ((-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1))
 
+GAME_ROW_COUNT = 8
+GAME_COLUMN_COUNT = 8
+ALL_FIELDS_SIZE = GAME_ROW_COUNT * GAME_COLUMN_COUNT
 
 @njit(cache=True)
 def njit_check_empty_edge_fields(board, field):

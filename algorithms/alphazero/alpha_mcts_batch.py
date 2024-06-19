@@ -5,17 +5,9 @@ import time
 import gc
 
 import torch
-from game_logic import Othello
+from game_logic import Othello, ALL_FIELDS_SIZE
 from game_modes import ai_vs_ai_cli
 from models.model_interface import ai_random
-from collections import Counter
-
-from .model_interface import ModelInterface
-
-# TODO: dupliran kod iz Alphazero....
-GAME_ROW_COUNT = 8
-GAME_COLUMN_COUNT = 8
-ALL_FIELDS_SIZE = GAME_ROW_COUNT * GAME_COLUMN_COUNT
 
 
 class Node:
@@ -50,17 +42,18 @@ class Node:
                 child_node = Node(game_copy, move, parent_node=self, prior=prob)
                 self.children.append(child_node)
 
+    # ----------- log ---------------------
+
     # def select_highest_ucb_child(self, c):
     #     log_visited = math.log(self.visited)
-    #     max_child = max(self.children, key=lambda ch: ch.get_uct(c, log_visited)[0])
-    #     mapped_children_DEBUG = list(map(lambda ch: ch.get_uct(c, log_visited)[1], self.children))
+    #     max_child = max(self.children, key=lambda ch: ch.get_uct(c, log_visited))
     #     return max_child
     #
     # def get_uct(self, c, log_visited):
     #     if self.visited == 0:
     #         q_value = 0
     #     else:
-    #         # q_value = self.value / self.visited
+    #         #q_value = self.value / self.visited
     #         avg_value = self.value / self.visited
     #         q_value = avg_value * 4
     #     exploration_term = c * math.sqrt(log_visited / (1 + self.visited))#(math.sqrt(parent_visits) / (self.visited + 1))
@@ -68,17 +61,15 @@ class Node:
     #     exploration_term *= (self.prior + 0.075)
     #     # explo_biased = exploration_term * (self.prior + 0.5)
     #
-    #     return q_value + exploration_term, {'value': self.value,
-    #                                         'visited': self.visited,
-    #                                         'q_value': q_value,
-    #                                         'exploration_term': exploration_term,
-    #                                         'prior': self.prior}
+    #     return q_value + exploration_term
+
+    # -------------------------------------non log-----------------------
 
     # def select_highest_ucb_child(self, c):
     #     max_child = max(self.children, key=lambda ch: ch.get_uct(c, self.visited)[0])
     #     mapped_children_DEBUG = list(map(lambda ch: ch.get_uct(c, self.visited)[1], self.children))
     #     return max_child
-    #
+
     # def get_uct(self, c, parent_visits):
     #     if self.visited == 0:
     #         q_value = 0
@@ -98,7 +89,7 @@ class Node:
     #                                         'prior': self.prior}
 
     # -----------------------------------------
-    # def select_highest_ucb_child(self, c):
+    #def select_highest_ucb_child(self, c):
     #    if self.visited > 2 * len(self.children):
     #        log_visited = math.log(self.visited)
     #        max_child = max(self.children, key=lambda ch: ch.get_uct_log(c, log_visited))
@@ -107,10 +98,10 @@ class Node:
     #        max_child = max(self.children, key=lambda ch: ch.get_uct(c, self.visited))
     #        # mapped_children_DEBUG = list(map(lambda ch: ch.get_uct_debug(c, self.visited)[1], self.children))
     #
-    # return max_child
-    # -------------------------------------------
-    def select_highest_ucb_child(self, c):
-        max_child = max(self.children, key=lambda ch: ch.get_uct(c, self.visited))
+    #return max_child
+    #-------------------------------------------
+    def select_highest_ucb_child(self, c):        
+        max_child = max(self.children, key=lambda ch: ch.get_uct(c, self.visited))            
         return max_child
 
     def get_uct_log(self, c, log_visited):
@@ -131,6 +122,7 @@ class Node:
             avg_value = self.value / self.visited
             q_value = avg_value
         exploration_term = c * (math.sqrt(parent_visits) / (self.visited + 1))
+
         exploration_term *= (self.prior + 0.075)
         return q_value + exploration_term
 
@@ -165,13 +157,14 @@ class Node:
                                             'prior': self.prior}
 
 
-class MCTS:
+class MCTS():
 
     def __init__(self, model, max_iter=math.inf, max_time=math.inf,
                  uct_exploration_const=2.0, verbose=0, dirichlet_epsilon=0.2,
-                 initial_alpha=0.4, final_alpha=0.1, decay_steps=50):
-        self.root = None  # Node(game.get_snapshot())
+                 initial_alpha=0.4, final_alpha=0.1, decay_steps=50,
+                 seed=None, lock=None):
         self.model = model
+        self.rng = np.random.default_rng(seed=seed)
 
         self.last_cycle_iteration = 0
         self.last_cycle_time = 0
@@ -186,49 +179,41 @@ class MCTS:
         self.decay_steps = decay_steps
 
         self.uct_exploration_const = uct_exploration_const
+        self.lock = lock
+        if lock:
+            self.run_model = self.run_model_lock
 
     def iter_per_cycle(self):
         if self.last_cycle_time != 0:
             return int(self.last_cycle_iteration / self.last_cycle_time)
         return -1
 
-    def set_root_new(self, game):
+    def set_root_new(self, spgs):
         """create new root Node."""
-        game_copy = game.get_snapshot()
-        encoded_state = game_copy.get_encoded_state()
-        policy, _ = self.run_model(encoded_state, game_copy, add_noise=True)
-        self.root = Node(game_copy, None, visited=1)
-        self.root.explore_all_children(policy)
+        games_copy = [spg.game.get_snapshot() for spg in spgs]
+        policies, _ = self.run_model(games_copy, add_noise=True)
+        # TODO get back and finish
 
-    # def predict_best_move(self, game: Othello, deterministic=True):
-    #     self.set_root_new(game)
-    #     self.mcts_search()
-    #     # print(f'\nafter simulating: {dict(self.root.get_all_next_move_counter())}')
-    #     gc.collect()
-    #
-    #     if deterministic:
-    #         return self.best_moves(), None
-    #
-    #     action_probs = np.zeros(ALL_FIELDS_SIZE)
-    #     for child in self.root.children:
-    #         move = child.move
-    #         encoded_move = Othello.get_encoded_field(move)
-    #         action_probs[encoded_move] = child.visited
-    #     action_probs /= np.sum(action_probs)
-    #     return action_probs
+        for i, spg in enumerate(spgs):
+            spg.root = Node(games_copy[i], None, visited=1)
+            policy = policies[i]
+            spg.root.explore_all_children(policy)
 
-    def simulate(self, game: Othello):
-        self.set_root_new(game)
-        self.mcts_search()
+    def predict_best_move(self, spgs):
+        self.set_root_new(spgs)
+        self.mcts_search(spgs)
         # print(f'\nafter simulating: {dict(self.root.get_all_next_move_counter())}')
         gc.collect()
 
-        action_probs = np.zeros(ALL_FIELDS_SIZE)
-        for child in self.root.children:
-            move = child.move
-            encoded_move = Othello.get_encoded_field(move)
-            action_probs[encoded_move] = child.visited
-        action_probs /= np.sum(action_probs)
+        action_probs = np.zeros((len(spgs), ALL_FIELDS_SIZE))
+
+        for i, spg in enumerate(spgs):
+            for child in spg.root.children:
+                move = child.move
+                encoded_move = Othello.get_encoded_field(move)
+                action_probs[i][encoded_move] = child.visited
+            action_probs[i] /= np.sum(action_probs[i])
+
         return action_probs
 
     def best_move_child_items(self):
@@ -242,41 +227,51 @@ class MCTS:
             elif current_value == max_value:
                 best_items.append((move, node))
 
-        return best_items
+        return best_itemsselect_expansion_sim
 
     def best_moves(self):
         items = self.best_move_child_items()  # [(move, child),..]
         return [el[0] for el in items]  # [move1, move2, ...]
 
-    def select_expansion_sim(self):
-        node: Node = self.root
-        value = 0
-        while True:
-            if node.is_final_state:
-                winner = node.game.get_winner()
-                if node.game.last_turn == winner:
-                    value = 1
-                elif winner != 0:
-                    value = -1  # else it stays 0
-                break  # return node
-            elif not node.explored():
-                encoded_state = node.game.get_encoded_state()
-                # policy, value = self.model(
-                #     torch.tensor(encoded_state, device=self.model.device).unsqueeze(0)
-                # )
-                # policy = torch.softmax(policy, dim=1).squeeze(0).cpu().numpy()
-                # valid_moves = node.game.valid_moves_encoded()
-                #
-                # policy *= valid_moves
-                # policy /= np.sum(policy)
-                policy, value = self.run_model(encoded_state, node.game)
-                value = value.item()
+    def select_expansion_sim(self, spgs):
+        nodes = []
+        values = []
 
-                node.explore_all_children(policy)  # return node.explore_new_child()
-                break
-            else:
-                node = node.select_highest_ucb_child(self.uct_exploration_const)
-        return node, value  # returns (node , winner)
+        games = []
+        nodes_to_expand = []
+        for spg in spgs:
+            node: Node = spg.root
+            value = 0
+            while True:
+                if node.is_final_state:
+                    winner = node.game.get_winner()
+                    if node.game.last_turn == winner:
+                        value = 1
+                    elif winner != 0:
+                        value = -1  # else it stays 0
+                    nodes.append(node)
+                    values.append(value)
+                    break  # return node
+                elif not node.explored():
+                    # policy, value = self.run_model(node.game)
+                    # value = value.item()
+                    #
+                    # node.explore_all_children(policy)  # return node.explore_new_child()
+                    # spg.node = node
+                    nodes_to_expand.append(node)
+                    games.append(node.game)
+                    break
+                else:
+                    node = node.select_highest_ucb_child(self.uct_exploration_const)
+
+        if len(games) > 0:
+            policies, vals = self.run_model(games)
+            for i, node in enumerate(nodes_to_expand):
+                node.explore_all_children(policies[i])
+                nodes.append(node)
+                values.append(vals[i][0])
+
+        return nodes, values  # returns (node , winner)
 
     def backprop(self, node: Node, value: float):
         from_perspective_of = node.game.last_turn
@@ -285,7 +280,7 @@ class MCTS:
 
         while node is not None:
             node.visited += 1
-            if from_perspective_of == node.game.last_turn:  # node.game.last_turn
+            if from_perspective_of == node.game.last_turn:
                 node.value += value
             else:
                 node.value -= value
@@ -297,19 +292,47 @@ class MCTS:
         return elapsed_time >= max_time_sec
 
     @torch.no_grad()
-    def run_model(self, encoded_state, game, add_noise=False):
+    def run_model(self, games, add_noise=False):
+        states = np.stack([game.get_encoded_state() for game in games])
+
         policy, value = self.model(
-            torch.tensor(encoded_state, device=self.model.device).unsqueeze(0)
+            torch.tensor(states, device=self.model.device, dtype=torch.float32)
         )
-        policy = torch.softmax(policy, dim=1).squeeze(0).cpu().numpy()
+        policy = torch.softmax(policy, dim=1).cpu().numpy()
+        value = value.cpu().numpy()
 
         if add_noise:
             policy = policy * (1 - self.dirichlet_epsilon) + self.dirichlet_epsilon \
-                     * np.random.dirichlet([self.get_dirichlet_alpha()] * ALL_FIELDS_SIZE)
+                     * self.rng.dirichlet([self.get_dirichlet_alpha()] * ALL_FIELDS_SIZE,
+                                           size=policy.shape[0])
 
-        valid_moves = game.valid_moves_encoded()
-        policy *= valid_moves
-        policy /= np.sum(policy)
+        for i, game in enumerate(games):
+            valid_moves = game.valid_moves_encoded()  # TODO mozda spg.root.game ???
+            policy[i] *= valid_moves
+            policy[i] /= np.sum(policy[i])
+
+        return policy, value
+
+    @torch.no_grad()
+    def run_model_lock(self, games, add_noise=False):
+        states = np.stack([game.get_encoded_state() for game in games])
+
+        with self.lock:
+            policy, value = self.model(
+                torch.tensor(states, device=self.model.device, dtype=torch.float32)
+            )
+            policy = torch.softmax(policy, dim=1).cpu().numpy()
+            value = value.cpu().numpy()
+
+        if add_noise:
+            policy = policy * (1 - self.dirichlet_epsilon) + self.dirichlet_epsilon \
+                     * self.rng.dirichlet([self.get_dirichlet_alpha()] * ALL_FIELDS_SIZE,
+                                          size=policy.shape[0])
+
+        for i, game in enumerate(games):
+            valid_moves = game.valid_moves_encoded()  # TODO mozda spg.root.game ???
+            policy[i] *= valid_moves
+            policy[i] /= np.sum(policy[i])
 
         return policy, value
 
@@ -321,11 +344,12 @@ class MCTS:
         else:
             return self.initial_alpha - (self.initial_alpha - self.final_alpha) * (training_step / self.decay_steps)
 
-    def mcts_iter(self):
-        node, value = self.select_expansion_sim()
-        self.backprop(node, value)
+    def mcts_iter(self, spgs):
+        nodes, values = self.select_expansion_sim(spgs)
+        for node, value in zip(nodes, values):
+            self.backprop(node, value)
 
-    def mcts_search(self):
+    def mcts_search(self, spgs):
         if self.max_time == math.inf and self.max_iter == math.inf:
             raise ValueError("At least one of max_time or max_iter must be specified.")
 
@@ -334,7 +358,7 @@ class MCTS:
         iterations = 1  # root is always called in advance to add some noise
         while True:
             # Perform MCTS steps: selection, expansion, simulation, backpropagation
-            self.mcts_iter()
+            self.mcts_iter(spgs)
             iterations += 1
 
             # Check termination conditions

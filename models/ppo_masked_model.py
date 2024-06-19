@@ -212,7 +212,8 @@ class MaskedPPOWrapperNew(ModelInterface):
 
 def load_model_new(name, file, cls=MaskablePPO, cnn=False, policy_cls=None):  # TODO generalize this module
     '''for ppo cnn it doesnt pickle policy class BUG, so you need to supply it'''
-    custom_objects = {'lr_schedule': lambda _: 0.0005,
+    custom_objects = {'lr_schedule': lambda _: 0.0005,  # only cuz of warnings...
+                      'learning_rate': 0.0005,
                       'clip_range': 0.2,
                       'action_space': Discrete(64),
                       'seed': int(time.time())

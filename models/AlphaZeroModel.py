@@ -4,8 +4,8 @@ import time
 
 import numpy as np
 from game_logic import Othello
-from models.AlphaZero import load_model
-from models.montecarlo_alphazero_version import MCTS
+from algorithms.alphazero.AlphaZero import load_model
+from algorithms.alphazero.alpha_mcts import MCTS
 from models.model_interface import ModelInterface
 
 
@@ -36,7 +36,7 @@ def load_azero_model(name, file=None, model=None, params=None):
     if params is None:
         params = {}
 
-    res_blocks = params.get('res_blocks', 4)
+    # res_blocks = params.get('res_blocks', 4)
     hidden_layer = params.get('hidden_layer', 128)
     time_limit = params.get('max_time', math.inf)
     iter_limit = params.get('max_iter', 100)
@@ -47,7 +47,8 @@ def load_azero_model(name, file=None, model=None, params=None):
     verbose = params.get('verbose', 0)  # 0 means no logging
 
     if model is None:
-        model = load_model(file, res_blocks, hidden_layer)
+        model = load_model(file, hidden_layer)
+        # model = load_model(file, res_blocks, hidden_layer)
     model.eval()
 
     mcts = MCTS(model,
