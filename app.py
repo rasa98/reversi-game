@@ -84,13 +84,13 @@ if __name__ == '__main__':
                   iter_limit=1000
                   )
 
-    azero_folder = f'models_output/alpha-zero/FINAL/layer128-2-v2/'
-    azero_model_location = f'{azero_folder}model_2.pt'
-    alpha_params = {'hidden_layer': 128, 'max_iter': 200,
-                    'dirichlet_epsilon': 0.1, "uct_exploration_const": .8,
-                    "final_alpha": 0.4}
+    azero_folder = f'models_output/alpha-zero/FINAL2/res8layer128-v1/'
+    azero_model_location = f'{azero_folder}model_4.pt'
+    alpha_params = {'res_blocks': 8, 'hidden_layer': 128, 'max_iter': 200,
+                    'dirichlet_epsilon': 0.2, "uct_exploration_const": 1.41,
+                    "final_alpha": 0.1}
 
-    alpha_2 = load_azero_model(f'model 2',
+    alpha = load_azero_model(f'model 4',
                                  file=azero_model_location,
                                  params=alpha_params)
 
@@ -189,11 +189,11 @@ if __name__ == '__main__':
 
     for agent2 in range(1):
         bench_both_sides(
-            alpha_2,
+            alpha,
             # best_ppo_yet.set_deterministic(False),
             # ga_vpn_5,
             best_ppo_yet,#.set_deterministic(False),
             # ppo_del2.set_deterministic(False),#agent,
-            times=10,
+            times=3,
             timed=True,
             verbose=1)
