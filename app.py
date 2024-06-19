@@ -16,7 +16,7 @@ import models.AlphaZero
 from models.AlphaZeroModel import (load_azero_model,
                                    multi_folder_load_models,
                                    multi_folder_load_some_models)
-#from models.AlphaZero import (multi_folder_load_some_models)
+# from models.AlphaZero import (multi_folder_load_some_models)
 from bench_agent import bench_both_sides
 
 from cProfile import Profile
@@ -84,15 +84,15 @@ if __name__ == '__main__':
                   iter_limit=1000
                   )
 
-    azero_folder = f'models_output/alpha-zero/FINAL2/res8layer128-v1/'
-    azero_model_location = f'{azero_folder}model_4.pt'
-    alpha_params = {'res_blocks': 8, 'hidden_layer': 128, 'max_iter': 200,
-                    'dirichlet_epsilon': 0.2, "uct_exploration_const": 1.41,
+    azero_folder = f'models_output/alpha-zero/FINAL2/res4layer256-v1/'
+    azero_model_location = f'{azero_folder}model_0.pt'
+    alpha_params = {'res_blocks': 4, 'hidden_layer': 256, 'max_iter': 300,
+                    'dirichlet_epsilon': 0.1, "uct_exploration_const": 1.41,
                     "final_alpha": 0.1}
 
-    alpha = load_azero_model(f'model 4',
-                                 file=azero_model_location,
-                                 params=alpha_params)
+    alpha = load_azero_model(f'model 0 256',
+                             file=azero_model_location,
+                             params=alpha_params)
 
     azero_folder_params = [(azero_folder, range(2, 4), alpha_params)]
     many_zero_models = lambda: multi_folder_load_some_models(azero_folder_params)
@@ -111,8 +111,6 @@ if __name__ == '__main__':
     #                  # ga_vpn_5,
     #                  # ga_vpn_5,
     #                  times=100)
-
-
 
     import random
     import numpy as np
@@ -192,8 +190,8 @@ if __name__ == '__main__':
             alpha,
             # best_ppo_yet.set_deterministic(False),
             # ga_vpn_5,
-            best_ppo_yet,#.set_deterministic(False),
+            best_ppo_yet,  # .set_deterministic(False),
             # ppo_del2.set_deterministic(False),#agent,
-            times=3,
+            times=1,
             timed=True,
             verbose=1)

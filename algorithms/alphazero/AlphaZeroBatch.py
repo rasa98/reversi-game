@@ -4,139 +4,28 @@ import json
 import random
 import timeit
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
+
 from torch.optim.lr_scheduler import StepLR
 from tqdm import trange
 from torch.optim.lr_scheduler import StepLR
 
-# for teseting purposes
 import sys
 import copy
 import os
+
+if __name__ == '__main__' and os.environ['USER'] != 'student':
+    source_dir = os.path.abspath(os.path.join(os.getcwd(), '../../'))
+    sys.path.append(source_dir)
 # ---------------------
-from game_logic import Othello
-from models.mcts_alpha_parallel import MCTS
+from game_logic import Othello, ALL_FIELDS_SIZE
+from algorithms.alphazero.alpha_mcts_batch import MCTS
+from algorithms.alphazero.utils.neural_net import Net
 
 from models.ppo_masked_model import load_model_new
 from bench_agent import bench_both_sides
-from models.montecarlo_alphazero_version import MCTS as MCTS1
+
 from models.model_interface import ai_random
 from models.AlphaZeroModel import load_azero_model
-
-GAME_ROW_COUNT = 8
-GAME_COLUMN_COUNT = 8
-ALL_FIELDS_SIZE = GAME_ROW_COUNT * GAME_COLUMN_COUNT
-
-
-class ResNet(nn.Module):
-    def __init__(self, num_resBlocks, num_hidden, device):
-        super().__init__()
-        self.device = device
-        self.iterations_trained = 0
-
-        self.startBlock = nn.Sequential(
-            nn.Conv2d(3, num_hidden, kernel_size=3, padding=1),
-            nn.BatchNorm2d(num_hidden),
-            nn.ReLU()
-        )
-
-        self.backBone = nn.ModuleList(
-            [ResBlock(num_hidden) for i in range(num_resBlocks)]
-        )
-
-        self.policyHead = nn.Sequential(
-            nn.Conv2d(num_hidden, 32, kernel_size=3, padding=1),
-            nn.BatchNorm2d(32),
-            nn.ReLU(),
-            nn.Flatten(),
-            nn.Linear(32 * GAME_ROW_COUNT * GAME_COLUMN_COUNT, ALL_FIELDS_SIZE)
-        )
-
-        self.valueHead = nn.Sequential(
-            nn.Conv2d(num_hidden, 3, kernel_size=3, padding=1),
-            nn.BatchNorm2d(3),
-            nn.ReLU(),
-            nn.Flatten(),
-            nn.Linear(3 * GAME_ROW_COUNT * GAME_COLUMN_COUNT, 1),
-            nn.Tanh()
-        )
-
-        self.to(device)
-
-    def forward(self, x):
-        x = self.startBlock(x)
-        for resBlock in self.backBone:
-            x = resBlock(x)
-        policy = self.policyHead(x)
-        value = self.valueHead(x)
-        return policy, value
-
-
-class ResBlock(nn.Module):
-    def __init__(self, num_hidden):
-        super().__init__()
-        self.conv1 = nn.Conv2d(num_hidden, num_hidden, kernel_size=3, padding=1)
-        self.bn1 = nn.BatchNorm2d(num_hidden)
-        self.conv2 = nn.Conv2d(num_hidden, num_hidden, kernel_size=3, padding=1)
-        self.bn2 = nn.BatchNorm2d(num_hidden)
-
-    def forward(self, x):
-        residual = x
-        x = F.relu(self.bn1(self.conv1(x)))
-        x = self.bn2(self.conv2(x))
-        x += residual
-        x = F.relu(x)
-        return x
-
-# class ResNet(nn.Module):
-#     def __init__(self, num_hidden, device):
-#         super().__init__()
-#         self.device = device
-#         self.iterations_trained = 0
-#
-#         self.device = device
-#
-#
-#         self.startBlock = nn.Sequential(
-#             nn.Conv2d(3, num_hidden, kernel_size=3, padding=1),
-#             nn.ReLU(),
-#             nn.Dropout(p=0.3)  # Dropout layer
-#         )
-#
-#         self.sharedConv = nn.Sequential(
-#             nn.Conv2d(num_hidden, 128, kernel_size=3, padding=1),
-#             nn.ReLU(),
-#             nn.Dropout(p=0.3),  # Dropout layer
-#             nn.Conv2d(128, 256, kernel_size=3, padding=1),
-#             nn.ReLU(),
-#             nn.Dropout(p=0.3)  # Dropout layer
-#
-#         )
-#
-#         self.policyHead = nn.Sequential(
-#             nn.Conv2d(256, 512, kernel_size=3, padding=1),
-#             nn.ReLU(),
-#             nn.Flatten(),
-#             nn.Linear(512 * GAME_ROW_COUNT * GAME_COLUMN_COUNT, ALL_FIELDS_SIZE)
-#         )
-#
-#         self.valueHead = nn.Sequential(
-#             nn.Conv2d(256, 128, kernel_size=3, padding=1),
-#             nn.ReLU(),
-#             nn.Flatten(),
-#             nn.Linear(128 * GAME_ROW_COUNT * GAME_COLUMN_COUNT, 1),
-#             nn.Tanh()
-#         )
-#
-#         self.to(device)
-#
-#     def forward(self, x):
-#         x = self.startBlock(x)
-#         shared_out = self.sharedConv(x)
-#         policy = self.policyHead(shared_out)
-#         value = self.valueHead(shared_out)
-#         return policy, value
 
 
 class AlphaZero:
@@ -362,7 +251,8 @@ class AlphaZero:
 
 
 def load_model_and_optimizer(params, model_state_path, optimizer_state_path, device):
-    model = ResNet(params['res_blocks'], params['hidden_layer'], device)
+    model = Net(params['hidden_layer'], device)
+    # model = ResNet(params['res_blocks'], params['hidden_layer'], device)
     optimizer = torch.optim.Adam(model.parameters(), lr=params['lr'], weight_decay=params['weight_decay'])
 
     if model_state_path is not None:
@@ -387,13 +277,11 @@ class SPG:
 
 
 if __name__ == "__main__":
-    if os.environ['USER'] == 'rasa':
-        source_dir = os.path.abspath(os.path.join(os.getcwd(), '../'))
-        sys.path.append(source_dir)
-        os.chdir('../')
+    if os.environ['USER'] != 'student':
+        os.chdir('../../')
 
     params = {
-        'res_blocks': 4,
+        # 'res_blocks': 4,
         'hidden_layer': 128,
         'lr': 7e-5,
         'weight_decay': 1e-4,
