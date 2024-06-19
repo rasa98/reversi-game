@@ -158,7 +158,6 @@ class AlphaZero:
         self.best_models_optimizer = None
         self.test_agent = self.load_test_agent()
         self.mcts = MCTS(model, **mcts_params)
-        self.model_iteration = 0
 
         self.model_subsequent_fail = 0
         self.max_fail_times = params['max_fail_times']
@@ -191,13 +190,16 @@ class AlphaZero:
             timed=True,
             verbose=1)
         a1_win_rate = a1_wins / (2 * times)
-        return a1_wins, a2_wins, a1_win_rate
+        return a1_wins, a2_wins, a1_win_rate   
 
     def save_if_passes_bench(self, folder, iteration):
         params = dict(self.mcts_params)
         params['max_iter'] = 30
-        params['dirichlet_epsilon'] = 0.1
+        params['dirichlet_epsilon'] = 0.2  # for some variability when simulating
         params['uct_exploration_const'] = 1.41
+        params['decay_steps'] = -1  # so that alpha is set to final alpha for both
+        params['final_alpha'] = 0.1        
+
 
         assert params is not self.mcts_params, \
             'You changed azero obj field mcts_params!!'
@@ -219,14 +221,13 @@ class AlphaZero:
         #     _, _, a1_winrate = self.bench_agents(current_agent, best_agent, det=False)
         #     if a1_winrate < 0.65:
         #         return False
-        _, _, a1_winrate = self.bench_agents(current_agent, best_agent, det=True)  # true , but keep some epsilon dirichlet for variability
-        if a1_winrate < 0.6:
+        _, _, a1_winrate = self.bench_agents(current_agent, best_agent, times=20, det=True)
+        if a1_winrate < 0.65:
             return False
         print('++++ +++++++++ ++++New model Save!!!++++ +++++++++ ++++')
         torch.save(self.model.state_dict(), f"{folder}/model_{iteration}.pt")
         torch.save(self.optimizer.state_dict(), f"{folder}/optimizer_{iteration}.pt")
         self.copy_model()
-        self.model_iteration += 1
         return True
 
     def train(self, data, val_data, epoch):
@@ -404,6 +405,19 @@ def parallel_fun(rank, times, params, model, mcts_params):
     return res
 
 
+def get_temp_value(training_step, params):
+    # Linear decay of temp
+    temp_decay = params['temp_decay_steps']
+    initial_temp = params['initial_temp']
+    final_temp = params['final_temp']
+    
+    if training_step >= temp_decay:
+        return final_temp
+    else:
+        return initial_temp - (initial_temp - final_temp) * (training_step / temp_decay)
+
+
+
 def self_play_function(params, mcts):
     data_to_return = []
     spGames = [SPG() for _ in range(params['num_parallel_games'])]
@@ -424,7 +438,8 @@ def self_play_function(params, mcts):
                              action_probs[i],
                              game.player_turn))
             # print(f'after 2 - {action_probs.shape}')
-            temp_action_probs = action_probs[i] ** (1 / params['temp'])
+            temp = get_temp_value(self.model.iterations_trained, params)
+            temp_action_probs = action_probs[i] ** (1 / temp)
             temp_action_probs /= np.sum(temp_action_probs)
             # print(f'after 4 - {action_probs.shape}')
 
@@ -463,30 +478,32 @@ if __name__ == "__main__":
     print(f'number of cores used for pool: {num_cores}')
 
     params = {
-        'res_blocks': 4,
+        'res_blocks': 8,
         'hidden_layer': 128,
-        'lr': 5e-5,
-        'weight_decay': 7e-5,
-        'num_iterations': 50,
-        'num_self_play_iterations': 200 * 6,
-        'num_epochs': 4,
-        'batch_size': 256,
-        'temp': 1.2,
-        'num_parallel_games': 100,
-        'max_fail_times': 5,
-        'scheduler_step_size': 12,
-        'scheduler_gamma': 0.97,
-        'model_output': 'models_output/alpha-zero/FINAL/layer128-v3/'
+        'lr': 1e-3,
+        'weight_decay': 1e-3,
+        'num_iterations': 30,
+        'num_self_play_iterations': 1 * 64 * 16,
+        'num_epochs': 5,
+        'batch_size': 128,
+        'initial_temp': 1.75,
+        'final_temp': 0.6,
+        'temp_decay_steps': 16,
+        'num_parallel_games': 64,
+        'max_fail_times': 2,
+        'scheduler_step_size': 5, 
+        'scheduler_gamma':0.8,
+        'model_output': 'models_output/alpha-zero/FINAL2/res8layer128-v1/'
     }
     mcts_params = {
-        'uct_exploration_const': 1.7,
-        'max_iter': 70,
+        'uct_exploration_const': 1.72,
+        'max_iter': 100,#70,
         # these are flexible dirichlet epsilon for noise
         # favor exploration more in the beginning
-        'dirichlet_epsilon': 0.25,
-        'initial_alpha': 0.5,
-        'final_alpha': 0.20,
-        'decay_steps': 20
+        'dirichlet_epsilon': 0.2,
+        'initial_alpha': 0.6,
+        'final_alpha': 0.1,
+        'decay_steps': 8
     }
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -509,7 +526,7 @@ if __name__ == "__main__":
     azero = AlphaZero(model, optimizer, scheduler, params, mcts_params)
 
     mp.set_start_method('forkserver')
-    lock = mp.Lock()
+    lock = None #mp.Lock()
 
     with mp.Pool(processes=num_cores, initializer=init, initargs=(lock,)) as pool:
         azero.learn()
