@@ -167,7 +167,7 @@ class MCTS(ModelInterface):
 
 
 time_limit = 1
-iter_limit = 100  # math.inf
+iter_limit = 30  # math.inf
 verbose = 0  # 0 means no logging
 mcts_model = MCTS(f'mcts iter_limit {iter_limit}',
                   max_time=time_limit,

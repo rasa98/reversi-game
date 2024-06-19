@@ -22,40 +22,35 @@ ALL_FIELDS_SIZE = GAME_ROW_COUNT * GAME_COLUMN_COUNT
 
 
 class ResNet(nn.Module):
-    def __init__(self, num_hidden, device):
+    def __init__(self, num_resBlocks, num_hidden, device):
         super().__init__()
         self.device = device
         self.iterations_trained = 0
 
-        self.device = device
-        
         self.startBlock = nn.Sequential(
             nn.Conv2d(3, num_hidden, kernel_size=3, padding=1),
-            nn.ReLU(),
-            nn.Dropout(p=0.3)  # Dropout layer
+            nn.BatchNorm2d(num_hidden),
+            nn.ReLU()
         )
-        
-        self.sharedConv = nn.Sequential(
-            nn.Conv2d(num_hidden, 128, kernel_size=3, padding=1),
-            nn.ReLU(),
-            nn.Dropout(p=0.3),  # Dropout layer
-            nn.Conv2d(128, 256, kernel_size=3, padding=1),
-            nn.ReLU(),
-            nn.Dropout(p=0.3)  # Dropout layer
+
+        self.backBone = nn.ModuleList(
+            [ResBlock(num_hidden) for i in range(num_resBlocks)]
         )
-        
+
         self.policyHead = nn.Sequential(
-            nn.Conv2d(256, 512, kernel_size=3, padding=1),
+            nn.Conv2d(num_hidden, 32, kernel_size=3, padding=1),
+            nn.BatchNorm2d(32),
             nn.ReLU(),
             nn.Flatten(),
-            nn.Linear(512 * GAME_ROW_COUNT * GAME_COLUMN_COUNT, ALL_FIELDS_SIZE)
+            nn.Linear(32 * GAME_ROW_COUNT * GAME_COLUMN_COUNT, ALL_FIELDS_SIZE)
         )
 
         self.valueHead = nn.Sequential(
-            nn.Conv2d(256, 128, kernel_size=3, padding=1),
+            nn.Conv2d(num_hidden, 3, kernel_size=3, padding=1),
+            nn.BatchNorm2d(3),
             nn.ReLU(),
             nn.Flatten(),
-            nn.Linear(128 * GAME_ROW_COUNT * GAME_COLUMN_COUNT, 1),
+            nn.Linear(3 * GAME_ROW_COUNT * GAME_COLUMN_COUNT, 1),
             nn.Tanh()
         )
 
@@ -63,10 +58,76 @@ class ResNet(nn.Module):
 
     def forward(self, x):
         x = self.startBlock(x)
-        shared_out = self.sharedConv(x)
-        policy = self.policyHead(shared_out)
-        value = self.valueHead(shared_out)
+        for resBlock in self.backBone:
+            x = resBlock(x)
+        policy = self.policyHead(x)
+        value = self.valueHead(x)
         return policy, value
+
+
+class ResBlock(nn.Module):
+    def __init__(self, num_hidden):
+        super().__init__()
+        self.conv1 = nn.Conv2d(num_hidden, num_hidden, kernel_size=3, padding=1)
+        self.bn1 = nn.BatchNorm2d(num_hidden)
+        self.conv2 = nn.Conv2d(num_hidden, num_hidden, kernel_size=3, padding=1)
+        self.bn2 = nn.BatchNorm2d(num_hidden)
+
+    def forward(self, x):
+        residual = x
+        x = F.relu(self.bn1(self.conv1(x)))
+        x = self.bn2(self.conv2(x))
+        x += residual
+        x = F.relu(x)
+        return x
+
+
+# class ResNet(nn.Module):
+#     def __init__(self, num_hidden, device):
+#         super().__init__()
+#         self.device = device
+#         self.iterations_trained = 0
+#
+#         self.device = device
+#
+#         self.startBlock = nn.Sequential(
+#             nn.Conv2d(3, num_hidden, kernel_size=3, padding=1),
+#             nn.ReLU(),
+#             nn.Dropout(p=0.3)  # Dropout layer
+#         )
+#
+#         self.sharedConv = nn.Sequential(
+#             nn.Conv2d(num_hidden, 128, kernel_size=3, padding=1),
+#             nn.ReLU(),
+#             nn.Dropout(p=0.3),  # Dropout layer
+#             nn.Conv2d(128, 256, kernel_size=3, padding=1),
+#             nn.ReLU(),
+#             nn.Dropout(p=0.3)  # Dropout layer
+#         )
+#
+#         self.policyHead = nn.Sequential(
+#             nn.Conv2d(256, 512, kernel_size=3, padding=1),
+#             nn.ReLU(),
+#             nn.Flatten(),
+#             nn.Linear(512 * GAME_ROW_COUNT * GAME_COLUMN_COUNT, ALL_FIELDS_SIZE)
+#         )
+#
+#         self.valueHead = nn.Sequential(
+#             nn.Conv2d(256, 128, kernel_size=3, padding=1),
+#             nn.ReLU(),
+#             nn.Flatten(),
+#             nn.Linear(128 * GAME_ROW_COUNT * GAME_COLUMN_COUNT, 1),
+#             nn.Tanh()
+#         )
+#
+#         self.to(device)
+#
+#     def forward(self, x):
+#         x = self.startBlock(x)
+#         shared_out = self.sharedConv(x)
+#         policy = self.policyHead(shared_out)
+#         value = self.valueHead(shared_out)
+#         return policy, value
 
 
 class AlphaZero:
@@ -158,110 +219,26 @@ class AlphaZero:
             self.model.iterations_trained += 1
 
 
-def load_model(model_path, hidden_layer_number, device=None):
+def load_model(model_path, res_blocks, hidden_layer_number, device=None):
     if device is None:
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-    model = ResNet(hidden_layer_number, device)
+    model = ResNet(res_blocks, hidden_layer_number, device)
 
     if model_path is not None:
         model.load_state_dict(torch.load(model_path, map_location=device))
     return model
 
 
-# def gen_azero_model(model_location, params=None):
-#     if params is None:
-#         params = {}
+# def load_model(model_path, hidden_layer_number, device=None):
+#     if device is None:
+#         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 #
-#     hidden_layer = params.get('hidden_layer', 128)
-#     time_limit = params.get('mcts_time_limit', math.inf)
-#     iter_limit = params.get('mcts_iter_limit', 50)
-#     verbose = params.get('verbose', 0)  # 0 means no logging
-#     c = params.get('c', 1.41)
-#     dirichlet_epsilon = params.get('dirichlet_epsilon', 0)
+#     model = ResNet(hidden_layer_number, device)
 #
-#     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-#     m = ResNet(hidden_layer, device)
-#
-#     m.load_state_dict(torch.load(model_location, map_location=device))
-#     m.eval()
-#
-#     return MCTS(f'alpha-mcts - {model_location}',
-#                 m,
-#                 max_time=time_limit,
-#                 max_iter=iter_limit,
-#                 uct_exploration_const=c,
-#                 dirichlet_epsilon=dirichlet_epsilon,
-#                 verbose=verbose)
-#
-#
-# def model_generator(file_location, model_idxs, params):
-#     for i in model_idxs:
-#         model_location = f'{file_location}/model_{i}.pt'
-#         try:
-#             model = gen_azero_model(model_location, params)
-#         except FileNotFoundError as e:
-#             print(e)
-#             break
-#         yield model
-#
-#
-# def model_generator_all(file_location, params):
-#     cwd = os.getcwd()
-#     d = os.path.join(cwd, file_location)
-#     file_names = [f for f in os.listdir(d)
-#                   if os.path.isfile(os.path.join(d, f)) and f.startswith('model')]
-#
-#     # In the meantime if new models were created, also detect them
-#     previous_contents = set()
-#
-#     while True:
-#         current_contents = set(os.listdir(d))
-#         new_files = current_contents - previous_contents
-#         if new_files:
-#             for f in sorted(list(new_files)):
-#                 if os.path.isfile(os.path.join(d, f)) and f.startswith('model'):
-#                     model_location = f'{file_location}/{f}'
-#                     model = gen_azero_model(model_location, params)
-#                     yield model
-#         else:
-#             break
-#
-#         previous_contents = current_contents
-#
-#
-# def multi_folder_load_models(folder_params):
-#     for folder, params in folder_params:
-#         print(f'\n++++++++++++++++ TESTED FOLDER - {folder}++++++++++++++++\n')
-#         yield from model_generator_all(folder, params)
-#         print()
-#
-#
-# def multi_folder_load_some_models(folder_idxs_params):
-#     for folder, model_idxs, params in folder_idxs_params:
-#         print(f'\n++++++++++++++++ TESTED FOLDER - {folder}++++++++++++++++\n')
-#         yield from model_generator(folder, model_idxs, params)
-#         print()
-
-
-# def move_to_testing():
-#     game = Othello()
-#     game.play_move((2, 4))
-#     game.play_move((2, 3))
-#     # print(game)
-#     encoded_state = game.get_encoded_state()
-#
-#     tensor_state = torch.tensor(encoded_state).unsqueeze(0)
-#     model = ResNet(4, 64, torch.device('cpu'))
-#     policy, value = model(tensor_state)
-#     value = value.item()
-#     policy = (torch.softmax(policy, dim=1).squeeze(0).detach()
-#               .cpu()
-#               .numpy())
-#
-#     # print(value, policy)
-#     res = game.valid_moves_encoded() * policy
-#     print(res / np.sum(res))
+#     if model_path is not None:
+#         model.load_state_dict(torch.load(model_path, map_location=device))
+#     return model
 
 
 if __name__ == "__main__":
@@ -269,7 +246,7 @@ if __name__ == "__main__":
 
     game = Othello()
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    model = ResNet(64, device)
+    model = ResNet(4, 64, device)
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-4, weight_decay=0.01)
     params = {
         'num_iterations': 200,

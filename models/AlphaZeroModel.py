@@ -36,15 +36,18 @@ def load_azero_model(name, file=None, model=None, params=None):
     if params is None:
         params = {}
 
+    res_blocks = params.get('res_blocks', 4)
     hidden_layer = params.get('hidden_layer', 128)
     time_limit = params.get('max_time', math.inf)
     iter_limit = params.get('max_iter', 100)
     c = params.get('uct_exploration_const', 1.41)
     dirichlet_epsilon = params.get('dirichlet_epsilon', 0)
+    # initial_alpha = params.get('initial_alpha', 0.4)
+    # final_alpha = params.get('final_alpha', 0.1)
     verbose = params.get('verbose', 0)  # 0 means no logging
 
     if model is None:
-        model = load_model(file, hidden_layer)
+        model = load_model(file, res_blocks, hidden_layer)
     model.eval()
 
     mcts = MCTS(model,
