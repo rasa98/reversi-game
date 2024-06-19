@@ -25,6 +25,7 @@ if os.environ['USER'] == 'rasa':
     sys.path.append(source_dir)
 # ---------------------
 from game_logic import Othello
+from utils.replay_buffer import ReplayBuffer
 from models.mcts_alpha_parallel import MCTS
 
 from models.ppo_masked_model import load_model_new
@@ -98,6 +99,7 @@ class ResBlock(nn.Module):
         x = F.relu(x)
         return x
 
+
 # class ResNet(nn.Module):
 #     def __init__(self, num_hidden, device):
 #         super().__init__()
@@ -166,6 +168,19 @@ class AlphaZero:
         self.scheduler = scheduler
         self.copy_model()
 
+        self.buffer = self.init_buffer()
+
+    def init_buffer(self):
+        train_ratio = self.params['train_ratio']
+        max_exp_size = self.params['num_self_play_iterations'] * 61
+        train_buffer_times = self.params['buffer_times']  # how much times is buffer larger
+                                               # that amount of data generated
+                                               # in 1 self play iteration
+        valid_buffer_size = int(max_exp_size * (1 - train_ratio))
+        train_buffer_size = int(train_buffer_times * max_exp_size)
+        buffer = ReplayBuffer(train_buffer_size, valid_buffer_size, train_ratio)
+        return buffer
+
     @staticmethod
     def load_test_agent():
         ppo_18_big_rollouts = (
@@ -219,7 +234,8 @@ class AlphaZero:
         #     _, _, a1_winrate = self.bench_agents(current_agent, best_agent, det=False)
         #     if a1_winrate < 0.65:
         #         return False
-        _, _, a1_winrate = self.bench_agents(current_agent, best_agent, det=True)  # true , but keep some epsilon dirichlet for variability
+        _, _, a1_winrate = self.bench_agents(current_agent, best_agent,
+                                             det=True)  # true , but keep some epsilon dirichlet for variability
         if a1_winrate < 0.6:
             return False
         print('++++ +++++++++ ++++New model Save!!!++++ +++++++++ ++++')
@@ -311,7 +327,7 @@ class AlphaZero:
         self.model.share_memory()
 
         for iteration in range(self.params['num_iterations']):
-            memory = []
+            # memory = []
 
             self.model.eval()
 
@@ -321,16 +337,17 @@ class AlphaZero:
                                                   [(rank, times, self.params, self.model, self.mcts_params) for rank in
                                                    range(num_cores)])
 
-            for data in unflattened_memory:
-                memory.extend(data)
+            for batch in unflattened_memory:
+                self.buffer.add(batch)
 
             print(flush=True)
 
             self.model.train()
-            random.shuffle(memory)
-            separation_idx = int(0.2 * len(memory))
-            val_data = memory[0: separation_idx]
-            train_data = memory[separation_idx:]
+            # random.shuffle(memory)
+            # separation_idx = int(0.2 * len(memory))
+            # val_data = memory[0: separation_idx]
+            # train_data = memory[separation_idx:]
+            train_data, val_data = self.buffer.sample(self.params['buffer_percent'])
             for epoch in range(self.params['num_epochs']):
                 self.train(train_data, val_data, epoch)
 
@@ -345,7 +362,7 @@ class AlphaZero:
             else:
                 self.model_subsequent_fail = 0
                 self.model.iterations_trained += 1  # ovo ne treba van if/else??? nije tolko bitno,
-                                                    # za dirichlet alpha se koristi.
+                # za dirichlet alpha se koristi.
 
 
 def load_model_and_optimizer(params, model_state_path, optimizer_state_path, device):
@@ -394,14 +411,28 @@ def parallel_fun(rank, times, params, model, mcts_params):
 
     device = torch.device(f'cuda' if torch.cuda.is_available() else 'cpu')
     model = model.to(device)
-    if str(model.device) not in {'cuda'}:
-        raise Exception('Not running on CUDA !!!!')
+
+    if os.environ['USER'] != 'rasa':
+        if str(model.device) not in {'cuda'}:
+            raise Exception('Not running on CUDA !!!!')
 
     mcts = MCTS(model, seed=seed, lock=lock, **mcts_params)
 
     for _ in range(times):
         res += self_play_function(params, mcts)
     return res
+
+
+def get_temp_value(training_step, params):
+    # Linear decay of temp
+    temp_decay = params['temp_decay_steps']
+    initial_temp = params['initial_temp']
+    final_temp = params['final_temp']
+
+    if training_step >= temp_decay:
+        return final_temp
+    else:
+        return initial_temp - (initial_temp - final_temp) * (training_step / temp_decay)
 
 
 def self_play_function(params, mcts):
@@ -424,7 +455,8 @@ def self_play_function(params, mcts):
                              action_probs[i],
                              game.player_turn))
             # print(f'after 2 - {action_probs.shape}')
-            temp_action_probs = action_probs[i] ** (1 / params['temp'])
+            temp = get_temp_value(mcts.model.iterations_trained, params)
+            temp_action_probs = action_probs[i] ** (1 / temp)
             temp_action_probs /= np.sum(temp_action_probs)
             # print(f'after 4 - {action_probs.shape}')
 
@@ -471,12 +503,17 @@ if __name__ == "__main__":
         'num_self_play_iterations': 200 * 6,
         'num_epochs': 4,
         'batch_size': 256,
-        'temp': 1.2,
+        'initial_temp': 1.75,
+        'final_temp': 0.6,
+        'temp_decay_steps': 16,
         'num_parallel_games': 100,
         'max_fail_times': 5,
         'scheduler_step_size': 12,
         'scheduler_gamma': 0.97,
-        'model_output': 'models_output/alpha-zero/FINAL/layer128-v3/'
+        'model_output': 'models_output/alpha-zero/FINAL/layer128-v3/',
+        'train_ratio': 0.7,
+        'buffer_times': 2.2,  # how many times is bigger than 1 iter of generated games by selfplay
+        'buffer_percent': 0.5  # how many of all data to supply training
     }
     mcts_params = {
         'uct_exploration_const': 1.7,
@@ -509,7 +546,11 @@ if __name__ == "__main__":
     azero = AlphaZero(model, optimizer, scheduler, params, mcts_params)
 
     mp.set_start_method('forkserver')
-    lock = mp.Lock()
+
+    lock = None
+    if os.environ['USER'] == 'rasa':
+        lock = mp.Lock()
+
 
     with mp.Pool(processes=num_cores, initializer=init, initargs=(lock,)) as pool:
         azero.learn()
