@@ -6,7 +6,11 @@ import numpy as np
 import random
 from gymnasium import spaces
 
-sys.path.append('/home/rasa/PycharmProjects/reversi-game/')
+if __name__ == '__main__' and os.environ['USER'] != 'student':
+    source_dir = os.path.abspath(os.path.join(os.getcwd(), '../../'))
+    sys.path.append(source_dir)
+    os.chdir('../../')
+
 import torch
 from stable_baselines3.common.vec_env import VecEnv, DummyVecEnv, sync_envs_normalization
 
@@ -243,6 +247,7 @@ def get_env(env_factory):
     monitor = Monitor(env=env_factory())
     return DummyVecEnv([lambda: monitor])
 
+
 if __name__ == '__main__':
     # Settings
     SEED = 129  # NOT USED
@@ -251,8 +256,8 @@ if __name__ == '__main__':
     EVAL_EPISODES = int(200)
     BEST_THRESHOLD = 0.3  # must achieve a mean score above this to replace prev best self
     RENDER_MODE = False  # set this to false if you plan on running for full 1000 trials.    
-    LOGDIR = 'scripts/rl/output/phase2/ars/mlp/base/'  # "ppo_masked/test/"    
-    CONTINUE_FROM_MODEL = None
+    LOGDIR = 'scripts/rl/output/phase2/ars/mlp/base-v2/'  # "ppo_masked/test/"
+    CONTINUE_FROM_MODEL = None #"scripts/rl/output/phase2/ars/mlp/base/history_0140"
 
     print(f'seed: {SEED} \nnum_timesteps: {NUM_TIMESTEPS} \neval_freq: {EVAL_FREQ}',
           f'\neval_episoded: {EVAL_EPISODES} \nbest_threshold: {BEST_THRESHOLD}',
@@ -264,26 +269,23 @@ if __name__ == '__main__':
     env = OthelloEnv
     env = get_env(env)
 
+    eval_env = env
+
     policy_kwargs = dict(
         net_arch=[64] * 8
     )
 
-    params = {        
+    params = {
         'n_delta': 30,
-        'n_top': 12,
+        'n_top': 8,
         'zero_policy': False,
-        'n_eval_episodes': 10,
+        'n_eval_episodes': 20,
         'delta_std': 0.05,
-        'learning_rate': LinearSchedule(4e-2),
-        'verbose': 2,
+        'learning_rate': LinearSchedule(5e-3),
+        'verbose': 1,
         'seed': SEED,
     }
 
-    
-
-    
-    
-    
     if CONTINUE_FROM_MODEL is None:
         params['policy_kwargs'] = policy_kwargs
         model = MaskableArs(policy=CustomMlpPolicy,
@@ -294,20 +296,24 @@ if __name__ == '__main__':
         model.save(starting_model_filepath)
     else:
         starting_model_filepath = CONTINUE_FROM_MODEL
-        # params['exploration_rate'] = 1.0  # to reset exploration rate !!!        
-        model = MaskablePPO.load(starting_model_filepath,
+        # params['exploration_rate'] = 1.0  # to reset exploration rate !!!
+        params['policy_class'] = CustomMlpPolicy
+        model = MaskableArs.load(starting_model_filepath,
                                  env=env,
                                  device=device,
                                  custom_objects=params)
 
     print(f'\nparams: {params}\n')
 
-
-    start_model_copy = model.load(starting_model_filepath)
-    env.envs[0].unwrapped.change_to_latest_agent(start_model_copy)
+    #start_model_copy = model.load(starting_model_filepath, custom_objects={'policy_class': CustomMlpPolicy})
+    #env.envs[0].unwrapped.change_to_latest_agent(start_model_copy)
+    eval_env.env_method('change_to_latest_agent',
+                        model.__class__,
+                        starting_model_filepath,
+                        model.policy_class)
 
     params = {
-        'eval_env': env,
+        'eval_env': eval_env,
         'LOGDIR': LOGDIR,
         'BEST_THRESHOLD': BEST_THRESHOLD
     }

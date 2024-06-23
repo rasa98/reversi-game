@@ -12,7 +12,7 @@ from models.ppo_masked_model import (load_model_new,
 from models.model_interface import ai_random
 from models.montecarlo import mcts_model
 from models.ParallelMCTS import PMCTS
-import models.AlphaZero
+
 from models.AlphaZeroModel import (load_azero_model,
                                    multi_folder_load_models,
                                    multi_folder_load_some_models)
@@ -84,13 +84,13 @@ if __name__ == '__main__':
                   iter_limit=1000
                   )
 
-    azero_folder = f'models_output/alpha-zero/FINAL2/res4layer256-v1/'
-    azero_model_location = f'{azero_folder}model_0.pt'
-    alpha_params = {'res_blocks': 4, 'hidden_layer': 256, 'max_iter': 300,
+    azero_folder = 'models_output/alpha-zero/FINAL/layer64-LAST-v4/'  # f'models_output/alpha-zero/FINAL/layer64-LAST-v3/'
+    azero_model_location = f'{azero_folder}model_4.pt'  # 3
+    alpha_params = {'hidden_layer': 64, 'max_iter': 30,
                     'dirichlet_epsilon': 0.1, "uct_exploration_const": 1.41,
                     "final_alpha": 0.1}
 
-    alpha = load_azero_model(f'model 0 256',
+    alpha = load_azero_model(f'model 3 64',
                              file=azero_model_location,
                              params=alpha_params)
 
@@ -135,63 +135,77 @@ if __name__ == '__main__':
     #             verbose=1)
     # with PMCTS.create_pool_manager(pmcts, num_processes=4):
 
-    from scripts.rl.train_model_ars import MaskableArs
+    from scripts.rl.train_model_ars import MaskableArs, CustomMlpPolicy as CustomMlpArsPolicy
     from scripts.rl.train_model_dqn import MaskableDQN
     from scripts.rl.train_model_trpo import MaskableTrpo, CustomMlpPolicy as CustomMlpTrpoPolicy
 
     from scripts.rl.train_model_ppo import CustomCnnPPOPolicy
     from sb3_contrib.ppo_mask import MaskablePPO
 
-    file_base_ars = 'scripts/rl/scripts/rl/test-working/ars/del2/history_'
+    file_base_ars = 'scripts/rl/output/phase2/ars/mlp/base/history_'
     multi_ars = lambda: (load_model_new(f'ars_{i}',
                                         f'{file_base_ars}{str(i).zfill(4)}',
-                                        MaskableArs)
-                         for i in range(14, 34))  # num 15 je najbolji
+                                        cls=MaskableArs,
+                                        policy_cls=CustomMlpArsPolicy)
+                         for i in [140, 141, 142, 143, 144, 145, 669, 671])  # num 15 je najbolji
 
-    file_base_dqn = 'scripts/rl/scripts/rl/test-working/dqn/4v1/history_'
-    multi_dqn = lambda: (load_model_new(f'dqn_{i}',
-                                        f'{file_base_dqn}{str(i).zfill(4)}',
-                                        MaskableDQN)
-                         for i in range(1, 75))  # num 15 je najbolji
+    # file_base_dqn = 'scripts/rl/scripts/rl/test-working/dqn/4v1/history_'
+    # multi_dqn = lambda: (load_model_new(f'dqn_{i}',
+    #                                     f'{file_base_dqn}{str(i).zfill(4)}',
+    #                                     MaskableDQN)
+    #                      for i in range(1, 75))  # num 15 je najbolji
+    #
+    # file_base_ppo_cnn = 'scripts/rl/scripts/rl/test-working/ppo/1/history_'
+    # multi_ppo_cnn_paral_v0 = lambda: (load_model_new(f'ppo_{i}',
+    #                                                  f'{file_base}{str(i).zfill(4)}',
+    #                                                  cnn=True)
+    #                                   for i in [1, 2, 3, 4])
+    #
+    # file_base_trpo_cnn = 'scripts/rl/scripts/rl/test-working/trpo/test/history_'
+    # multi_trpo_cnn = lambda: (load_model_new(f'trpo_{i}',
+    #                                          f'{file_base_trpo_cnn}{str(i).zfill(4)}',
+    #                                          MaskableTrpo,
+    #                                          cnn=True)
+    #                           for i in range(1, 9))
 
-    file_base_ppo_cnn = 'scripts/rl/scripts/rl/test-working/ppo/1/history_'
-    multi_ppo_cnn_paral_v0 = lambda: (load_model_new(f'ppo_{i}',
-                                                     f'{file_base}{str(i).zfill(4)}',
-                                                     cnn=True)
-                                      for i in [1, 2, 3, 4])
-
-    file_base_trpo_cnn = 'scripts/rl/scripts/rl/test-working/trpo/test/history_'
-    multi_trpo_cnn = lambda: (load_model_new(f'trpo_{i}',
-                                             f'{file_base_trpo_cnn}{str(i).zfill(4)}',
-                                             MaskableTrpo,
-                                             cnn=True)
-                              for i in range(1, 9))
-
-    file_ppo_base2_cnn = 'scripts/rl/ppo_masked/cnn/base2/history_'
+    file_ppo_base2_cnn = 'scripts/rl/output/phase2/ppo/cnn/base-v3/history_'
     ppo_base2_cnn = lambda: (load_model_new(f'ppo_cnn{i}',
                                             f'{file_ppo_base2_cnn}{str(i).zfill(4)}',
                                             cnn=True,
                                             policy_cls=CustomCnnPPOPolicy)
-                             for i in [62])  # range(1, 52))
+                             for i in range(10, 26))  # range(1, 52))
 
-    file_base_trpo = 'scripts/rl/trpo/mlp/first run/history_'
+    file_base_trpo = 'scripts/rl/output/phase2/trpo/mlp/base2/history_'
     multi_trpo = lambda: (load_model_new(f'trpo_mlp{i}',
                                          f'{file_base_trpo}{str(i).zfill(4)}',
                                          MaskableTrpo,
                                          cnn=False,
                                          policy_cls=CustomMlpTrpoPolicy)
-                          for i in range(86, 92))
+                          for i in range(95, 100))
 
+    # new env rewards
+    from scripts.rl.alternate_env.train_model_ppo_alt import CustomCnnPPOPolicy as CNNPolicy_changed
+
+    file_ppo_new_reward_cnn = 'scripts/rl/output/alternate/ppo/cnn/base/history_'
+    ppo_new_reward_cnn = lambda: (load_model_new(f'ppo_cnn new reward {i}',
+                                                 f'{file_ppo_new_reward_cnn}{str(i).zfill(4)}',
+                                                 cnn=True,
+                                                 policy_cls=CNNPolicy_changed)
+                                  for i in [4, 5])  # range(1, 52))
+
+    # multi_ars, ppo_base2_cnn, multi_trpo
     l1 = list([best_ppo_yet])
-    # l2 = list(ppo_base2_cnn())
-
-    for agent2 in range(1):
+    l2 = list(multi_ars())
+    for agent2 in ppo_new_reward_cnn():
         bench_both_sides(
-            alpha,
+            best_ppo_yet.set_deterministic(False),
             # best_ppo_yet.set_deterministic(False),
             # ga_vpn_5,
-            best_ppo_yet,  # .set_deterministic(False),
+            # alpha,
+            agent2.set_deterministic(False),
+            # mcts_model,
+            # best_ppo_yet,
             # ppo_del2.set_deterministic(False),#agent,
-            times=1,
+            times=100,
             timed=True,
             verbose=1)

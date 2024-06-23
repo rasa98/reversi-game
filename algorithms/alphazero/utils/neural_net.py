@@ -2,6 +2,9 @@ import torch.nn as nn
 import torch.nn.functional as F
 from game_logic import ALL_FIELDS_SIZE
 
+import torch
+import torch.nn as nn
+
 
 class Net(nn.Module):
     def __init__(self, num_hidden, device):
@@ -12,31 +15,33 @@ class Net(nn.Module):
         self.startBlock = nn.Sequential(
             nn.Conv2d(3, num_hidden, kernel_size=3, padding=1),
             nn.ReLU(),
-            nn.Dropout(p=0.3)  # Dropout layer
+            nn.Dropout(p=0.2)  # Dropout layer
         )
 
         self.sharedConv = nn.Sequential(
-            nn.Conv2d(num_hidden, 128, kernel_size=3, padding=1),
+            nn.Conv2d(num_hidden, 2 * num_hidden, kernel_size=3, padding=1),
             nn.ReLU(),
-            nn.Dropout(p=0.3),  # Dropout layer
-            nn.Conv2d(128, 256, kernel_size=3, padding=1),
+            nn.Dropout(p=0.2),  # Dropout layer
+            nn.Conv2d(2 * num_hidden, 2 * num_hidden, kernel_size=3, padding=1),
             nn.ReLU(),
-            nn.Dropout(p=0.3)  # Dropout layer
-
+            nn.Dropout(p=0.2) , # Dropout layer
+            nn.Conv2d(2 * num_hidden, 2 * num_hidden, kernel_size=3, padding=1),
+            nn.ReLU(),
+            nn.Dropout(p=0.2)  # Dropout layer
         )
 
         self.policyHead = nn.Sequential(
-            nn.Conv2d(256, 512, kernel_size=3, padding=1),
+            nn.Conv2d(2 * num_hidden, 1 * num_hidden, kernel_size=3, padding=1),
             nn.ReLU(),
             nn.Flatten(),
-            nn.Linear(512 * ALL_FIELDS_SIZE, ALL_FIELDS_SIZE)
+            nn.Linear(1 * num_hidden * ALL_FIELDS_SIZE, ALL_FIELDS_SIZE)
         )
 
         self.valueHead = nn.Sequential(
-            nn.Conv2d(256, 128, kernel_size=3, padding=1),
+            nn.Conv2d(2 * num_hidden, 1 * num_hidden, kernel_size=3, padding=1),
             nn.ReLU(),
             nn.Flatten(),
-            nn.Linear(128 * ALL_FIELDS_SIZE, 1),
+            nn.Linear(1 * num_hidden * ALL_FIELDS_SIZE, 1),
             nn.Tanh()
         )
 
@@ -108,5 +113,3 @@ class Net(nn.Module):
 #         x += residual
 #         x = F.relu(x)
 #         return x
-
-

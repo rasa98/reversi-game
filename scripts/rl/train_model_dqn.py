@@ -364,6 +364,7 @@ if __name__ == '__main__':
         env = get_env(env)
         policy_class = CustomDQNPolicy
 
+    eval_env = env
     # --------------------------------------------
 
     #
@@ -383,13 +384,17 @@ if __name__ == '__main__':
                                  device=device,
                                  custom_objects=params)
 
-    start_model_copy = model.load(starting_model_filepath,
-                                  device=device,
-                                  custom_objects=params)
-    env.envs[0].unwrapped.change_to_latest_agent(start_model_copy)
+    # start_model_copy = model.load(starting_model_filepath,
+    #                               device=device,
+    #                               custom_objects=params)
+    # env.envs[0].unwrapped.change_to_latest_agent(start_model_copy)
+    eval_env.env_method('change_to_latest_agent',
+                        model.__class__,
+                        starting_model_filepath,
+                        model.policy_class)
 
     callback_params = {
-        'eval_env': env,
+        'eval_env': eval_env,
         'LOGDIR': LOGDIR,
         'BEST_THRESHOLD': BEST_THRESHOLD
     }

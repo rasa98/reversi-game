@@ -21,19 +21,25 @@ from stable_baselines3.dqn.policies import MlpPolicy, CnnPolicy, MultiInputPolic
 # from sb3_contrib.common.maskable.evaluation import evaluate_policy
 from stable_baselines3.common.monitor import Monitor
 
-if os.environ['USER'] == 'rasa':
-    source_dir = os.path.abspath(os.path.join(os.getcwd(), '../../'))
-    sys.path.append(source_dir)
-
 from sb3_contrib.common.maskable.policies import MaskableActorCriticPolicy, MaskableActorCriticCnnPolicy
 from sb3_contrib.ppo_mask import MaskablePPO
-from scripts.rl.old_game_env import OthelloEnv, SelfPlayCallback, ReversiCNN
+
+if __name__ == '__main__' and os.environ['USER'] != 'student':
+    sys.path.append(os.path.join(os.getcwd(), '../../../'))
+    os.chdir('../../../')
+
+from scripts.rl.alternate_env.sp_env import (TrainEnv,
+                                             EvalEnv,
+                                             SelfPlayCallback,
+                                             ReversiCNN)
+
 import stable_baselines3.common.callbacks as callbacks_module
 from sb3_contrib.common.maskable.evaluation import evaluate_policy as masked_evaluate_policy
 
 callbacks_module.evaluate_policy = masked_evaluate_policy
 
 th = torch
+
 
 class LinearSchedule:
     def __init__(self, initial_value):
@@ -56,20 +62,21 @@ def get_env(env_factory, use_cnn=False):
 
 
 if __name__ == '__main__':
+
     print(f'CUDA available: {torch.cuda.is_available()}')
     device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
     # Settings
     SEED = 12  # NOT USED
     NUM_TIMESTEPS = int(12_000_000)
-    EVAL_FREQ = int(20_500 * 3)
+    EVAL_FREQ = int(25_000)
     EVAL_EPISODES = int(200)
-    BEST_THRESHOLD = 0.22  # must achieve a mean score above this to replace prev best self
+    BEST_THRESHOLD = 0.28  # must achieve a mean score above this to replace prev best self
     RENDER_MODE = False  # set this to false if you plan on running for full 1000 trials.
     # LOGDIR = 'scripts/rl/test-working/ppo/v1/'  # "ppo_masked/test/"
-    LOGDIR = 'scripts/rl/output/phase2/ppo/cnn/base-v3/'  # "ppo_masked/test/"
+    LOGDIR = 'scripts/rl/output/alternate/ppo/cnn/base/'  # "ppo_masked/test/"
     CNN_POLICY = True
-    CONTINUE_FROM_MODEL = None #'scripts/rl/output/phase2/ppo/cnn/base-v2/history_0062' #None
+    CONTINUE_FROM_MODEL = None
 
     print(f'seed: {SEED} \nnum_timesteps: {NUM_TIMESTEPS} \neval_freq: {EVAL_FREQ}',
           f'\neval_episoded: {EVAL_EPISODES} \nbest_threshold: {BEST_THRESHOLD}',
@@ -77,12 +84,12 @@ if __name__ == '__main__':
 
     params = {
         'learning_rate': LinearSchedule(2e-4),
-        'n_steps': 2048 * 30,
+        'n_steps': 24000,
         'n_epochs': 5,
-        'clip_range': 0.18,
+        'clip_range': 0.2,
         'batch_size': 128,
         'ent_coef': 0.01,
-        #'gamma': 0.99,
+        # 'gamma': 0.99,
         'verbose': 100,
         'seed': SEED,
     }
@@ -92,24 +99,21 @@ if __name__ == '__main__':
     # --------------------------------------------
     policy_kwargs = {
         'net_arch': {
-            'pi': [128, 128] * 4,
-            'vf': [64, 64] * 4
+            'pi': [64] * 4,
+            'vf': [64] * 4
         }
     }
 
-    env = OthelloEnv
+    env = TrainEnv
+    eval_env = EvalEnv
     if CNN_POLICY:
         env = get_env(env, use_cnn=True)
+        eval_env = get_env(eval_env, use_cnn=True)
         policy_class = CustomCnnPPOPolicy
     else:
         env = get_env(env)
+        eval_env = get_env(eval_env)
         policy_class = MaskableActorCriticPolicy
-
-    eval_env = env
-
-    # starting_model_filepath = LOGDIR + 'random_start_model'
-    # starting_model_filepath = 'ppo_masked/cloud/v2/history_0299'
-    # starting_model_filepath = "scripts/rl/output/v3/" + 'history_0020'
 
     if CONTINUE_FROM_MODEL is None:
         params['policy_kwargs'] = policy_kwargs
@@ -121,7 +125,7 @@ if __name__ == '__main__':
         model.save(starting_model_filepath)
     else:
         starting_model_filepath = CONTINUE_FROM_MODEL
-        params['policy_class'] = CustomCnnPPOPolicy  #  trained on different version libs...
+        params['policy_class'] = CustomCnnPPOPolicy if CNN_POLICY else MaskableActorCriticPolicy
         model = MaskablePPO.load(starting_model_filepath,
                                  env=env,
                                  device=device,
@@ -129,7 +133,7 @@ if __name__ == '__main__':
 
     # start_model_copy = model.load(starting_model_filepath,
     #                               device=device)
-    # env.envs[0].unwrapped.change_to_latest_agent(start_model_copy)
+    # eval_env.envs[0].unwrapped.change_to_latest_agent(start_model_copy)
     eval_env.env_method('change_to_latest_agent',
                         model.__class__,
                         starting_model_filepath,
@@ -151,5 +155,5 @@ if __name__ == '__main__':
     )
 
     model.learn(total_timesteps=NUM_TIMESTEPS,
-                log_interval=100,
+                log_interval=1,
                 callback=eval_callback)

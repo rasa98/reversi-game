@@ -290,7 +290,7 @@ if __name__ == '__main__':
     # LOGDIR = 'scripts/rl/test-working/ppo/v1/'  # "ppo_masked/test/"
     LOGDIR = 'scripts/rl/output/phase2/trpo/mlp/base2/'  # "ppo_masked/test/"
     CNN_POLICY = False
-    CONTINUE_FROM_MODEL = 'scripts/rl/output/phase2/trpo/mlp/base/history_0092'
+    CONTINUE_FROM_MODEL = None #'scripts/rl/output/phase2/trpo/mlp/base/history_0092'
 
     print(f'seed: {SEED} \nnum_timesteps: {NUM_TIMESTEPS} \neval_freq: {EVAL_FREQ}',
           f'\neval_episoded: {EVAL_EPISODES} \nbest_threshold: {BEST_THRESHOLD}',
@@ -307,12 +307,11 @@ if __name__ == '__main__':
         'learning_rate': LinearSchedule(0.0001),
         'n_steps': 2048 * 3,
         'batch_size': 64,
-        #'gamma': 0.99,
+        # 'gamma': 0.99,
         'verbose': 100,
         'seed': SEED,
-    }    
+    }
 
-    
     env = OthelloEnv
     if CNN_POLICY:
         env = get_env(env, use_cnn=True)
@@ -320,6 +319,8 @@ if __name__ == '__main__':
     else:
         env = get_env(env)
         policy_class = CustomMlpPolicy
+
+    eval_env = env
 
     if CONTINUE_FROM_MODEL is None:
         params['policy_kwargs'] = policy_kwargs
@@ -339,13 +340,16 @@ if __name__ == '__main__':
 
     print(f'\nparams: {params}\n')
 
-    start_model_copy = model.load(starting_model_filepath,
-                                  device=device)
-    env.envs[0].unwrapped.change_to_latest_agent(start_model_copy)
-
+    # start_model_copy = model.load(starting_model_filepath,
+    #                               device=device)
+    # env.envs[0].unwrapped.change_to_latest_agent(start_model_copy)
+    eval_env.env_method('change_to_latest_agent',
+                        model.__class__,
+                        starting_model_filepath,
+                        model.policy_class)
 
     params = {
-        'eval_env': env,
+        'eval_env': eval_env,
         'LOGDIR': LOGDIR,
         'BEST_THRESHOLD': BEST_THRESHOLD
     }

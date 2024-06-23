@@ -5,6 +5,7 @@ import json
 import random
 import timeit
 import torch
+import torch.nn.functional as F
 
 from torch.optim.lr_scheduler import StepLR
 from tqdm import trange
@@ -127,6 +128,7 @@ class AlphaZero:
         return True
 
     def train(self, data, val_data, epoch):
+        self.model.train()
         random.shuffle(data)
         train_policy_loss = 0
         train_value_loss = 0
@@ -170,10 +172,11 @@ class AlphaZero:
             f"Valid Policy Loss: {scale * val_policy_loss}, "
             f"Valid Value Loss: {scale * val_value_loss}", flush=True)
 
+    @torch.no_grad()
     def validate_loss(self, data):
         self.model.eval()
-        policy_loss = 0
-        value_loss = 0
+        valid_policy_loss = 0
+        valid_value_loss = 0
         for batchIdx in range(0, len(data), self.params['batch_size']):
             sample = data[batchIdx:min(len(data) - 1, batchIdx + self.params[
                 'batch_size'])]  # Change to memory[batchIdx:batchIdx+self.args['batch_size']] in case of an error
@@ -192,10 +195,10 @@ class AlphaZero:
             value_loss = F.mse_loss(out_value, value_targets)
             loss = policy_loss + value_loss
 
-            policy_loss += policy_loss.item()
-            value_loss += value_loss.item()
-        policy_loss /= len(data) // self.params['batch_size']
-        value_loss /= len(data) // self.params['batch_size']
+            valid_policy_loss += policy_loss.item()
+            valid_value_loss += value_loss.item()
+        valid_policy_loss /= len(data) // self.params['batch_size']
+        valid_value_loss /= len(data) // self.params['batch_size']
         self.model.train()
         return policy_loss, value_loss
 
@@ -222,12 +225,6 @@ class AlphaZero:
                 self.buffer.add(batch)
 
             print(flush=True)
-
-            self.model.train()
-            # random.shuffle(memory)
-            # separation_idx = int(0.2 * len(memory))
-            # val_data = memory[0: separation_idx]
-            # train_data = memory[separation_idx:]
 
             # TODO fix buffer sample method to return only train and valid to not be a deque
             for epoch in range(self.params['num_epochs']):
@@ -375,7 +372,7 @@ if __name__ == "__main__":
         print('running on local node')
         print(f'cwd is : {os.getcwd()}')
         os.chdir('../../')
-        num_cores = 2
+        num_cores = 1
     else:
         num_cores = int(os.environ['SLURM_CPUS_ON_NODE']) // 2
 
@@ -387,13 +384,13 @@ if __name__ == "__main__":
         'lr': 5e-5,
         'weight_decay': 7e-5,
         'num_iterations': 50,
-        'num_self_play_iterations': 200 * 6,
+        'num_self_play_iterations': 2,#200 * 6,
         'num_epochs': 4,
         'batch_size': 256,
         'initial_temp': 1.75,
         'final_temp': 0.6,
         'temp_decay_steps': 16,
-        'num_parallel_games': 100,
+        'num_parallel_games': 2,#100,
         'max_fail_times': 5,
         'scheduler_step_size': 12,
         'scheduler_gamma': 0.97,
@@ -404,7 +401,7 @@ if __name__ == "__main__":
     }
     mcts_params = {
         'uct_exploration_const': 1.7,
-        'max_iter': 70,
+        'max_iter': 1,
         # these are flexible dirichlet epsilon for noise
         # favor exploration more in the beginning
         'dirichlet_epsilon': 0.25,

@@ -15,36 +15,16 @@ callbacks_module.evaluate_policy = masked_evaluate_policy
 from stable_baselines3.common.callbacks import EvalCallback
 
 
-# from sb3_contrib.common.maskable.evaluation import evaluate_policy
 from stable_baselines3.common.monitor import Monitor
-# from stable_baselines3.common.callbacks import EvalCallback
 from sb3_contrib.common.maskable.policies import MaskableActorCriticPolicy
 from sb3_contrib.ppo_mask import MaskablePPO
-from scripts.rl.game_env_paral import OthelloEnv, SelfPlayCallback
-
-# Settings
-SEED = 19  # NOT USED
-NUM_TIMESTEPS = int(30_000_000)
-N_STEPS = 2048 * 30
-EVAL_FREQ = int(N_STEPS + 1)
-EVAL_EPISODES = int(1000)
-BEST_THRESHOLD = 0.125  # must achieve a mean score above this to replace prev best self
-RENDER_MODE = False  # set this to false if you plan on running for full 1000 trials.
-LOGDIR = "scripts/rl/output/paral/v3v3-1/"
+from scripts.rl.old_game_env import OthelloEnv, SelfPlayCallback
+from scripts.rl.train_model_ppo import CustomCnnPPOPolicy
 
 
-
-class LinearSchedule:
-    def __init__(self, initial_value):
-        self.initial_value = initial_value
-
-    def __call__(self, progress_remaining):
-        return progress_remaining * self.initial_value
-
-
-def make_env():
+def make_env(use_cnn=False):
     def _init():
-        env = OthelloEnv()
+        env = OthelloEnv(use_cnn=use_cnn)
         env2 = Monitor(env=env)
         return env2
 
@@ -52,58 +32,89 @@ def make_env():
 
 
 if __name__ == '__main__':
-    mp.set_start_method('forkserver')
-    num_envs = int(os.environ['SLURM_CPUS_ON_NODE']) // 2
-    print(f'\nnum parallel processes: {num_envs}\n')
-    env_fns = [make_env() for _ in range(num_envs)]
-    vec_env = SubprocVecEnv(env_fns)
-    # env = OthelloEnv()
-    # env = Monitor(env=env)
-
     print(f'CUDA available: {torch.cuda.is_available()}')
     device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
-    #policy_kwargs = {
+    # Settings
+    SEED = 19  # NOT USED
+    NUM_TIMESTEPS = int(30_000_000)
+    N_STEPS = 2048 * 30
+    EVAL_FREQ = int(N_STEPS + 1)
+    EVAL_EPISODES = int(1000)
+    BEST_THRESHOLD = 0.125  # must achieve a mean score above this to replace prev best self
+    RENDER_MODE = False  # set this to false if you plan on running for full 1000 trials.
+    LOGDIR = "del/"
+    CNN_POLICY = True
+    CONTINUE_FROM_MODEL = 'scripts/rl/output/phase2/ppo/cnn/base-v3/history_0024'  # None
+
+    mp.set_start_method('forkserver')
+
+    if os.environ['USER'] == 'student':
+        num_envs = int(os.environ['SLURM_CPUS_ON_NODE']) // 2
+    else:
+        os.chdir('../../')
+        num_envs = 2
+    print(f'\nnum parallel processes: {num_envs}\n')
+
+    if CNN_POLICY:
+        env_fns = [make_env(use_cnn=True) for _ in range(num_envs)]
+        policy_class = CustomCnnPPOPolicy
+    else:
+        env_fns = [make_env() for _ in range(num_envs)]
+        policy_class = MaskableActorCriticPolicy
+
+    vec_env = SubprocVecEnv(env_fns)
+
+
+    print(f'seed: {SEED} \nnum_timesteps: {NUM_TIMESTEPS} \neval_freq: {EVAL_FREQ}',
+          f'\neval_episoded: {EVAL_EPISODES} \nbest_threshold: {BEST_THRESHOLD}',
+          f'\nlogdir: {LOGDIR} \ncnn_policy: {CNN_POLICY} \ncontinueFrom_model: {CONTINUE_FROM_MODEL}', flush=True)
+
+    params = {
+        'learning_rate': 7e-5,
+        'n_steps': N_STEPS,
+        'n_epochs': 5,
+        'clip_range': 0.18,
+        'batch_size': 128,
+        'ent_coef': 0.01,
+        # 'gamma': 0.99,
+        'verbose': 100,
+        'seed': SEED,
+    }
+
+    print(f'\nparams: {params}\n')
+
+    # policy_kwargs = {
     #    'net_arch': {
     #        'pi': [128, 128] * 4,
     #        'vf': [64, 64] * 4
     #    }
-    #}
-    #print(f'net architecture - {policy_kwargs}')
+    # }
+    # print(f'net architecture - {policy_kwargs}')
 
-    print(
-        f'params: \nNUM_TIMESTEPS={NUM_TIMESTEPS}\nEVAL_FREQ={EVAL_FREQ}\nEVAL_EPISODES={EVAL_EPISODES}\nBEST_THRESHOLD={BEST_THRESHOLD}\nLOGDIR={LOGDIR}')
 
-    params = {
-        'learning_rate': 5e-5,  #LinearSchedule(9e-5),
-        'n_steps': N_STEPS,
-        'n_epochs': 3,
-        'clip_range': 0.3,
-        'batch_size': 512,
-        # 'ent_coef': 0.01,
-        # 'gae_lambda': 0.95,
-        'gamma': 1,
-        'verbose': 1
-    }
-
-    print(f'model params: \n {params}')
-
-    #model = MaskablePPO(policy=MaskableActorCriticPolicy,
-    #                    env=vec_env,
-    #                    device=device,
-    #                    policy_kwargs=policy_kwargs,
-    #                    **params)
-
-    #starting_model_filepath = LOGDIR + 'random_start_model'
-    #model.save(starting_model_filepath)
-
-    # ------ load pretrained ---------
-    starting_model_filepath = "scripts/rl/output/v3v3/" + 'history_0018'
-    model = MaskablePPO.load(starting_model_filepath, env=vec_env, custom_objects=params)
+    if CONTINUE_FROM_MODEL is None:
+        params['policy_kwargs'] = policy_kwargs
+        model = MaskablePPO(policy=policy_class,
+                            env=vec_env,
+                            device=device,
+                            **params)
+        starting_model_filepath = LOGDIR + 'random_start_model'
+        model.save(starting_model_filepath)
+    else:
+        starting_model_filepath = CONTINUE_FROM_MODEL
+        params['policy_class'] = policy_class
+        model = MaskablePPO.load(starting_model_filepath,
+                                 env=vec_env,
+                                 device=device,
+                                 custom_objects=params)
 
     print(f'starting model: {starting_model_filepath}', flush=True)
 
-    vec_env.env_method('change_to_latest_agent', model.__class__, starting_model_filepath)
+    vec_env.env_method('change_to_latest_agent',
+                       model.__class__,
+                       starting_model_filepath,
+                       model.policy_class)
     
     params = {
         'eval_env': vec_env,
@@ -120,4 +131,6 @@ if __name__ == '__main__':
         deterministic=True
     )
 
-    model.learn(total_timesteps=NUM_TIMESTEPS, callback=eval_callback)
+    model.learn(total_timesteps=NUM_TIMESTEPS,
+                log_interval=1,
+                callback=eval_callback)
