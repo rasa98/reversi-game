@@ -1,0 +1,475 @@
+CUDA Available: True
+CPU Model: Intel(R) Core(TM) i7-8700 CPU @ 3.20GHz
+GPU Model: NVIDIA GeForce RTX 2070 SUPER
+CUDA available: True
+seed: 113 
+num_timesteps: 50000000 
+eval_freq: 615000 
+eval_episoded: 400 
+best_threshold: 0.18 
+logdir: scripts/rl/output/phase2/trpo/mlp/base-v3/ 
+cnn_policy: False 
+continueFrom_model: scripts/rl/output/phase2/trpo/mlp/base2/history_0095
+/home/student/pantrasa/project/venv310/lib/python3.10/site-packages/gymnasium/core.py:311: UserWarning: [33mWARN: env.action_masks to get variables from other wrappers is deprecated and will be removed in v1.0, to get this variable you can do `env.unwrapped.action_masks` for environment variables or `env.get_wrapper_attr('action_masks')` that will search the reminding wrappers.[0m
+  logger.warn(
+
+params: {'learning_rate': <__main__.LinearSchedule object at 0x7f74ad1b4310>, 'n_steps': 61440, 'batch_size': 128, 'gae_lambda': 0.96, 'verbose': 100, 'seed': 113}
+
+Ep done - 1000.
+Ep done - 2000.
+Ep done - 3000.
+Ep done - 4000.
+Ep done - 5000.
+Ep done - 6000.
+Ep done - 7000.
+Ep done - 8000.
+Ep done - 9000.
+Ep done - 10000.
+Ep done - 11000.
+Ep done - 12000.
+Ep done - 13000.
+Ep done - 14000.
+Ep done - 15000.
+Ep done - 16000.
+Ep done - 17000.
+Ep done - 18000.
+Ep done - 19000.
+Ep done - 20000.
+----------------------------------------
+| rollout/                  |          |
+|    ep_len_mean            | 29.9     |
+|    ep_rew_mean            | -0.02    |
+| time/                     |          |
+|    fps                    | 291      |
+|    iterations             | 10       |
+|    time_elapsed           | 2106     |
+|    total_timesteps        | 614400   |
+| train/                    |          |
+|    explained_variance     | 0.423    |
+|    is_line_search_success | 0        |
+|    kl_divergence_loss     | 0        |
+|    learning_rate          | 5.04e-05 |
+|    n_updates              | 5008     |
+|    policy_objective       | 1.11e-07 |
+|    value_loss             | 0.253    |
+----------------------------------------
+Eval num_timesteps=615000, episode_reward=0.20 +/- 0.96
+Episode length: 30.05 +/- 0.56
+-----------------------------------------
+| eval/                     |           |
+|    mean_ep_length         | 30.1      |
+|    mean_reward            | 0.195     |
+| time/                     |           |
+|    total_timesteps        | 615000    |
+| train/                    |           |
+|    explained_variance     | 0.453     |
+|    is_line_search_success | 0         |
+|    kl_divergence_loss     | 0         |
+|    learning_rate          | 5.04e-05  |
+|    n_updates              | 5009      |
+|    policy_objective       | -1.62e-07 |
+|    value_loss             | 0.244     |
+-----------------------------------------
+/home/student/pantrasa/project/venv310/lib/python3.10/site-packages/gymnasium/core.py:311: UserWarning: [33mWARN: env.action_masks to get variables from other wrappers is deprecated and will be removed in v1.0, to get this variable you can do `env.unwrapped.action_masks` for environment variables or `env.get_wrapper_attr('action_masks')` that will search the reminding wrappers.[0m
+  logger.warn(
+New best mean reward!
+SELFPLAY: mean_reward achieved: 0.195
+SELFPLAY: new best model, bumping up generation to 1
+Ep done - 21000.
+Ep done - 22000.
+Ep done - 23000.
+Ep done - 24000.
+Ep done - 25000.
+Ep done - 26000.
+Ep done - 27000.
+Ep done - 28000.
+Ep done - 29000.
+Ep done - 30000.
+Ep done - 31000.
+Ep done - 32000.
+Ep done - 33000.
+Ep done - 34000.
+Ep done - 35000.
+Ep done - 36000.
+Ep done - 37000.
+Ep done - 38000.
+Ep done - 39000.
+Ep done - 40000.
+Ep done - 41000.
+-----------------------------------------
+| rollout/                  |           |
+|    ep_len_mean            | 30        |
+|    ep_rew_mean            | 0.03      |
+| time/                     |           |
+|    fps                    | 297       |
+|    iterations             | 20        |
+|    time_elapsed           | 4133      |
+|    total_timesteps        | 1228800   |
+| train/                    |           |
+|    explained_variance     | 0.444     |
+|    is_line_search_success | 0         |
+|    kl_divergence_loss     | 0         |
+|    learning_rate          | 4.98e-05  |
+|    n_updates              | 5018      |
+|    policy_objective       | -6.87e-08 |
+|    value_loss             | 0.246     |
+-----------------------------------------
+Eval num_timesteps=1230000, episode_reward=0.07 +/- 0.98
+Episode length: 30.04 +/- 0.55
+-----------------------------------------
+| eval/                     |           |
+|    mean_ep_length         | 30        |
+|    mean_reward            | 0.075     |
+| time/                     |           |
+|    total_timesteps        | 1230000   |
+| train/                    |           |
+|    explained_variance     | 0.451     |
+|    is_line_search_success | 0         |
+|    kl_divergence_loss     | 0         |
+|    learning_rate          | 4.97e-05  |
+|    n_updates              | 5019      |
+|    policy_objective       | -8.28e-08 |
+|    value_loss             | 0.245     |
+-----------------------------------------
+Ep done - 42000.
+Ep done - 43000.
+Ep done - 44000.
+Ep done - 45000.
+Ep done - 46000.
+Ep done - 47000.
+Ep done - 48000.
+Ep done - 49000.
+Ep done - 50000.
+Ep done - 51000.
+Ep done - 52000.
+Ep done - 53000.
+Ep done - 54000.
+Ep done - 55000.
+Ep done - 56000.
+Ep done - 57000.
+Ep done - 58000.
+Ep done - 59000.
+Ep done - 60000.
+Ep done - 61000.
+Ep done - 62000.
+-----------------------------------------
+| rollout/                  |           |
+|    ep_len_mean            | 30        |
+|    ep_rew_mean            | 0.06      |
+| time/                     |           |
+|    fps                    | 292       |
+|    iterations             | 30        |
+|    time_elapsed           | 6306      |
+|    total_timesteps        | 1843200   |
+| train/                    |           |
+|    explained_variance     | 0.43      |
+|    is_line_search_success | 0         |
+|    kl_divergence_loss     | 0         |
+|    learning_rate          | 4.92e-05  |
+|    n_updates              | 5028      |
+|    policy_objective       | -9.05e-08 |
+|    value_loss             | 0.252     |
+-----------------------------------------
+Eval num_timesteps=1845000, episode_reward=0.06 +/- 0.99
+Episode length: 29.96 +/- 1.02
+----------------------------------------
+| eval/                     |          |
+|    mean_ep_length         | 30       |
+|    mean_reward            | 0.0575   |
+| time/                     |          |
+|    total_timesteps        | 1845000  |
+| train/                    |          |
+|    explained_variance     | 0.417    |
+|    is_line_search_success | 0        |
+|    kl_divergence_loss     | 0        |
+|    learning_rate          | 4.91e-05 |
+|    n_updates              | 5029     |
+|    policy_objective       | 1.84e-08 |
+|    value_loss             | 0.256    |
+----------------------------------------
+Ep done - 63000.
+Ep done - 64000.
+Ep done - 65000.
+Ep done - 66000.
+Ep done - 67000.
+Ep done - 68000.
+Ep done - 69000.
+Ep done - 70000.
+Ep done - 71000.
+Ep done - 72000.
+Ep done - 73000.
+Ep done - 74000.
+Ep done - 75000.
+Ep done - 76000.
+Ep done - 77000.
+Ep done - 78000.
+Ep done - 79000.
+Ep done - 80000.
+Ep done - 81000.
+Ep done - 82000.
+Ep done - 83000.
+-----------------------------------------
+| rollout/                  |           |
+|    ep_len_mean            | 30        |
+|    ep_rew_mean            | 0.04      |
+| time/                     |           |
+|    fps                    | 289       |
+|    iterations             | 40        |
+|    time_elapsed           | 8483      |
+|    total_timesteps        | 2457600   |
+| train/                    |           |
+|    explained_variance     | 0.441     |
+|    is_line_search_success | 0         |
+|    kl_divergence_loss     | 0         |
+|    learning_rate          | 4.86e-05  |
+|    n_updates              | 5038      |
+|    policy_objective       | -1.38e-07 |
+|    value_loss             | 0.242     |
+-----------------------------------------
+Eval num_timesteps=2460000, episode_reward=0.20 +/- 0.96
+Episode length: 30.00 +/- 0.57
+-----------------------------------------
+| eval/                     |           |
+|    mean_ep_length         | 30        |
+|    mean_reward            | 0.205     |
+| time/                     |           |
+|    total_timesteps        | 2460000   |
+| train/                    |           |
+|    explained_variance     | 0.434     |
+|    is_line_search_success | 0         |
+|    kl_divergence_loss     | 0         |
+|    learning_rate          | 4.85e-05  |
+|    n_updates              | 5039      |
+|    policy_objective       | -7.57e-08 |
+|    value_loss             | 0.249     |
+-----------------------------------------
+New best mean reward!
+SELFPLAY: mean_reward achieved: 0.205
+SELFPLAY: new best model, bumping up generation to 2
+Ep done - 84000.
+Ep done - 85000.
+Ep done - 86000.
+Ep done - 87000.
+Ep done - 88000.
+Ep done - 89000.
+Ep done - 90000.
+Ep done - 91000.
+Ep done - 92000.
+Ep done - 93000.
+Ep done - 94000.
+Ep done - 95000.
+Ep done - 96000.
+Ep done - 97000.
+Ep done - 98000.
+Ep done - 99000.
+Ep done - 100000.
+Ep done - 101000.
+Ep done - 102000.
+Ep done - 103000.
+Ep done - 104000.
+-----------------------------------------
+| rollout/                  |           |
+|    ep_len_mean            | 30        |
+|    ep_rew_mean            | 0.11      |
+| time/                     |           |
+|    fps                    | 288       |
+|    iterations             | 50        |
+|    time_elapsed           | 10665     |
+|    total_timesteps        | 3072000   |
+| train/                    |           |
+|    explained_variance     | 0.442     |
+|    is_line_search_success | 0         |
+|    kl_divergence_loss     | 0         |
+|    learning_rate          | 4.79e-05  |
+|    n_updates              | 5048      |
+|    policy_objective       | -6.48e-08 |
+|    value_loss             | 0.247     |
+-----------------------------------------
+Eval num_timesteps=3075000, episode_reward=0.10 +/- 0.97
+Episode length: 30.01 +/- 0.60
+----------------------------------------
+| eval/                     |          |
+|    mean_ep_length         | 30       |
+|    mean_reward            | 0.095    |
+| time/                     |          |
+|    total_timesteps        | 3075000  |
+| train/                    |          |
+|    explained_variance     | 0.452    |
+|    is_line_search_success | 0        |
+|    kl_divergence_loss     | 0        |
+|    learning_rate          | 4.79e-05 |
+|    n_updates              | 5049     |
+|    policy_objective       | 1.54e-07 |
+|    value_loss             | 0.239    |
+----------------------------------------
+Ep done - 105000.
+Ep done - 106000.
+Ep done - 107000.
+Ep done - 108000.
+Ep done - 109000.
+Ep done - 110000.
+Ep done - 111000.
+Ep done - 112000.
+Ep done - 113000.
+Ep done - 114000.
+Ep done - 115000.
+Ep done - 116000.
+Ep done - 117000.
+Ep done - 118000.
+Ep done - 119000.
+Ep done - 120000.
+Ep done - 121000.
+Ep done - 122000.
+Ep done - 123000.
+Ep done - 124000.
+----------------------------------------
+| rollout/                  |          |
+|    ep_len_mean            | 30       |
+|    ep_rew_mean            | -0.08    |
+| time/                     |          |
+|    fps                    | 286      |
+|    iterations             | 60       |
+|    time_elapsed           | 12845    |
+|    total_timesteps        | 3686400  |
+| train/                    |          |
+|    explained_variance     | 0.435    |
+|    is_line_search_success | 0        |
+|    kl_divergence_loss     | 0        |
+|    learning_rate          | 4.73e-05 |
+|    n_updates              | 5058     |
+|    policy_objective       | 1.83e-08 |
+|    value_loss             | 0.249    |
+----------------------------------------
+Ep done - 125000.
+Eval num_timesteps=3690000, episode_reward=0.10 +/- 0.98
+Episode length: 30.05 +/- 0.58
+-----------------------------------------
+| eval/                     |           |
+|    mean_ep_length         | 30.1      |
+|    mean_reward            | 0.0975    |
+| time/                     |           |
+|    total_timesteps        | 3690000   |
+| train/                    |           |
+|    explained_variance     | 0.394     |
+|    is_line_search_success | 0         |
+|    kl_divergence_loss     | 0         |
+|    learning_rate          | 4.72e-05  |
+|    n_updates              | 5059      |
+|    policy_objective       | -3.54e-08 |
+|    value_loss             | 0.26      |
+-----------------------------------------
+Ep done - 126000.
+Ep done - 127000.
+Ep done - 128000.
+Ep done - 129000.
+Ep done - 130000.
+Ep done - 131000.
+Ep done - 132000.
+Ep done - 133000.
+Ep done - 134000.
+Ep done - 135000.
+Ep done - 136000.
+Ep done - 137000.
+Ep done - 138000.
+Ep done - 139000.
+Ep done - 140000.
+Ep done - 141000.
+Ep done - 142000.
+Ep done - 143000.
+Ep done - 144000.
+Ep done - 145000.
+----------------------------------------
+| rollout/                  |          |
+|    ep_len_mean            | 29.9     |
+|    ep_rew_mean            | 0.04     |
+| time/                     |          |
+|    fps                    | 286      |
+|    iterations             | 70       |
+|    time_elapsed           | 15024    |
+|    total_timesteps        | 4300800  |
+| train/                    |          |
+|    explained_variance     | 0.41     |
+|    is_line_search_success | 0        |
+|    kl_divergence_loss     | 0        |
+|    learning_rate          | 4.67e-05 |
+|    n_updates              | 5068     |
+|    policy_objective       | 9.66e-08 |
+|    value_loss             | 0.258    |
+----------------------------------------
+Ep done - 146000.
+Eval num_timesteps=4305000, episode_reward=0.22 +/- 0.96
+Episode length: 30.01 +/- 0.56
+----------------------------------------
+| eval/                     |          |
+|    mean_ep_length         | 30       |
+|    mean_reward            | 0.217    |
+| time/                     |          |
+|    total_timesteps        | 4305000  |
+| train/                    |          |
+|    explained_variance     | 0.448    |
+|    is_line_search_success | 0        |
+|    kl_divergence_loss     | 0        |
+|    learning_rate          | 4.66e-05 |
+|    n_updates              | 5069     |
+|    policy_objective       | 1.97e-08 |
+|    value_loss             | 0.246    |
+----------------------------------------
+New best mean reward!
+SELFPLAY: mean_reward achieved: 0.2175
+SELFPLAY: new best model, bumping up generation to 3
+Ep done - 147000.
+Ep done - 148000.
+Ep done - 149000.
+Ep done - 150000.
+Ep done - 151000.
+Ep done - 152000.
+Ep done - 153000.
+Ep done - 154000.
+Ep done - 155000.
+Ep done - 156000.
+Ep done - 157000.
+Ep done - 158000.
+Ep done - 159000.
+Ep done - 160000.
+Ep done - 161000.
+Ep done - 162000.
+Ep done - 163000.
+Ep done - 164000.
+Ep done - 165000.
+Ep done - 166000.
+-----------------------------------------
+| rollout/                  |           |
+|    ep_len_mean            | 30        |
+|    ep_rew_mean            | -0.13     |
+| time/                     |           |
+|    fps                    | 285       |
+|    iterations             | 80        |
+|    time_elapsed           | 17201     |
+|    total_timesteps        | 4915200   |
+| train/                    |           |
+|    explained_variance     | 0.447     |
+|    is_line_search_success | 0         |
+|    kl_divergence_loss     | 0         |
+|    learning_rate          | 4.6e-05   |
+|    n_updates              | 5078      |
+|    policy_objective       | -5.86e-08 |
+|    value_loss             | 0.241     |
+-----------------------------------------
+Ep done - 167000.
+Eval num_timesteps=4920000, episode_reward=0.09 +/- 0.97
+Episode length: 30.00 +/- 0.60
+-----------------------------------------
+| eval/                     |           |
+|    mean_ep_length         | 30        |
+|    mean_reward            | 0.0875    |
+| time/                     |           |
+|    total_timesteps        | 4920000   |
+| train/                    |           |
+|    explained_variance     | 0.458     |
+|    is_line_search_success | 0         |
+|    kl_divergence_loss     | 0         |
+|    learning_rate          | 4.6e-05   |
+|    n_updates              | 5079      |
+|    policy_objective       | -3.08e-08 |
+|    value_loss             | 0.243     |
+-----------------------------------------

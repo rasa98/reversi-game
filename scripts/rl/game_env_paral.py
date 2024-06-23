@@ -9,13 +9,14 @@ from shutil import copyfile  # keep track of generations
 from gymnasium.spaces import Discrete, Box
 
 from game_logic import Othello
+# from scripts.rl.train_model_ppo import CustomCnnPPOPolicy
 import numpy as np
 import os, math
 from itertools import cycle
 
 
 class OthelloEnv(gym.Env):
-    def __init__(self):
+    def __init__(self, use_cnn=False):
         self.game = Othello()
         self.agent_turn = 1
         shape = self.game.board.shape
@@ -24,7 +25,11 @@ class OthelloEnv(gym.Env):
         #                                 'board' : Box(0, 2, shape=shape, dtype=int),
         #                                 'player': Discrete(2, start=1)
         #                               })
-        self.observation_space = Box(low=0, high=1, shape=(64 * 3,), dtype=np.float32)
+        self.use_cnn = use_cnn
+        if use_cnn:
+            self.observation_space = Box(low=0, high=255, shape=(3, 8, 8), dtype=np.uint8)
+        else:
+            self.observation_space = Box(low=0, high=1, shape=(64 * 3,), dtype=np.float32)
         self.other_agent = None
         self.reset_othello_gen = self.reset_othello()
         self.episodes = 0
@@ -39,11 +44,15 @@ class OthelloEnv(gym.Env):
             model_turn = next(infinite_player_turn)
             yield game, model_turn
 
-    def change_to_latest_agent(self, agent_class, agent_file_path):
-        self.other_agent = agent_class.load(agent_file_path)
+    def change_to_latest_agent(self, agent_class, agent_file_path, policy_class):
+        self.other_agent = agent_class.load(agent_file_path,
+                                            custom_objects={'policy_class': policy_class})
 
     def get_obs(self):
-        encoded_board = self.game.get_encoded_state().reshape(-1)
+        if self.use_cnn:
+            encoded_board = self.game.get_encoded_state_as_img()
+        else:
+            encoded_board = self.game.get_encoded_state().reshape(-1)
         return encoded_board
 
     def check_game_ended(self):
@@ -158,6 +167,9 @@ class SelfPlayCallback(EvalCallback):
             # agent = self.model.load(source_file)
             # agent.env = self.model.env
             # self.train_env.unwrapped.change_to_latest_agent(agent)
-            self.eval_env.env_method('change_to_latest_agent', self.model.__class__, source_file)
+            self.eval_env.env_method('change_to_latest_agent',
+                                     self.model.__class__,
+                                     source_file,
+                                     self.model.policy_class)
 
         return result

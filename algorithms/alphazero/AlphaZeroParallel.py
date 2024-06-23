@@ -5,6 +5,7 @@ import json
 import random
 import timeit
 import torch
+import torch.nn.functional as F
 
 from torch.optim.lr_scheduler import StepLR
 from tqdm import trange
@@ -90,8 +91,8 @@ class AlphaZero:
 
     def save_if_passes_bench(self, folder, iteration):
         params = dict(self.mcts_params)
-        params['max_iter'] = 30
-        params['dirichlet_epsilon'] = 0.2  # for some variability when simulating
+        params['max_iter'] = 50
+        params['dirichlet_epsilon'] = 0.15  # for some variability when simulating
         params['uct_exploration_const'] = 1.41
         params['decay_steps'] = -1  # so that alpha is set to final alpha for both
         params['final_alpha'] = 0.1        
@@ -117,9 +118,8 @@ class AlphaZero:
         #     _, _, a1_winrate = self.bench_agents(current_agent, best_agent, det=False)
         #     if a1_winrate < 0.65:
         #         return False
-        _, _, a1_winrate = self.bench_agents(current_agent, best_agent, times=20, det=True)
-        if a1_winrate < 0.65:
-
+        _, _, a1_winrate = self.bench_agents(current_agent, best_agent, times=50, det=True)
+        if a1_winrate < self.params['winrate_save']:
             return False
         print('++++ +++++++++ ++++New model Save!!!++++ +++++++++ ++++')
         torch.save(self.model.state_dict(), f"{folder}/model_{iteration}.pt")
@@ -128,6 +128,7 @@ class AlphaZero:
         return True
 
     def train(self, data, val_data, epoch):
+        self.model.train()
         random.shuffle(data)
         train_policy_loss = 0
         train_value_loss = 0
@@ -170,11 +171,12 @@ class AlphaZero:
         print(  # f"Epoch {epoch + 1}/{params['num_epochs']} - "
             f"Valid Policy Loss: {scale * val_policy_loss}, "
             f"Valid Value Loss: {scale * val_value_loss}", flush=True)
-
+    
+    @torch.no_grad()
     def validate_loss(self, data):
         self.model.eval()
-        policy_loss = 0
-        value_loss = 0
+        valid_policy_loss = 0
+        valid_value_loss = 0
         for batchIdx in range(0, len(data), self.params['batch_size']):
             sample = data[batchIdx:min(len(data) - 1, batchIdx + self.params[
                 'batch_size'])]  # Change to memory[batchIdx:batchIdx+self.args['batch_size']] in case of an error
@@ -193,10 +195,10 @@ class AlphaZero:
             value_loss = F.mse_loss(out_value, value_targets)
             loss = policy_loss + value_loss
 
-            policy_loss += policy_loss.item()
-            value_loss += value_loss.item()
-        policy_loss /= len(data) // self.params['batch_size']
-        value_loss /= len(data) // self.params['batch_size']
+            valid_policy_loss += policy_loss.item()
+            valid_value_loss += value_loss.item()
+        valid_policy_loss /= len(data) // self.params['batch_size']
+        valid_value_loss /= len(data) // self.params['batch_size']
         self.model.train()
         return policy_loss, value_loss
 
@@ -223,12 +225,6 @@ class AlphaZero:
                 self.buffer.add(batch)
 
             print(flush=True)
-
-            self.model.train()
-            # random.shuffle(memory)
-            # separation_idx = int(0.2 * len(memory))
-            # val_data = memory[0: separation_idx]
-            # train_data = memory[separation_idx:]
 
             # TODO fix buffer sample method to return only train and valid to not be a deque
             for epoch in range(self.params['num_epochs']):
@@ -384,36 +380,39 @@ if __name__ == "__main__":
 
     print(f'number of cores used for pool: {num_cores}')
 
+    num_parallel_games = 64
+
     params = {
-        'hidden_layer': 128,
-        'lr': 1e-3,
-        'weight_decay': 1e-3,
-        'num_iterations': 30,
-        'num_self_play_iterations': 1 * 64 * 16,
-        'num_epochs': 5,
-        'batch_size': 128,
-        'initial_temp': 1.75,
+        'hidden_layer': 64,
+        'lr': 1e-5,
+        'weight_decay': 1e-6,
+        'num_iterations': 5,
+        'num_self_play_iterations': 1 * num_parallel_games * num_cores,
+        'num_epochs': 8,
+        'batch_size': 256,
+        'initial_temp': 1.1,
         'final_temp': 0.6,
-        'temp_decay_steps': 16,
-        'num_parallel_games': 64,
-        'max_fail_times': 2,
-        'scheduler_step_size': 5, 
-        'scheduler_gamma':0.8,
-        'model_output': 'models_output/alpha-zero/FINAL2/res8layer128-v1/'
-        'train_ratio': 0.7,
-        'buffer_times': 2.2,  # how many times is bigger than 1 iter of generated games by selfplay
-        'buffer_percent': 0.5  # how many of all data to supply training
+        'temp_decay_steps': 5,
+        'num_parallel_games': num_parallel_games,
+        'max_fail_times': 99999,#2,
+        'scheduler_step_size': 8, 
+        'scheduler_gamma':0.7,
+        'model_output': 'models_output/alpha-zero/FINAL/layer64-LAST-v4/',
+        'train_ratio': 0.66,
+        'buffer_times': 2.4,  # how many times is bigger than 1 iter of generated games by selfplay
+        'buffer_percent': 0.8,  # how many of all train buffer data to supply training
+        'winrate_save': 0.6
 
     }
     mcts_params = {
-        'uct_exploration_const': 1.72,
-        'max_iter': 100,#70,
+        'uct_exploration_const': 1.58,
+        'max_iter': 1000,
         # these are flexible dirichlet epsilon for noise
         # favor exploration more in the beginning
-        'dirichlet_epsilon': 0.2,
-        'initial_alpha': 0.6,
-        'final_alpha': 0.1,
-        'decay_steps': 8
+        'dirichlet_epsilon': 0.5,
+        'initial_alpha': 0.15,
+        'final_alpha': 0.03,
+        'decay_steps': 5
     }
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')

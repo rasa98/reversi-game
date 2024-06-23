@@ -1,0 +1,1305 @@
+CUDA Available: True
+CPU Model: Intel(R) Core(TM) i7-8700 CPU @ 3.20GHz
+GPU Model: NVIDIA GeForce RTX 2070 SUPER
+seed: 369 
+num_timesteps: 50000000 
+eval_freq: 200000 
+eval_episoded: 500 
+best_threshold: 0.4 
+logdir: scripts/rl/output/phase2/ars/mlp/base-new/ 
+continueFrom_model: None
+CUDA available: True
+Using cuda device
+
+params: {'n_delta': 100, 'n_top': 15, 'zero_policy': False, 'n_eval_episodes': 50, 'delta_std': 0.03, 'learning_rate': <__main__.LinearSchedule object at 0x7f077b38fb50>, 'verbose': 1, 'seed': 369, 'policy_kwargs': {'net_arch': [64, 64, 64, 64]}}
+
+Ep done - 1000.
+Ep done - 2000.
+Ep done - 3000.
+Ep done - 4000.
+Ep done - 5000.
+Ep done - 6000.
+Ep done - 7000.
+Eval num_timesteps=200000, episode_reward=-0.15 +/- 0.98
+Episode length: 29.99 +/- 1.20
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 30       |
+|    mean_reward     | -0.154   |
+| time/              |          |
+|    total_timesteps | 200000   |
+---------------------------------
+Ep done - 8000.
+Ep done - 9000.
+Ep done - 10000.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 30       |
+|    ep_rew_mean     | -0.254   |
+|    return_std      | 11.7     |
+| time/              |          |
+|    fps             | 640      |
+|    time_elapsed    | 467      |
+|    total_timesteps | 299701   |
+| train/             |          |
+|    delta_std       | 0.03     |
+|    iterations      | 0        |
+|    learning_rate   | 0.001    |
+|    step_size       | 5.72e-06 |
+---------------------------------
+Ep done - 11000.
+Ep done - 12000.
+Ep done - 13000.
+Ep done - 14000.
+Eval num_timesteps=400000, episode_reward=-0.23 +/- 0.95
+Episode length: 29.98 +/- 0.62
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 30       |
+|    mean_reward     | -0.234   |
+| time/              |          |
+|    total_timesteps | 400000   |
+---------------------------------
+Ep done - 15000.
+Ep done - 16000.
+Ep done - 17000.
+Ep done - 18000.
+Ep done - 19000.
+Ep done - 20000.
+Ep done - 21000.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 30       |
+|    ep_rew_mean     | -0.262   |
+|    return_std      | 11       |
+| time/              |          |
+|    fps             | 646      |
+|    time_elapsed    | 926      |
+|    total_timesteps | 599460   |
+| train/             |          |
+|    delta_std       | 0.03     |
+|    iterations      | 1        |
+|    learning_rate   | 0.000994 |
+|    step_size       | 6.05e-06 |
+---------------------------------
+Eval num_timesteps=600000, episode_reward=-0.31 +/- 0.93
+Episode length: 30.02 +/- 0.61
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 30       |
+|    mean_reward     | -0.31    |
+| time/              |          |
+|    total_timesteps | 600000   |
+---------------------------------
+Ep done - 22000.
+Ep done - 23000.
+Ep done - 24000.
+Ep done - 25000.
+Ep done - 26000.
+Ep done - 27000.
+Ep done - 28000.
+Eval num_timesteps=800000, episode_reward=-0.26 +/- 0.94
+Episode length: 29.99 +/- 0.63
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 30       |
+|    mean_reward     | -0.262   |
+| time/              |          |
+|    total_timesteps | 800000   |
+---------------------------------
+Ep done - 29000.
+Ep done - 30000.
+Ep done - 31000.
+Ep done - 32000.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 30       |
+|    ep_rew_mean     | -0.237   |
+|    return_std      | 7.06     |
+| time/              |          |
+|    fps             | 639      |
+|    time_elapsed    | 1405     |
+|    total_timesteps | 899144   |
+| train/             |          |
+|    delta_std       | 0.03     |
+|    iterations      | 2        |
+|    learning_rate   | 0.000988 |
+|    step_size       | 9.32e-06 |
+---------------------------------
+Ep done - 33000.
+Ep done - 34000.
+Ep done - 35000.
+Eval num_timesteps=1000000, episode_reward=-0.17 +/- 0.96
+Episode length: 29.95 +/- 1.16
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 30       |
+|    mean_reward     | -0.166   |
+| time/              |          |
+|    total_timesteps | 1000000  |
+---------------------------------
+Ep done - 36000.
+Ep done - 37000.
+Ep done - 38000.
+Ep done - 39000.
+Ep done - 40000.
+Ep done - 41000.
+Ep done - 42000.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 30       |
+|    ep_rew_mean     | -0.242   |
+|    return_std      | 9.79     |
+| time/              |          |
+|    fps             | 643      |
+|    time_elapsed    | 1863     |
+|    total_timesteps | 1198890  |
+| train/             |          |
+|    delta_std       | 0.03     |
+|    iterations      | 3        |
+|    learning_rate   | 0.000982 |
+|    step_size       | 6.69e-06 |
+---------------------------------
+Ep done - 43000.
+Eval num_timesteps=1200000, episode_reward=-0.19 +/- 0.96
+Episode length: 30.02 +/- 0.60
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 30       |
+|    mean_reward     | -0.188   |
+| time/              |          |
+|    total_timesteps | 1200000  |
+---------------------------------
+Ep done - 44000.
+Ep done - 45000.
+Ep done - 46000.
+Ep done - 47000.
+Ep done - 48000.
+Ep done - 49000.
+Ep done - 50000.
+Eval num_timesteps=1400000, episode_reward=-0.28 +/- 0.94
+Episode length: 29.96 +/- 1.22
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 30       |
+|    mean_reward     | -0.28    |
+| time/              |          |
+|    total_timesteps | 1400000  |
+---------------------------------
+Ep done - 51000.
+Ep done - 52000.
+Ep done - 53000.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 30       |
+|    ep_rew_mean     | -0.243   |
+|    return_std      | 12.1     |
+| time/              |          |
+|    fps             | 638      |
+|    time_elapsed    | 2347     |
+|    total_timesteps | 1498735  |
+| train/             |          |
+|    delta_std       | 0.03     |
+|    iterations      | 4        |
+|    learning_rate   | 0.000976 |
+|    step_size       | 5.36e-06 |
+---------------------------------
+Ep done - 54000.
+Ep done - 55000.
+Ep done - 56000.
+Ep done - 57000.
+Eval num_timesteps=1600000, episode_reward=-0.19 +/- 0.96
+Episode length: 29.98 +/- 0.66
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 30       |
+|    mean_reward     | -0.186   |
+| time/              |          |
+|    total_timesteps | 1600000  |
+---------------------------------
+Ep done - 58000.
+Ep done - 59000.
+Ep done - 60000.
+Ep done - 61000.
+Ep done - 62000.
+Ep done - 63000.
+Ep done - 64000.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 30       |
+|    ep_rew_mean     | -0.223   |
+|    return_std      | 10.7     |
+| time/              |          |
+|    fps             | 641      |
+|    time_elapsed    | 2805     |
+|    total_timesteps | 1798520  |
+| train/             |          |
+|    delta_std       | 0.03     |
+|    iterations      | 5        |
+|    learning_rate   | 0.00097  |
+|    step_size       | 6.07e-06 |
+---------------------------------
+Eval num_timesteps=1800000, episode_reward=-0.21 +/- 0.95
+Episode length: 29.93 +/- 1.56
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 29.9     |
+|    mean_reward     | -0.206   |
+| time/              |          |
+|    total_timesteps | 1800000  |
+---------------------------------
+Ep done - 65000.
+Ep done - 66000.
+Ep done - 67000.
+Ep done - 68000.
+Ep done - 69000.
+Ep done - 70000.
+Ep done - 71000.
+Eval num_timesteps=2000000, episode_reward=-0.17 +/- 0.96
+Episode length: 30.02 +/- 0.59
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 30       |
+|    mean_reward     | -0.174   |
+| time/              |          |
+|    total_timesteps | 2000000  |
+---------------------------------
+Ep done - 72000.
+Ep done - 73000.
+Ep done - 74000.
+Ep done - 75000.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 30       |
+|    ep_rew_mean     | -0.231   |
+|    return_std      | 9.64     |
+| time/              |          |
+|    fps             | 639      |
+|    time_elapsed    | 3282     |
+|    total_timesteps | 2098351  |
+| train/             |          |
+|    delta_std       | 0.03     |
+|    iterations      | 6        |
+|    learning_rate   | 0.000964 |
+|    step_size       | 6.66e-06 |
+---------------------------------
+Ep done - 76000.
+Ep done - 77000.
+Ep done - 78000.
+Eval num_timesteps=2200000, episode_reward=-0.22 +/- 0.95
+Episode length: 30.01 +/- 0.63
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 30       |
+|    mean_reward     | -0.22    |
+| time/              |          |
+|    total_timesteps | 2200000  |
+---------------------------------
+Ep done - 79000.
+Ep done - 80000.
+Ep done - 81000.
+Ep done - 82000.
+Ep done - 83000.
+Ep done - 84000.
+Ep done - 85000.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 30       |
+|    ep_rew_mean     | -0.241   |
+|    return_std      | 12.6     |
+| time/              |          |
+|    fps             | 641      |
+|    time_elapsed    | 3740     |
+|    total_timesteps | 2398159  |
+| train/             |          |
+|    delta_std       | 0.03     |
+|    iterations      | 7        |
+|    learning_rate   | 0.000958 |
+|    step_size       | 5.07e-06 |
+---------------------------------
+Ep done - 86000.
+Eval num_timesteps=2400000, episode_reward=-0.12 +/- 0.98
+Episode length: 30.03 +/- 0.62
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 30       |
+|    mean_reward     | -0.116   |
+| time/              |          |
+|    total_timesteps | 2400000  |
+---------------------------------
+Ep done - 87000.
+Ep done - 88000.
+Ep done - 89000.
+Ep done - 90000.
+Ep done - 91000.
+Ep done - 92000.
+Ep done - 93000.
+Eval num_timesteps=2600000, episode_reward=-0.13 +/- 0.96
+Episode length: 30.05 +/- 0.62
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 30       |
+|    mean_reward     | -0.132   |
+| time/              |          |
+|    total_timesteps | 2600000  |
+---------------------------------
+Ep done - 94000.
+Ep done - 95000.
+Ep done - 96000.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 30       |
+|    ep_rew_mean     | -0.225   |
+|    return_std      | 11.3     |
+| time/              |          |
+|    fps             | 639      |
+|    time_elapsed    | 4218     |
+|    total_timesteps | 2697904  |
+| train/             |          |
+|    delta_std       | 0.03     |
+|    iterations      | 8        |
+|    learning_rate   | 0.000952 |
+|    step_size       | 5.6e-06  |
+---------------------------------
+Ep done - 97000.
+Ep done - 98000.
+Ep done - 99000.
+Ep done - 100000.
+Eval num_timesteps=2800000, episode_reward=-0.15 +/- 0.96
+Episode length: 29.99 +/- 0.64
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 30       |
+|    mean_reward     | -0.152   |
+| time/              |          |
+|    total_timesteps | 2800000  |
+---------------------------------
+Ep done - 101000.
+Ep done - 102000.
+Ep done - 103000.
+Ep done - 104000.
+Ep done - 105000.
+Ep done - 106000.
+Ep done - 107000.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 30       |
+|    ep_rew_mean     | -0.222   |
+|    return_std      | 13.5     |
+| time/              |          |
+|    fps             | 641      |
+|    time_elapsed    | 4675     |
+|    total_timesteps | 2997734  |
+| train/             |          |
+|    delta_std       | 0.03     |
+|    iterations      | 9        |
+|    learning_rate   | 0.000946 |
+|    step_size       | 4.67e-06 |
+---------------------------------
+Eval num_timesteps=3000000, episode_reward=-0.15 +/- 0.96
+Episode length: 29.99 +/- 0.63
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 30       |
+|    mean_reward     | -0.154   |
+| time/              |          |
+|    total_timesteps | 3000000  |
+---------------------------------
+Ep done - 108000.
+Ep done - 109000.
+Ep done - 110000.
+Ep done - 111000.
+Ep done - 112000.
+Ep done - 113000.
+Ep done - 114000.
+Eval num_timesteps=3200000, episode_reward=-0.21 +/- 0.96
+Episode length: 29.98 +/- 0.63
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 30       |
+|    mean_reward     | -0.208   |
+| time/              |          |
+|    total_timesteps | 3200000  |
+---------------------------------
+Ep done - 115000.
+Ep done - 116000.
+Ep done - 117000.
+Ep done - 118000.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 30       |
+|    ep_rew_mean     | -0.21    |
+|    return_std      | 10.3     |
+| time/              |          |
+|    fps             | 639      |
+|    time_elapsed    | 5156     |
+|    total_timesteps | 3297603  |
+| train/             |          |
+|    delta_std       | 0.03     |
+|    iterations      | 10       |
+|    learning_rate   | 0.00094  |
+|    step_size       | 6.07e-06 |
+---------------------------------
+Ep done - 119000.
+Ep done - 120000.
+Ep done - 121000.
+Eval num_timesteps=3400000, episode_reward=-0.23 +/- 0.95
+Episode length: 30.01 +/- 0.61
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 30       |
+|    mean_reward     | -0.232   |
+| time/              |          |
+|    total_timesteps | 3400000  |
+---------------------------------
+Ep done - 122000.
+Ep done - 123000.
+Ep done - 124000.
+Ep done - 125000.
+Ep done - 126000.
+Ep done - 127000.
+Ep done - 128000.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 30       |
+|    ep_rew_mean     | -0.207   |
+|    return_std      | 10.7     |
+| time/              |          |
+|    fps             | 640      |
+|    time_elapsed    | 5617     |
+|    total_timesteps | 3597409  |
+| train/             |          |
+|    delta_std       | 0.03     |
+|    iterations      | 11       |
+|    learning_rate   | 0.000934 |
+|    step_size       | 5.8e-06  |
+---------------------------------
+Ep done - 129000.
+Eval num_timesteps=3600000, episode_reward=-0.20 +/- 0.95
+Episode length: 29.97 +/- 0.62
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 30       |
+|    mean_reward     | -0.204   |
+| time/              |          |
+|    total_timesteps | 3600000  |
+---------------------------------
+Ep done - 130000.
+Ep done - 131000.
+Ep done - 132000.
+Ep done - 133000.
+Ep done - 134000.
+Ep done - 135000.
+Ep done - 136000.
+Eval num_timesteps=3800000, episode_reward=-0.22 +/- 0.96
+Episode length: 29.98 +/- 0.67
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 30       |
+|    mean_reward     | -0.22    |
+| time/              |          |
+|    total_timesteps | 3800000  |
+---------------------------------
+Ep done - 137000.
+Ep done - 138000.
+Ep done - 139000.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 30       |
+|    ep_rew_mean     | -0.21    |
+|    return_std      | 10.1     |
+| time/              |          |
+|    fps             | 639      |
+|    time_elapsed    | 6095     |
+|    total_timesteps | 3897257  |
+| train/             |          |
+|    delta_std       | 0.03     |
+|    iterations      | 12       |
+|    learning_rate   | 0.000928 |
+|    step_size       | 6.13e-06 |
+---------------------------------
+Ep done - 140000.
+Ep done - 141000.
+Ep done - 142000.
+Ep done - 143000.
+Eval num_timesteps=4000000, episode_reward=-0.16 +/- 0.96
+Episode length: 30.02 +/- 0.59
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 30       |
+|    mean_reward     | -0.158   |
+| time/              |          |
+|    total_timesteps | 4000000  |
+---------------------------------
+Ep done - 144000.
+Ep done - 145000.
+Ep done - 146000.
+Ep done - 147000.
+Ep done - 148000.
+Ep done - 149000.
+Ep done - 150000.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 30       |
+|    ep_rew_mean     | -0.212   |
+|    return_std      | 11.6     |
+| time/              |          |
+|    fps             | 640      |
+|    time_elapsed    | 6552     |
+|    total_timesteps | 4197003  |
+| train/             |          |
+|    delta_std       | 0.03     |
+|    iterations      | 13       |
+|    learning_rate   | 0.000922 |
+|    step_size       | 5.28e-06 |
+---------------------------------
+Eval num_timesteps=4200000, episode_reward=-0.19 +/- 0.96
+Episode length: 29.98 +/- 0.60
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 30       |
+|    mean_reward     | -0.192   |
+| time/              |          |
+|    total_timesteps | 4200000  |
+---------------------------------
+Ep done - 151000.
+Ep done - 152000.
+Ep done - 153000.
+Ep done - 154000.
+Ep done - 155000.
+Ep done - 156000.
+Ep done - 157000.
+Eval num_timesteps=4400000, episode_reward=-0.14 +/- 0.97
+Episode length: 30.01 +/- 1.00
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 30       |
+|    mean_reward     | -0.138   |
+| time/              |          |
+|    total_timesteps | 4400000  |
+---------------------------------
+Ep done - 158000.
+Ep done - 159000.
+Ep done - 160000.
+Ep done - 161000.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 30       |
+|    ep_rew_mean     | -0.193   |
+|    return_std      | 9.36     |
+| time/              |          |
+|    fps             | 639      |
+|    time_elapsed    | 7032     |
+|    total_timesteps | 4496812  |
+| train/             |          |
+|    delta_std       | 0.03     |
+|    iterations      | 14       |
+|    learning_rate   | 0.000916 |
+|    step_size       | 6.52e-06 |
+---------------------------------
+Ep done - 162000.
+Ep done - 163000.
+Ep done - 164000.
+Eval num_timesteps=4600000, episode_reward=-0.15 +/- 0.96
+Episode length: 30.01 +/- 0.61
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 30       |
+|    mean_reward     | -0.154   |
+| time/              |          |
+|    total_timesteps | 4600000  |
+---------------------------------
+Ep done - 165000.
+Ep done - 166000.
+Ep done - 167000.
+Ep done - 168000.
+Ep done - 169000.
+Ep done - 170000.
+Ep done - 171000.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 30       |
+|    ep_rew_mean     | -0.194   |
+|    return_std      | 8.88     |
+| time/              |          |
+|    fps             | 640      |
+|    time_elapsed    | 7489     |
+|    total_timesteps | 4796587  |
+| train/             |          |
+|    delta_std       | 0.03     |
+|    iterations      | 15       |
+|    learning_rate   | 0.00091  |
+|    step_size       | 6.83e-06 |
+---------------------------------
+Ep done - 172000.
+Eval num_timesteps=4800000, episode_reward=-0.14 +/- 0.96
+Episode length: 30.00 +/- 0.66
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 30       |
+|    mean_reward     | -0.144   |
+| time/              |          |
+|    total_timesteps | 4800000  |
+---------------------------------
+Ep done - 173000.
+Ep done - 174000.
+Ep done - 175000.
+Ep done - 176000.
+Ep done - 177000.
+Ep done - 178000.
+Ep done - 179000.
+Eval num_timesteps=5000000, episode_reward=-0.24 +/- 0.95
+Episode length: 29.98 +/- 0.55
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 30       |
+|    mean_reward     | -0.238   |
+| time/              |          |
+|    total_timesteps | 5000000  |
+---------------------------------
+Ep done - 180000.
+Ep done - 181000.
+Ep done - 182000.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 30       |
+|    ep_rew_mean     | -0.188   |
+|    return_std      | 10.2     |
+| time/              |          |
+|    fps             | 639      |
+|    time_elapsed    | 7968     |
+|    total_timesteps | 5096532  |
+| train/             |          |
+|    delta_std       | 0.03     |
+|    iterations      | 16       |
+|    learning_rate   | 0.000904 |
+|    step_size       | 5.88e-06 |
+---------------------------------
+Ep done - 183000.
+Ep done - 184000.
+Ep done - 185000.
+Ep done - 186000.
+Eval num_timesteps=5200000, episode_reward=-0.15 +/- 0.97
+Episode length: 30.03 +/- 0.62
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 30       |
+|    mean_reward     | -0.15    |
+| time/              |          |
+|    total_timesteps | 5200000  |
+---------------------------------
+Ep done - 187000.
+Ep done - 188000.
+Ep done - 189000.
+Ep done - 190000.
+Ep done - 191000.
+Ep done - 192000.
+Ep done - 193000.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 30       |
+|    ep_rew_mean     | -0.202   |
+|    return_std      | 11.5     |
+| time/              |          |
+|    fps             | 640      |
+|    time_elapsed    | 8425     |
+|    total_timesteps | 5396284  |
+| train/             |          |
+|    delta_std       | 0.03     |
+|    iterations      | 17       |
+|    learning_rate   | 0.000898 |
+|    step_size       | 5.18e-06 |
+---------------------------------
+Eval num_timesteps=5400000, episode_reward=-0.16 +/- 0.96
+Episode length: 30.01 +/- 0.59
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 30       |
+|    mean_reward     | -0.16    |
+| time/              |          |
+|    total_timesteps | 5400000  |
+---------------------------------
+Ep done - 194000.
+Ep done - 195000.
+Ep done - 196000.
+Ep done - 197000.
+Ep done - 198000.
+Ep done - 199000.
+Ep done - 200000.
+Eval num_timesteps=5600000, episode_reward=-0.18 +/- 0.96
+Episode length: 29.97 +/- 0.77
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 30       |
+|    mean_reward     | -0.184   |
+| time/              |          |
+|    total_timesteps | 5600000  |
+---------------------------------
+Ep done - 201000.
+Ep done - 202000.
+Ep done - 203000.
+Ep done - 204000.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 30       |
+|    ep_rew_mean     | -0.185   |
+|    return_std      | 10.5     |
+| time/              |          |
+|    fps             | 639      |
+|    time_elapsed    | 8908     |
+|    total_timesteps | 5696124  |
+| train/             |          |
+|    delta_std       | 0.03     |
+|    iterations      | 18       |
+|    learning_rate   | 0.000892 |
+|    step_size       | 5.64e-06 |
+---------------------------------
+Ep done - 205000.
+Ep done - 206000.
+Ep done - 207000.
+Eval num_timesteps=5800000, episode_reward=-0.05 +/- 0.98
+Episode length: 30.04 +/- 0.64
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 30       |
+|    mean_reward     | -0.054   |
+| time/              |          |
+|    total_timesteps | 5800000  |
+---------------------------------
+Ep done - 208000.
+Ep done - 209000.
+Ep done - 210000.
+Ep done - 211000.
+Ep done - 212000.
+Ep done - 213000.
+Ep done - 214000.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 30       |
+|    ep_rew_mean     | -0.198   |
+|    return_std      | 8.72     |
+| time/              |          |
+|    fps             | 640      |
+|    time_elapsed    | 9366     |
+|    total_timesteps | 5995945  |
+| train/             |          |
+|    delta_std       | 0.03     |
+|    iterations      | 19       |
+|    learning_rate   | 0.000886 |
+|    step_size       | 6.77e-06 |
+---------------------------------
+Ep done - 215000.
+Eval num_timesteps=6000000, episode_reward=-0.18 +/- 0.96
+Episode length: 29.91 +/- 1.15
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 29.9     |
+|    mean_reward     | -0.176   |
+| time/              |          |
+|    total_timesteps | 6000000  |
+---------------------------------
+Ep done - 216000.
+Ep done - 217000.
+Ep done - 218000.
+Ep done - 219000.
+Ep done - 220000.
+Ep done - 221000.
+Ep done - 222000.
+Eval num_timesteps=6200000, episode_reward=-0.15 +/- 0.96
+Episode length: 29.98 +/- 0.63
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 30       |
+|    mean_reward     | -0.152   |
+| time/              |          |
+|    total_timesteps | 6200000  |
+---------------------------------
+Ep done - 223000.
+Ep done - 224000.
+Ep done - 225000.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 30       |
+|    ep_rew_mean     | -0.172   |
+|    return_std      | 8.43     |
+| time/              |          |
+|    fps             | 639      |
+|    time_elapsed    | 9843     |
+|    total_timesteps | 6295609  |
+| train/             |          |
+|    delta_std       | 0.03     |
+|    iterations      | 20       |
+|    learning_rate   | 0.00088  |
+|    step_size       | 6.96e-06 |
+---------------------------------
+Ep done - 226000.
+Ep done - 227000.
+Ep done - 228000.
+Ep done - 229000.
+Eval num_timesteps=6400000, episode_reward=-0.14 +/- 0.96
+Episode length: 30.01 +/- 0.64
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 30       |
+|    mean_reward     | -0.144   |
+| time/              |          |
+|    total_timesteps | 6400000  |
+---------------------------------
+Ep done - 230000.
+Ep done - 231000.
+Ep done - 232000.
+Ep done - 233000.
+Ep done - 234000.
+Ep done - 235000.
+Ep done - 236000.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 30       |
+|    ep_rew_mean     | -0.166   |
+|    return_std      | 11.1     |
+| time/              |          |
+|    fps             | 640      |
+|    time_elapsed    | 10300    |
+|    total_timesteps | 6595513  |
+| train/             |          |
+|    delta_std       | 0.03     |
+|    iterations      | 21       |
+|    learning_rate   | 0.000874 |
+|    step_size       | 5.24e-06 |
+---------------------------------
+Eval num_timesteps=6600000, episode_reward=-0.16 +/- 0.97
+Episode length: 30.01 +/- 0.65
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 30       |
+|    mean_reward     | -0.162   |
+| time/              |          |
+|    total_timesteps | 6600000  |
+---------------------------------
+Ep done - 237000.
+Ep done - 238000.
+Ep done - 239000.
+Ep done - 240000.
+Ep done - 241000.
+Ep done - 242000.
+Ep done - 243000.
+Eval num_timesteps=6800000, episode_reward=-0.15 +/- 0.96
+Episode length: 30.00 +/- 0.66
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 30       |
+|    mean_reward     | -0.154   |
+| time/              |          |
+|    total_timesteps | 6800000  |
+---------------------------------
+Ep done - 244000.
+Ep done - 245000.
+Ep done - 246000.
+Ep done - 247000.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 30       |
+|    ep_rew_mean     | -0.173   |
+|    return_std      | 11       |
+| time/              |          |
+|    fps             | 639      |
+|    time_elapsed    | 10779    |
+|    total_timesteps | 6895422  |
+| train/             |          |
+|    delta_std       | 0.03     |
+|    iterations      | 22       |
+|    learning_rate   | 0.000868 |
+|    step_size       | 5.28e-06 |
+---------------------------------
+Ep done - 248000.
+Ep done - 249000.
+Ep done - 250000.
+Eval num_timesteps=7000000, episode_reward=-0.10 +/- 0.96
+Episode length: 30.02 +/- 0.60
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 30       |
+|    mean_reward     | -0.104   |
+| time/              |          |
+|    total_timesteps | 7000000  |
+---------------------------------
+Ep done - 251000.
+Ep done - 252000.
+Ep done - 253000.
+Ep done - 254000.
+Ep done - 255000.
+Ep done - 256000.
+Ep done - 257000.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 30       |
+|    ep_rew_mean     | -0.172   |
+|    return_std      | 10.5     |
+| time/              |          |
+|    fps             | 640      |
+|    time_elapsed    | 11237    |
+|    total_timesteps | 7195285  |
+| train/             |          |
+|    delta_std       | 0.03     |
+|    iterations      | 23       |
+|    learning_rate   | 0.000862 |
+|    step_size       | 5.48e-06 |
+---------------------------------
+Ep done - 258000.
+Eval num_timesteps=7200000, episode_reward=-0.01 +/- 0.97
+Episode length: 30.01 +/- 0.59
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 30       |
+|    mean_reward     | -0.014   |
+| time/              |          |
+|    total_timesteps | 7200000  |
+---------------------------------
+Ep done - 259000.
+Ep done - 260000.
+Ep done - 261000.
+Ep done - 262000.
+Ep done - 263000.
+Ep done - 264000.
+Ep done - 265000.
+Eval num_timesteps=7400000, episode_reward=-0.07 +/- 0.96
+Episode length: 30.02 +/- 0.57
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 30       |
+|    mean_reward     | -0.074   |
+| time/              |          |
+|    total_timesteps | 7400000  |
+---------------------------------
+Ep done - 266000.
+Ep done - 267000.
+Ep done - 268000.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 30       |
+|    ep_rew_mean     | -0.175   |
+|    return_std      | 11.9     |
+| time/              |          |
+|    fps             | 639      |
+|    time_elapsed    | 11717    |
+|    total_timesteps | 7495138  |
+| train/             |          |
+|    delta_std       | 0.03     |
+|    iterations      | 24       |
+|    learning_rate   | 0.000856 |
+|    step_size       | 4.78e-06 |
+---------------------------------
+Ep done - 269000.
+Ep done - 270000.
+Ep done - 271000.
+Ep done - 272000.
+Eval num_timesteps=7600000, episode_reward=-0.00 +/- 0.97
+Episode length: 30.00 +/- 1.16
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 30       |
+|    mean_reward     | -0.002   |
+| time/              |          |
+|    total_timesteps | 7600000  |
+---------------------------------
+Ep done - 273000.
+Ep done - 274000.
+Ep done - 275000.
+Ep done - 276000.
+Ep done - 277000.
+Ep done - 278000.
+Ep done - 279000.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 30       |
+|    ep_rew_mean     | -0.167   |
+|    return_std      | 11       |
+| time/              |          |
+|    fps             | 640      |
+|    time_elapsed    | 12178    |
+|    total_timesteps | 7795085  |
+| train/             |          |
+|    delta_std       | 0.03     |
+|    iterations      | 25       |
+|    learning_rate   | 0.00085  |
+|    step_size       | 5.15e-06 |
+---------------------------------
+Eval num_timesteps=7800000, episode_reward=-0.09 +/- 0.97
+Episode length: 30.08 +/- 0.63
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 30.1     |
+|    mean_reward     | -0.092   |
+| time/              |          |
+|    total_timesteps | 7800000  |
+---------------------------------
+Ep done - 280000.
+Ep done - 281000.
+Ep done - 282000.
+Ep done - 283000.
+Ep done - 284000.
+Ep done - 285000.
+Ep done - 286000.
+Eval num_timesteps=8000000, episode_reward=-0.12 +/- 0.97
+Episode length: 30.00 +/- 0.60
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 30       |
+|    mean_reward     | -0.118   |
+| time/              |          |
+|    total_timesteps | 8000000  |
+---------------------------------
+Ep done - 287000.
+Ep done - 288000.
+Ep done - 289000.
+Ep done - 290000.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 30       |
+|    ep_rew_mean     | -0.175   |
+|    return_std      | 9.63     |
+| time/              |          |
+|    fps             | 639      |
+|    time_elapsed    | 12658    |
+|    total_timesteps | 8095004  |
+| train/             |          |
+|    delta_std       | 0.03     |
+|    iterations      | 26       |
+|    learning_rate   | 0.000844 |
+|    step_size       | 5.84e-06 |
+---------------------------------
+Ep done - 291000.
+Ep done - 292000.
+Ep done - 293000.
+Eval num_timesteps=8200000, episode_reward=-0.18 +/- 0.96
+Episode length: 30.05 +/- 0.59
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 30       |
+|    mean_reward     | -0.178   |
+| time/              |          |
+|    total_timesteps | 8200000  |
+---------------------------------
+Ep done - 294000.
+Ep done - 295000.
+Ep done - 296000.
+Ep done - 297000.
+Ep done - 298000.
+Ep done - 299000.
+Ep done - 300000.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 30       |
+|    ep_rew_mean     | -0.175   |
+|    return_std      | 10       |
+| time/              |          |
+|    fps             | 640      |
+|    time_elapsed    | 13115    |
+|    total_timesteps | 8395069  |
+| train/             |          |
+|    delta_std       | 0.03     |
+|    iterations      | 27       |
+|    learning_rate   | 0.000838 |
+|    step_size       | 5.56e-06 |
+---------------------------------
+Ep done - 301000.
+Eval num_timesteps=8400000, episode_reward=-0.08 +/- 0.97
+Episode length: 29.96 +/- 1.22
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 30       |
+|    mean_reward     | -0.084   |
+| time/              |          |
+|    total_timesteps | 8400000  |
+---------------------------------
+Ep done - 302000.
+Ep done - 303000.
+Ep done - 304000.
+Ep done - 305000.
+Ep done - 306000.
+Ep done - 307000.
+Ep done - 308000.
+Eval num_timesteps=8600000, episode_reward=-0.11 +/- 0.97
+Episode length: 29.98 +/- 0.64
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 30       |
+|    mean_reward     | -0.108   |
+| time/              |          |
+|    total_timesteps | 8600000  |
+---------------------------------
+Ep done - 309000.
+Ep done - 310000.
+Ep done - 311000.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 30       |
+|    ep_rew_mean     | -0.139   |
+|    return_std      | 9.81     |
+| time/              |          |
+|    fps             | 639      |
+|    time_elapsed    | 13594    |
+|    total_timesteps | 8695088  |
+| train/             |          |
+|    delta_std       | 0.03     |
+|    iterations      | 28       |
+|    learning_rate   | 0.000832 |
+|    step_size       | 5.65e-06 |
+---------------------------------
+Ep done - 312000.
+Ep done - 313000.
+Ep done - 314000.
+Ep done - 315000.
+Eval num_timesteps=8800000, episode_reward=-0.14 +/- 0.97
+Episode length: 30.03 +/- 0.64
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 30       |
+|    mean_reward     | -0.136   |
+| time/              |          |
+|    total_timesteps | 8800000  |
+---------------------------------
+Ep done - 316000.
+Ep done - 317000.
+Ep done - 318000.
+Ep done - 319000.
+Ep done - 320000.
+Ep done - 321000.
+Ep done - 322000.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 30       |
+|    ep_rew_mean     | -0.151   |
+|    return_std      | 11.8     |
+| time/              |          |
+|    fps             | 640      |
+|    time_elapsed    | 14051    |
+|    total_timesteps | 8994987  |
+| train/             |          |
+|    delta_std       | 0.03     |
+|    iterations      | 29       |
+|    learning_rate   | 0.000826 |
+|    step_size       | 4.68e-06 |
+---------------------------------
+Eval num_timesteps=9000000, episode_reward=-0.21 +/- 0.95
+Episode length: 29.99 +/- 0.64
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 30       |
+|    mean_reward     | -0.212   |
+| time/              |          |
+|    total_timesteps | 9000000  |
+---------------------------------
+Ep done - 323000.
+Ep done - 324000.
+Ep done - 325000.
+Ep done - 326000.
+Ep done - 327000.
+Ep done - 328000.
+Ep done - 329000.
+Eval num_timesteps=9200000, episode_reward=-0.09 +/- 0.98
+Episode length: 30.07 +/- 0.61
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 30.1     |
+|    mean_reward     | -0.086   |
+| time/              |          |
+|    total_timesteps | 9200000  |
+---------------------------------
+Ep done - 330000.
+Ep done - 331000.
+Ep done - 332000.
+Ep done - 333000.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 30       |
+|    ep_rew_mean     | -0.145   |
+|    return_std      | 10.9     |
+| time/              |          |
+|    fps             | 639      |
+|    time_elapsed    | 14530    |
+|    total_timesteps | 9294869  |
+| train/             |          |
+|    delta_std       | 0.03     |
+|    iterations      | 30       |
+|    learning_rate   | 0.00082  |
+|    step_size       | 5.03e-06 |
+---------------------------------
+Ep done - 334000.
+Ep done - 335000.
+Ep done - 336000.
+Ep done - 337000.
+Eval num_timesteps=9400000, episode_reward=-0.02 +/- 0.98
+Episode length: 30.01 +/- 1.12
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 30       |
+|    mean_reward     | -0.022   |
+| time/              |          |
+|    total_timesteps | 9400000  |
+---------------------------------
+Ep done - 338000.
+Ep done - 339000.
+Ep done - 340000.
+Ep done - 341000.
+Ep done - 342000.
+Ep done - 343000.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 30       |
+|    ep_rew_mean     | -0.132   |
+|    return_std      | 10.5     |
+| time/              |          |
+|    fps             | 639      |
+|    time_elapsed    | 14992    |
+|    total_timesteps | 9594872  |
+| train/             |          |
+|    delta_std       | 0.03     |
+|    iterations      | 31       |
+|    learning_rate   | 0.000814 |
+|    step_size       | 5.19e-06 |
+---------------------------------
+Ep done - 344000.
+Eval num_timesteps=9600000, episode_reward=-0.14 +/- 0.96
+Episode length: 29.98 +/- 1.15
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 30       |
+|    mean_reward     | -0.14    |
+| time/              |          |
+|    total_timesteps | 9600000  |
+---------------------------------
+Ep done - 345000.
+Ep done - 346000.
+Ep done - 347000.
+Ep done - 348000.
+Ep done - 349000.
+Ep done - 350000.
+Ep done - 351000.
+Eval num_timesteps=9800000, episode_reward=-0.07 +/- 0.97
+Episode length: 30.01 +/- 0.61
+---------------------------------
+| eval/              |          |
+|    mean_ep_length  | 30       |
+|    mean_reward     | -0.074   |
+| time/              |          |
+|    total_timesteps | 9800000  |
+---------------------------------
+Ep done - 352000.
+Ep done - 353000.
+Ep done - 354000.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 30       |
+|    ep_rew_mean     | -0.148   |
+|    return_std      | 11.2     |
+| time/              |          |
+|    fps             | 639      |
+|    time_elapsed    | 15470    |
+|    total_timesteps | 9894813  |
+| train/             |          |
+|    delta_std       | 0.03     |
+|    iterations      | 32       |
+|    learning_rate   | 0.000808 |
+|    step_size       | 4.8e-06  |
+---------------------------------

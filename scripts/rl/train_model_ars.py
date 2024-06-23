@@ -245,13 +245,13 @@ def get_env(env_factory):
 
 if __name__ == '__main__':
     # Settings
-    SEED = 129  # NOT USED
-    NUM_TIMESTEPS = int(10_000_000)
-    EVAL_FREQ = int(26000)
-    EVAL_EPISODES = int(200)
-    BEST_THRESHOLD = 0.3  # must achieve a mean score above this to replace prev best self
+    SEED = 369  # NOT USED
+    NUM_TIMESTEPS = int(50_000_000)
+    EVAL_FREQ = int(200_000)
+    EVAL_EPISODES = int(500)
+    BEST_THRESHOLD = 0.4  # must achieve a mean score above this to replace prev best self
     RENDER_MODE = False  # set this to false if you plan on running for full 1000 trials.    
-    LOGDIR = 'scripts/rl/output/phase2/ars/mlp/base/'  # "ppo_masked/test/"    
+    LOGDIR = 'scripts/rl/output/phase2/ars/mlp/base-new/'  # "ppo_masked/test/"    
     CONTINUE_FROM_MODEL = None
 
     print(f'seed: {SEED} \nnum_timesteps: {NUM_TIMESTEPS} \neval_freq: {EVAL_FREQ}',
@@ -265,17 +265,17 @@ if __name__ == '__main__':
     env = get_env(env)
 
     policy_kwargs = dict(
-        net_arch=[64] * 8
+        net_arch=[64] * 4
     )
 
     params = {        
-        'n_delta': 30,
-        'n_top': 12,
+        'n_delta': 100,
+        'n_top': 15,
         'zero_policy': False,
-        'n_eval_episodes': 10,
-        'delta_std': 0.05,
-        'learning_rate': LinearSchedule(4e-2),
-        'verbose': 2,
+        'n_eval_episodes': 50,
+        'delta_std': 0.03,
+        'learning_rate': LinearSchedule(1e-3),
+        'verbose': 1,
         'seed': SEED,
     }
 
@@ -294,8 +294,9 @@ if __name__ == '__main__':
         model.save(starting_model_filepath)
     else:
         starting_model_filepath = CONTINUE_FROM_MODEL
-        # params['exploration_rate'] = 1.0  # to reset exploration rate !!!        
-        model = MaskablePPO.load(starting_model_filepath,
+        # params['exploration_rate'] = 1.0  # to reset exploration rate !!! 
+        params['policy_class'] = CustomMlpPolicy
+        model = MaskableArs.load(starting_model_filepath,
                                  env=env,
                                  device=device,
                                  custom_objects=params)
@@ -303,7 +304,7 @@ if __name__ == '__main__':
     print(f'\nparams: {params}\n')
 
 
-    start_model_copy = model.load(starting_model_filepath)
+    start_model_copy = model.load(starting_model_filepath, custom_objects={'policy_class': CustomMlpPolicy})
     env.envs[0].unwrapped.change_to_latest_agent(start_model_copy)
 
     params = {
