@@ -17,6 +17,7 @@ from shutil import copyfile  # keep track of generations
 from gymnasium.spaces import Discrete, Box, MultiBinary
 
 from game_logic import Othello
+# from scripts.rl.train_model_ppo import CustomCnnPPOPolicy
 import numpy as np
 import os, math
 from itertools import cycle
@@ -170,9 +171,11 @@ class SelfPlayCallback(EvalCallback):
             backup_file = os.path.join(self.log_dir, "history_" + str(self.generation).zfill(4) + ".zip")
             copyfile(source_file, backup_file)            
             self.best_mean_reward = self.params['BEST_THRESHOLD']
+
             #agent = self.model.load(source_file, device=self.model.device)
             # agent.env = self.eval_env.envs[0]  # important for action mask of inner agent
             #self.eval_env.envs[0].unwrapped.change_to_latest_agent(agent)
+
             self.eval_env.env_method('change_to_latest_agent',
                                      self.model.__class__,
                                      source_file,

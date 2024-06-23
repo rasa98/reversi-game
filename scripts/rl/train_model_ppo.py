@@ -72,20 +72,21 @@ if __name__ == '__main__':
     # LOGDIR = 'scripts/rl/test-working/ppo/v1/'  # "ppo_masked/test/"
     LOGDIR = 'scripts/rl/output/phase2/ppo/cnn/base-v3/'  # "ppo_masked/test/"
     CNN_POLICY = True
-    CONTINUE_FROM_MODEL = None  # 'scripts/rl/output/phase2/ppo/cnn/base-v2/history_0062' #None
+    CONTINUE_FROM_MODEL = None #'scripts/rl/output/phase2/ppo/cnn/base-v3/history_0024' #None
+
 
     print(f'seed: {SEED} \nnum_timesteps: {NUM_TIMESTEPS} \neval_freq: {EVAL_FREQ}',
           f'\neval_episoded: {EVAL_EPISODES} \nbest_threshold: {BEST_THRESHOLD}',
           f'\nlogdir: {LOGDIR} \ncnn_policy: {CNN_POLICY} \ncontinueFrom_model: {CONTINUE_FROM_MODEL}', flush=True)
 
     params = {
-        'learning_rate': LinearSchedule(2e-4),
+        'learning_rate': LinearSchedule(5e-5),
         'n_steps': 2048 * 30,
         'n_epochs': 5,
-        'clip_range': 0.18,
+        'clip_range': 0.25,
         'batch_size': 128,
-        'ent_coef': 0.01,
-        # 'gamma': 0.99,
+        'ent_coef': 0.015,
+        #'gamma': 0.99,
         'verbose': 100,
         'seed': SEED,
     }
@@ -154,5 +155,5 @@ if __name__ == '__main__':
     )
 
     model.learn(total_timesteps=NUM_TIMESTEPS,
-                log_interval=100,
+                log_interval=1,
                 callback=eval_callback)

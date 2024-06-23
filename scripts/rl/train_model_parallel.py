@@ -14,6 +14,7 @@ from sb3_contrib.common.maskable.evaluation import evaluate_policy as masked_eva
 callbacks_module.evaluate_policy = masked_evaluate_policy
 from stable_baselines3.common.callbacks import EvalCallback
 
+
 from stable_baselines3.common.monitor import Monitor
 from sb3_contrib.common.maskable.policies import MaskableActorCriticPolicy
 from sb3_contrib.ppo_mask import MaskablePPO
@@ -25,6 +26,7 @@ from scripts.rl.train_model_ppo import CustomCnnPPOPolicy
 def make_env(env_cls=BasicEnv, use_cnn=False):
     def _init():
         env = env_cls(use_cnn=use_cnn)
+
         env2 = Monitor(env=env)
         return env2
 
@@ -37,13 +39,15 @@ if __name__ == '__main__':
 
     # Settings
     SEED = 19  # NOT USED
-    NUM_TIMESTEPS = int(30_000_000)
+
+    NUM_TIMESTEPS = int(160_000_000)
     N_STEPS = 2048 * 30
-    EVAL_FREQ = int(N_STEPS + 1)
+    
     EVAL_EPISODES = int(1000)
-    BEST_THRESHOLD = 0.125  # must achieve a mean score above this to replace prev best self
+    BEST_THRESHOLD = 0.24  # must achieve a mean score above this to replace prev best self
     RENDER_MODE = False  # set this to false if you plan on running for full 1000 trials.
-    LOGDIR = "del/"
+    LOGDIR = "scripts/rl/output/phase2/ppo/cnn/base-v4/"
+
     CNN_POLICY = True
     CONTINUE_FROM_MODEL = 'scripts/rl/output/phase2/ppo/cnn/base-v3/history_0024'  # None
 
@@ -56,6 +60,9 @@ if __name__ == '__main__':
         num_envs = 2
     print(f'\nnum parallel processes: {num_envs}\n')
 
+    EVAL_FREQ = int(N_STEPS * num_envs + 1000)
+
+
     if CNN_POLICY:
         env_fns = [make_env(use_cnn=True) for _ in range(num_envs)]
         policy_class = CustomCnnPPOPolicy
@@ -64,6 +71,7 @@ if __name__ == '__main__':
         policy_class = MaskableActorCriticPolicy
 
     vec_env = SubprocVecEnv(env_fns)
+
 
     print(f'seed: {SEED} \nnum_timesteps: {NUM_TIMESTEPS} \neval_freq: {EVAL_FREQ}',
           f'\neval_episoded: {EVAL_EPISODES} \nbest_threshold: {BEST_THRESHOLD}',
@@ -90,6 +98,7 @@ if __name__ == '__main__':
     #    }
     # }
     # print(f'net architecture - {policy_kwargs}')
+
 
     if CONTINUE_FROM_MODEL is None:
         params['policy_kwargs'] = policy_kwargs

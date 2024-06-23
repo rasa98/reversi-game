@@ -31,6 +31,7 @@ class Net(nn.Module):
         )
 
         self.policyHead = nn.Sequential(
+
             nn.Conv2d(2 * num_hidden, 1 * num_hidden, kernel_size=3, padding=1),
             nn.ReLU(),
             nn.Flatten(),

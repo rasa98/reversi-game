@@ -250,14 +250,15 @@ def get_env(env_factory):
 
 if __name__ == '__main__':
     # Settings
-    SEED = 129  # NOT USED
-    NUM_TIMESTEPS = int(10_000_000)
-    EVAL_FREQ = int(26000)
-    EVAL_EPISODES = int(200)
-    BEST_THRESHOLD = 0.3  # must achieve a mean score above this to replace prev best self
-    RENDER_MODE = False  # set this to false if you plan on running for full 1000 trials.    
-    LOGDIR = 'scripts/rl/output/phase2/ars/mlp/base-v2/'  # "ppo_masked/test/"
-    CONTINUE_FROM_MODEL = None #"scripts/rl/output/phase2/ars/mlp/base/history_0140"
+    SEED = 369  # NOT USED
+    NUM_TIMESTEPS = int(50_000_000)
+    EVAL_FREQ = int(200_000)
+    EVAL_EPISODES = int(500)
+    BEST_THRESHOLD = 0.4  # must achieve a mean score above this to replace prev best self
+    RENDER_MODE = False  # set this to false if you plan on running for full 1000 trials.
+    LOGDIR = 'scripts/rl/output/phase2/ars/mlp/base-new/'  # "ppo_masked/test/"    
+    CONTINUE_FROM_MODEL = None
+
 
     print(f'seed: {SEED} \nnum_timesteps: {NUM_TIMESTEPS} \neval_freq: {EVAL_FREQ}',
           f'\neval_episoded: {EVAL_EPISODES} \nbest_threshold: {BEST_THRESHOLD}',
@@ -272,16 +273,17 @@ if __name__ == '__main__':
     eval_env = env
 
     policy_kwargs = dict(
-        net_arch=[64] * 8
+        net_arch=[64] * 4
     )
 
-    params = {
-        'n_delta': 30,
-        'n_top': 8,
+
+    params = {        
+        'n_delta': 100,
+        'n_top': 15,
         'zero_policy': False,
-        'n_eval_episodes': 20,
-        'delta_std': 0.05,
-        'learning_rate': LinearSchedule(5e-3),
+        'n_eval_episodes': 50,
+        'delta_std': 0.03,
+        'learning_rate': LinearSchedule(1e-3),
         'verbose': 1,
         'seed': SEED,
     }
@@ -296,7 +298,7 @@ if __name__ == '__main__':
         model.save(starting_model_filepath)
     else:
         starting_model_filepath = CONTINUE_FROM_MODEL
-        # params['exploration_rate'] = 1.0  # to reset exploration rate !!!
+
         params['policy_class'] = CustomMlpPolicy
         model = MaskableArs.load(starting_model_filepath,
                                  env=env,
@@ -311,6 +313,7 @@ if __name__ == '__main__':
                         model.__class__,
                         starting_model_filepath,
                         model.policy_class)
+
 
     params = {
         'eval_env': eval_env,
