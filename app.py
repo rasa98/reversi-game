@@ -184,14 +184,14 @@ if __name__ == '__main__':
                           for i in range(95, 100))
 
     # new env rewards
-    from scripts.rl.alternate_env.train_model_ppo_alt import CustomCnnPPOPolicy as CNNPolicy_changed
+    from scripts.rl.env.train_model_ppo_alt import CustomCnnPPOPolicy as CNNPolicy_changed
 
     file_ppo_new_reward_cnn = 'scripts/rl/output/alternate/ppo/cnn/base/history_'
     ppo_new_reward_cnn = lambda: (load_model_new(f'ppo_cnn new reward {i}',
                                                  f'{file_ppo_new_reward_cnn}{str(i).zfill(4)}',
                                                  cnn=True,
                                                  policy_cls=CNNPolicy_changed)
-                                  for i in [4, 5])  # range(1, 52))
+                                  for i in [])  # range(1, 52))
 
     # multi_ars, ppo_base2_cnn, multi_trpo
     l1 = list([best_ppo_yet])

@@ -23,7 +23,9 @@ from sb3_contrib.trpo.trpo import TRPO
 
 from stable_baselines3.common.distributions import CategoricalDistribution
 from stable_baselines3.common.monitor import Monitor
-from scripts.rl.old_game_env import OthelloEnv, SelfPlayCallback, ReversiCNN
+from scripts.rl.env.old_game_env import (BasicEnv,
+                                         SelfPlayCallback,
+                                         ReversiCNN)
 
 import stable_baselines3.common.callbacks as callbacks_module
 from sb3_contrib.common.maskable.evaluation import evaluate_policy as masked_evaluate_policy
@@ -290,7 +292,7 @@ if __name__ == '__main__':
     # LOGDIR = 'scripts/rl/test-working/ppo/v1/'  # "ppo_masked/test/"
     LOGDIR = 'scripts/rl/output/phase2/trpo/mlp/base2/'  # "ppo_masked/test/"
     CNN_POLICY = False
-    CONTINUE_FROM_MODEL = None #'scripts/rl/output/phase2/trpo/mlp/base/history_0092'
+    CONTINUE_FROM_MODEL = None  # 'scripts/rl/output/phase2/trpo/mlp/base/history_0092'
 
     print(f'seed: {SEED} \nnum_timesteps: {NUM_TIMESTEPS} \neval_freq: {EVAL_FREQ}',
           f'\neval_episoded: {EVAL_EPISODES} \nbest_threshold: {BEST_THRESHOLD}',
@@ -312,7 +314,7 @@ if __name__ == '__main__':
         'seed': SEED,
     }
 
-    env = OthelloEnv
+    env = BasicEnv
     if CNN_POLICY:
         env = get_env(env, use_cnn=True)
         policy_class = CustomCnnTRPOPolicy

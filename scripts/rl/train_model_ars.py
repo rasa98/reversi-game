@@ -23,7 +23,7 @@ import sb3_contrib.ars.ars as ars
 
 from stable_baselines3.common.distributions import CategoricalDistribution
 from stable_baselines3.common.monitor import Monitor
-from scripts.rl.old_game_env import OthelloEnv, SelfPlayCallback
+from scripts.rl.env.old_game_env import BasicEnv, SelfPlayCallback
 
 import stable_baselines3.common.callbacks as callbacks_module
 from sb3_contrib.common.maskable.evaluation import evaluate_policy as masked_evaluate_policy
@@ -266,7 +266,7 @@ if __name__ == '__main__':
     print(f'CUDA available: {torch.cuda.is_available()}')
     device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
-    env = OthelloEnv
+    env = BasicEnv
     env = get_env(env)
 
     eval_env = env

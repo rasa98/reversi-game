@@ -23,7 +23,9 @@ from stable_baselines3.common.monitor import Monitor
 
 from sb3_contrib.common.maskable.policies import MaskableActorCriticPolicy
 from sb3_contrib.ppo_mask import MaskablePPO
-from scripts.rl.old_game_env import OthelloEnv, SelfPlayCallback, ReversiCNN
+from scripts.rl.env.old_game_env import (BasicEnv,
+                                         SelfPlayCallback,
+                                         ReversiCNN)
 
 import stable_baselines3.common.callbacks as callbacks_module
 from sb3_contrib.common.maskable.evaluation import evaluate_policy as masked_evaluate_policy
@@ -356,7 +358,7 @@ if __name__ == '__main__':
     print(f'CUDA available: {torch.cuda.is_available()}')
     device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
-    env = OthelloEnv
+    env = BasicEnv
     if CNN_POLICY:
         env = get_env(env, use_cnn=True)
         policy_class = CustomCnnDQNPolicy

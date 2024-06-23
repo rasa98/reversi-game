@@ -14,17 +14,17 @@ from sb3_contrib.common.maskable.evaluation import evaluate_policy as masked_eva
 callbacks_module.evaluate_policy = masked_evaluate_policy
 from stable_baselines3.common.callbacks import EvalCallback
 
-
 from stable_baselines3.common.monitor import Monitor
 from sb3_contrib.common.maskable.policies import MaskableActorCriticPolicy
 from sb3_contrib.ppo_mask import MaskablePPO
-from scripts.rl.old_game_env import OthelloEnv, SelfPlayCallback
+from scripts.rl.env.old_game_env import (BasicEnv,
+                                         SelfPlayCallback)
 from scripts.rl.train_model_ppo import CustomCnnPPOPolicy
 
 
-def make_env(use_cnn=False):
+def make_env(env_cls=BasicEnv, use_cnn=False):
     def _init():
-        env = OthelloEnv(use_cnn=use_cnn)
+        env = env_cls(use_cnn=use_cnn)
         env2 = Monitor(env=env)
         return env2
 
@@ -65,7 +65,6 @@ if __name__ == '__main__':
 
     vec_env = SubprocVecEnv(env_fns)
 
-
     print(f'seed: {SEED} \nnum_timesteps: {NUM_TIMESTEPS} \neval_freq: {EVAL_FREQ}',
           f'\neval_episoded: {EVAL_EPISODES} \nbest_threshold: {BEST_THRESHOLD}',
           f'\nlogdir: {LOGDIR} \ncnn_policy: {CNN_POLICY} \ncontinueFrom_model: {CONTINUE_FROM_MODEL}', flush=True)
@@ -92,7 +91,6 @@ if __name__ == '__main__':
     # }
     # print(f'net architecture - {policy_kwargs}')
 
-
     if CONTINUE_FROM_MODEL is None:
         params['policy_kwargs'] = policy_kwargs
         model = MaskablePPO(policy=policy_class,
@@ -115,7 +113,7 @@ if __name__ == '__main__':
                        model.__class__,
                        starting_model_filepath,
                        model.policy_class)
-    
+
     params = {
         'eval_env': vec_env,
         'LOGDIR': LOGDIR,

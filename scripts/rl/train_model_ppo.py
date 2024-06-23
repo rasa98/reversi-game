@@ -27,13 +27,16 @@ if os.environ['USER'] == 'rasa':
 
 from sb3_contrib.common.maskable.policies import MaskableActorCriticPolicy, MaskableActorCriticCnnPolicy
 from sb3_contrib.ppo_mask import MaskablePPO
-from scripts.rl.old_game_env import OthelloEnv, SelfPlayCallback, ReversiCNN
+from scripts.rl.env.old_game_env import (BasicEnv,
+                                         SelfPlayCallback,
+                                         ReversiCNN)
 import stable_baselines3.common.callbacks as callbacks_module
 from sb3_contrib.common.maskable.evaluation import evaluate_policy as masked_evaluate_policy
 
 callbacks_module.evaluate_policy = masked_evaluate_policy
 
 th = torch
+
 
 class LinearSchedule:
     def __init__(self, initial_value):
@@ -69,7 +72,7 @@ if __name__ == '__main__':
     # LOGDIR = 'scripts/rl/test-working/ppo/v1/'  # "ppo_masked/test/"
     LOGDIR = 'scripts/rl/output/phase2/ppo/cnn/base-v3/'  # "ppo_masked/test/"
     CNN_POLICY = True
-    CONTINUE_FROM_MODEL = None #'scripts/rl/output/phase2/ppo/cnn/base-v2/history_0062' #None
+    CONTINUE_FROM_MODEL = None  # 'scripts/rl/output/phase2/ppo/cnn/base-v2/history_0062' #None
 
     print(f'seed: {SEED} \nnum_timesteps: {NUM_TIMESTEPS} \neval_freq: {EVAL_FREQ}',
           f'\neval_episoded: {EVAL_EPISODES} \nbest_threshold: {BEST_THRESHOLD}',
@@ -82,7 +85,7 @@ if __name__ == '__main__':
         'clip_range': 0.18,
         'batch_size': 128,
         'ent_coef': 0.01,
-        #'gamma': 0.99,
+        # 'gamma': 0.99,
         'verbose': 100,
         'seed': SEED,
     }
@@ -97,7 +100,7 @@ if __name__ == '__main__':
         }
     }
 
-    env = OthelloEnv
+    env = BasicEnv
     if CNN_POLICY:
         env = get_env(env, use_cnn=True)
         policy_class = CustomCnnPPOPolicy
@@ -121,7 +124,7 @@ if __name__ == '__main__':
         model.save(starting_model_filepath)
     else:
         starting_model_filepath = CONTINUE_FROM_MODEL
-        params['policy_class'] = CustomCnnPPOPolicy  #  trained on different version libs...
+        params['policy_class'] = CustomCnnPPOPolicy  # trained on different version libs...
         model = MaskablePPO.load(starting_model_filepath,
                                  env=env,
                                  device=device,
