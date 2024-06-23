@@ -73,7 +73,7 @@ if __name__ == '__main__':
     LOGDIR = 'scripts/rl/output/phase2/ppo/cnn/base-v3/'  # "ppo_masked/test/"
     CNN_POLICY = True
     CONTINUE_FROM_MODEL = None #'scripts/rl/output/phase2/ppo/cnn/base-v3/history_0024' #None
-
+    TRAIN_ENV = BasicEnv
 
     print(f'seed: {SEED} \nnum_timesteps: {NUM_TIMESTEPS} \neval_freq: {EVAL_FREQ}',
           f'\neval_episoded: {EVAL_EPISODES} \nbest_threshold: {BEST_THRESHOLD}',
@@ -101,15 +101,20 @@ if __name__ == '__main__':
         }
     }
 
-    env = BasicEnv
+
+    env = TRAIN_ENV
+    eval_env = BasicEnv
     if CNN_POLICY:
         env = get_env(env, use_cnn=True)
+        eval_env = get_env(eval_env, use_cnn=True)
         policy_class = CustomCnnPPOPolicy
     else:
         env = get_env(env)
+        eval_env = get_env(eval_env)
         policy_class = MaskableActorCriticPolicy
 
-    eval_env = env
+    if TRAIN_ENV == BasicEnv:
+        eval_env = env  # if its basic win +1/-1 reward train, use the same env for eval, cuz inner model that changes.  newer more rewards env are implemented with model playing against itself so no inner model.
 
     # starting_model_filepath = LOGDIR + 'random_start_model'
     # starting_model_filepath = 'ppo_masked/cloud/v2/history_0299'

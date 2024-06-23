@@ -28,11 +28,7 @@ if __name__ == '__main__' and os.environ['USER'] != 'student':
     sys.path.append(os.path.join(os.getcwd(), '../../../'))
     os.chdir('../../../')
 
-from scripts.rl.env.sp_env import (TrainEnv,
-    # EvalEnv,
-    # SelfPlayCallback,
-    # ReversiCNN
-                                   )
+from scripts.rl.env.sp_env import TrainEnv
 from scripts.rl.env.old_game_env import (BasicEnv as EvalEnv,
                                          SelfPlayCallback,
                                          ReversiCNN)

@@ -258,7 +258,7 @@ if __name__ == '__main__':
     RENDER_MODE = False  # set this to false if you plan on running for full 1000 trials.
     LOGDIR = 'scripts/rl/output/phase2/ars/mlp/base-new/'  # "ppo_masked/test/"    
     CONTINUE_FROM_MODEL = None
-
+    TRAIN_ENV = BasicEnv
 
     print(f'seed: {SEED} \nnum_timesteps: {NUM_TIMESTEPS} \neval_freq: {EVAL_FREQ}',
           f'\neval_episoded: {EVAL_EPISODES} \nbest_threshold: {BEST_THRESHOLD}',
@@ -267,10 +267,14 @@ if __name__ == '__main__':
     print(f'CUDA available: {torch.cuda.is_available()}')
     device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
-    env = BasicEnv
-    env = get_env(env)
+    env = TRAIN_ENV
+    eval_env = BasicEnv
 
-    eval_env = env
+    env = get_env(env)
+    eval_env = get_env(eval_env)
+
+    if TRAIN_ENV == BasicEnv:
+        eval_env = env  # if its basic win +1/-1 reward train, use the same env for eval, cuz inner model that changes.  newer more rewards env are implemented with model playing against itself so no inner model.
 
     policy_kwargs = dict(
         net_arch=[64] * 4

@@ -292,9 +292,8 @@ if __name__ == '__main__':
     # LOGDIR = 'scripts/rl/test-working/ppo/v1/'  # "ppo_masked/test/"
     LOGDIR = 'scripts/rl/output/phase2/trpo/mlp/base-v3/'  # "ppo_masked/test/"
     CNN_POLICY = False
-
     CONTINUE_FROM_MODEL = None #'scripts/rl/output/phase2/trpo/mlp/base2/history_0095'
-
+    TRAIN_ENV = BasicEnv
 
     print(f'seed: {SEED} \nnum_timesteps: {NUM_TIMESTEPS} \neval_freq: {EVAL_FREQ}',
           f'\neval_episoded: {EVAL_EPISODES} \nbest_threshold: {BEST_THRESHOLD}',
@@ -321,15 +320,21 @@ if __name__ == '__main__':
         'seed': SEED,
     }
 
-    env = BasicEnv
+    env = TRAIN_ENV
+    eval_env = BasicEnv
     if CNN_POLICY:
         env = get_env(env, use_cnn=True)
+        eval_env = get_env(eval_env, use_cnn=True)
         policy_class = CustomCnnTRPOPolicy
     else:
         env = get_env(env)
+        eval_env = get_env(eval_env)
         policy_class = CustomMlpPolicy
 
-    eval_env = env
+    if TRAIN_ENV == BasicEnv:
+        eval_env = env  # if its basic win +1/-1 reward train, use the same env for eval, cuz inner model that changes.  newer more rewards env are implemented with model playing against itself so no inner model.
+
+    #---------------------------------------------------------------
 
     if CONTINUE_FROM_MODEL is None:
         params['policy_kwargs'] = policy_kwargs

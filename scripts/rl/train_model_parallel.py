@@ -14,7 +14,6 @@ from sb3_contrib.common.maskable.evaluation import evaluate_policy as masked_eva
 callbacks_module.evaluate_policy = masked_evaluate_policy
 from stable_baselines3.common.callbacks import EvalCallback
 
-
 from stable_baselines3.common.monitor import Monitor
 from sb3_contrib.common.maskable.policies import MaskableActorCriticPolicy
 from sb3_contrib.ppo_mask import MaskablePPO
@@ -39,17 +38,15 @@ if __name__ == '__main__':
 
     # Settings
     SEED = 19  # NOT USED
-
     NUM_TIMESTEPS = int(160_000_000)
     N_STEPS = 2048 * 30
-    
     EVAL_EPISODES = int(1000)
     BEST_THRESHOLD = 0.24  # must achieve a mean score above this to replace prev best self
     RENDER_MODE = False  # set this to false if you plan on running for full 1000 trials.
     LOGDIR = "scripts/rl/output/phase2/ppo/cnn/base-v4/"
-
     CNN_POLICY = True
     CONTINUE_FROM_MODEL = 'scripts/rl/output/phase2/ppo/cnn/base-v3/history_0024'  # None
+    TRAIN_ENV = BasicEnv
 
     mp.set_start_method('forkserver')
 
@@ -62,16 +59,24 @@ if __name__ == '__main__':
 
     EVAL_FREQ = int(N_STEPS * num_envs + 1000)
 
+    env = TRAIN_ENV
+    eval_env = BasicEnv
 
     if CNN_POLICY:
-        env_fns = [make_env(use_cnn=True) for _ in range(num_envs)]
+        env_fns = [make_env(env_cls=env, use_cnn=True) for _ in range(num_envs)]
+        eval_env_fns = [make_env(env_cls=eval_env, use_cnn=True) for _ in range(num_envs)]
         policy_class = CustomCnnPPOPolicy
     else:
-        env_fns = [make_env() for _ in range(num_envs)]
+        env_fns = [make_env(env_cls=env) for _ in range(num_envs)]
+        eval_env_fns = [make_env(env_cls=eval_env) for _ in range(num_envs)]
         policy_class = MaskableActorCriticPolicy
 
     vec_env = SubprocVecEnv(env_fns)
 
+    if TRAIN_ENV == BasicEnv:
+        eval_env = vec_env
+    else:
+        eval_env = SubprocVecEnv(eval_env_fns)
 
     print(f'seed: {SEED} \nnum_timesteps: {NUM_TIMESTEPS} \neval_freq: {EVAL_FREQ}',
           f'\neval_episoded: {EVAL_EPISODES} \nbest_threshold: {BEST_THRESHOLD}',
@@ -99,7 +104,6 @@ if __name__ == '__main__':
     # }
     # print(f'net architecture - {policy_kwargs}')
 
-
     if CONTINUE_FROM_MODEL is None:
         params['policy_kwargs'] = policy_kwargs
         model = MaskablePPO(policy=policy_class,
@@ -118,13 +122,13 @@ if __name__ == '__main__':
 
     print(f'starting model: {starting_model_filepath}', flush=True)
 
-    vec_env.env_method('change_to_latest_agent',
-                       model.__class__,
-                       starting_model_filepath,
-                       model.policy_class)
+    eval_env.env_method('change_to_latest_agent',
+                        model.__class__,
+                        starting_model_filepath,
+                        model.policy_class)
 
     params = {
-        'eval_env': vec_env,
+        'eval_env': eval_env,
         'LOGDIR': LOGDIR,
         'BEST_THRESHOLD': BEST_THRESHOLD
     }

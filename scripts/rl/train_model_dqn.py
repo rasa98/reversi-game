@@ -332,6 +332,7 @@ if __name__ == '__main__':
     LOGDIR = 'scripts/rl/test-working/dqn/5cnn/'  # "ppo_masked/test/"
     CNN_POLICY = True
     CONTINUE_FROM_MODEL = None  # 'scripts/rl/test-working/dqn/4/history_0004'
+    TRAIN_ENV = BasicEnv
 
     policy_kwargs = dict(
         net_arch=[64] * 4
@@ -358,17 +359,21 @@ if __name__ == '__main__':
     print(f'CUDA available: {torch.cuda.is_available()}')
     device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
-    env = BasicEnv
+    env = TRAIN_ENV
+    eval_env = BasicEnv
     if CNN_POLICY:
         env = get_env(env, use_cnn=True)
+        eval_env = get_env(eval_env, use_cnn=True)
         policy_class = CustomCnnDQNPolicy
     else:
         env = get_env(env)
+        eval_env = get_env(eval_env)
         policy_class = CustomDQNPolicy
 
-    eval_env = env
-    # --------------------------------------------
+    if TRAIN_ENV == BasicEnv:
+        eval_env = env  # if its basic win +1/-1 reward train, use the same env for eval, cuz inner model that changes.  newer more rewards env are implemented with model playing against itself so no inner model.
 
+    # --------------------------------------------
     #
     if CONTINUE_FROM_MODEL is None:
         params['policy_kwargs'] = policy_kwargs
