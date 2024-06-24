@@ -3,12 +3,12 @@ import numpy
 import numpy as np
 import time
 import gc
-from game_logic import Othello
+# from game_logic import Othello
 from game_modes import ai_vs_ai_cli
 from models.model_interface import ai_random
 from collections import Counter
 
-from .model_interface import ModelInterface
+# from .model_interface import ModelInterface
 
 
 class Node:
@@ -17,7 +17,7 @@ class Node:
         self.game = game_copy
         self.visited = 0
         self.value = 0
-        self.move_to_child = {}
+        self.move_to_child = {}  # TODO refactor to field children and every node has move that brought it to it.
         self.parent = parent_node
         self.valid_moves = list(game_copy.valid_moves_to_reverse)
         self.is_final_state = len(self.valid_moves) == 0
@@ -62,10 +62,10 @@ class Node:
         return winner
 
 
-class MCTS(ModelInterface):
+class MCTS:
 
-    def __init__(self, name, max_iter=math.inf, max_time=math.inf, uct_exploration_const=1.42, verbose=0):
-        super().__init__(name)
+    def __init__(self, max_iter=math.inf, max_time=math.inf, uct_exploration_const=1.42, verbose=0):
+        # super().__init__(name)
         self.root = None  # Node(game.get_snapshot())
         self.last_cycle_iteration = 0
         self.last_cycle_time = 0
@@ -85,12 +85,29 @@ class MCTS(ModelInterface):
         """create new root Node."""
         self.root = Node(game.get_snapshot())
 
-    def predict_best_move(self, game: Othello):
+
+    def predict_best_move_OLD(self, game):  # TODO remove
         self.set_root_new(game)
         self.mcts_search()
         # print(f'\nafter simulating: {dict(self.root.get_all_next_move_counter())}')
         gc.collect()
         return self.best_moves(), None
+
+
+    def simulate(self, game):
+        self.set_root_new(game)
+        self.mcts_search()
+        # print(f'\nafter simulating: {dict(self.root.get_all_next_move_counter())}')
+        gc.collect()
+
+        action_probs = np.zeros(game.action_space())
+        for move, child in self.root.move_to_child.items():
+            encoded_move = game.__class__.get_encoded_field(move)
+            action_probs[encoded_move] = child.visited
+        action_probs /= np.sum(action_probs)
+        return action_probs
+
+        #return self.best_moves(), None
 
     # def best_move_child_item(self):
     #     return max(self.root.move_to_child.items(), key=lambda item: item[1].visited)
@@ -166,10 +183,10 @@ class MCTS(ModelInterface):
             print(f'iterations {iterations} per one cycle: {self.iter_per_cycle()}\n')
 
 
-time_limit = 1
-iter_limit = 30  # math.inf
-verbose = 0  # 0 means no logging
-mcts_model = MCTS(f'mcts iter_limit {iter_limit}',
-                  max_time=time_limit,
-                  max_iter=iter_limit,
-                  verbose=verbose)
+# time_limit = 1
+# iter_limit = 30  # math.inf
+# verbose = 0  # 0 means no logging
+# mcts_model = MCTS(f'mcts iter_limit {iter_limit}',
+#                   max_time=time_limit,
+#                   max_iter=iter_limit,
+#                   verbose=verbose)

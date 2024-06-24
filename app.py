@@ -1,5 +1,6 @@
 import random
 import time
+import math
 
 from models.minmax import (mm_static,
                            mm2_dynamic,
@@ -10,8 +11,10 @@ from models.minmax import (mm_static,
 from models.ppo_masked_model import (load_model_new,
                                      )
 from models.model_interface import ai_random
-from models.montecarlo import mcts_model
-from models.ParallelMCTS import PMCTS
+# from models.montecarlo import mcts_model
+from models.MctsModel import load_mcts_model
+from models.ParallelMctsModel import load_parallel_mcts_model
+# from models.ParallelMCTS import PMCTS
 
 from models.AlphaZeroModel import (load_azero_model,
                                    multi_folder_load_models,
@@ -79,10 +82,23 @@ if __name__ == '__main__':
     # multi_ppo = (load_model_new(f'ppo_{i}_bigg rollouts', f'{file_base}{str(i).zfill(4)}')
     #              for i in range(14, 19))
 
-    pmcts = PMCTS('parallel mcts',
-                  time_limit=1,
-                  iter_limit=1000
-                  )
+    mcts_param = {'max_time': math.inf,
+                  'max_iter': 200,
+                  'c': 1.41,
+                  'verbose': 0}
+    mcts_model = load_mcts_model(params=mcts_param)
+
+    # pmcts = PMCTS('parallel mcts',
+    #               time_limit=1,
+    #               iter_limit=1000
+    #               )
+    pmcts_param = {'max_time': math.inf,
+                   'max_iter': 200,
+                   'c': 1.41,
+                   'verbose': 0}
+    pmcts = load_parallel_mcts_model(params=pmcts_param)
+
+
 
     azero_folder = 'models_output/alpha-zero/FINAL/layer64-LAST-v4/'  # f'models_output/alpha-zero/FINAL/layer64-LAST-v3/'
     azero_model_location = f'{azero_folder}model_4.pt'  # 3
@@ -193,19 +209,33 @@ if __name__ == '__main__':
                                                  policy_cls=CNNPolicy_changed)
                                   for i in [])  # range(1, 52))
 
+    file_ppo_base4_cnn = 'scripts/rl/output/phase2/ppo/cnn/base-v4/history_'
+    ppo_base4_cnn = lambda: (load_model_new(f'ppo_cnn{i}',
+                                            f'{file_ppo_base4_cnn}{str(i).zfill(4)}',
+                                            cnn=True,
+                                            policy_cls=CustomCnnPPOPolicy)
+                             for i in [3])  # range(1, 52))
+
     # multi_ars, ppo_base2_cnn, multi_trpo
     l1 = list([best_ppo_yet])
     l2 = list(multi_ars())
-    for agent2 in ppo_new_reward_cnn():
+
+    pmcts.open_pool(4) #  need to use to open pool, also need to close manually it to not waste resources
+
+    for agent2 in ppo_base4_cnn():
         bench_both_sides(
-            best_ppo_yet.set_deterministic(False),
+            # best_ppo_yet,
+            # ai_random,
             # best_ppo_yet.set_deterministic(False),
             # ga_vpn_5,
             # alpha,
-            agent2.set_deterministic(False),
-            # mcts_model,
+            # agent2.set_deterministic(False),
+            pmcts,
+            mcts_model,
             # best_ppo_yet,
             # ppo_del2.set_deterministic(False),#agent,
-            times=100,
+            times=3,
             timed=True,
             verbose=1)
+
+        pmcts.clean_pool()

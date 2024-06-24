@@ -107,6 +107,10 @@ class Othello:
                        chips=self.chips,
                        winner=self.winner)
 
+    @staticmethod
+    def action_space():
+        return ALL_FIELDS_SIZE
+
     def _swap_player_turn(self):
         self.player_turn = 3 - self.player_turn
 
