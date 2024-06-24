@@ -2,24 +2,22 @@ import random
 import time
 import math
 
-from models.minmax import (mm_static,
-                           mm2_dynamic,
-                           ga_0,
-                           ga_1,
-                           ga_2,
-                           ga_vpn_5)
-from models.ppo_masked_model import (load_model_new,
-                                     )
+from models.MiniMaxAgent import (load_minimax_agent,
+                                 mm_static,
+                                 mm2_dynamic,
+                                 ga_0,
+                                 ga_1,
+                                 ga_2,
+                                 ga_vpn_5)
+from models.sb3_model import load_sb3_model
 from models.model_interface import ai_random
-# from models.montecarlo import mcts_model
 from models.MctsModel import load_mcts_model
 from models.ParallelMctsModel import load_parallel_mcts_model
-# from models.ParallelMCTS import PMCTS
 
 from models.AlphaZeroModel import (load_azero_model,
                                    multi_folder_load_models,
                                    multi_folder_load_some_models)
-# from models.AlphaZero import (multi_folder_load_some_models)
+
 from bench_agent import bench_both_sides
 
 from cProfile import Profile
@@ -39,47 +37,47 @@ def ppo_death_match(multi_ppo, times=100):
 
 
 if __name__ == '__main__':
-    ppo_299 = load_model_new('cloud_299', 'scripts/rl/ppo_masked/cloud/v2/history_0299.zip')  # file)
-    ppo_113 = load_model_new('cloud_113', 'scripts/rl/ppo_masked/cloud/v2/history_0113.zip')  # file)
-    ppo_531 = load_model_new('cloud_531', 'scripts/rl/ppo_masked/cloud/v2/history_0531.zip')
-    ppo_del = load_model_new('cloud_test', 'scripts/rl/scripts/rl/test-working/ppo/v1/history_0004.zip')  # file)
-    ppo_del2 = load_model_new('cloud_test2', 'scripts/rl/scripts/rl/test-working/ppo/v1/history_0003.zip')  # file)
-    # ppo_18_big_rollouts = load_model_new('18 big rollout', 'scripts/rl/scripts/rl/test-working/ppo/1/history_0018')
+    ppo_299 = load_sb3_model('cloud_299', 'scripts/rl/ppo_masked/cloud/v2/history_0299.zip')  # file)
+    ppo_113 = load_sb3_model('cloud_113', 'scripts/rl/ppo_masked/cloud/v2/history_0113.zip')  # file)
+    ppo_531 = load_sb3_model('cloud_531', 'scripts/rl/ppo_masked/cloud/v2/history_0531.zip')
+    ppo_del = load_sb3_model('cloud_test', 'scripts/rl/scripts/rl/test-working/ppo/v1/history_0004.zip')  # file)
+    ppo_del2 = load_sb3_model('cloud_test2', 'scripts/rl/scripts/rl/test-working/ppo/v1/history_0003.zip')  # file)
+    # ppo_18_big_rollouts = load_sb3_model('18 big rollout', 'scripts/rl/scripts/rl/test-working/ppo/1/history_0018')
 
-    cloud_random = load_model_new(f'ppo_random_cloud', f'scripts/rl/ppo_masked/cloud/paral/random_start_model')
+    cloud_random = load_sb3_model(f'ppo_random_cloud', f'scripts/rl/ppo_masked/cloud/paral/random_start_model')
     file_base = 'scripts/rl/ppo_masked/cloud/paral/history_'
-    multi_ppo = (load_model_new(f'ppo_{i}', f'{file_base}{str(i).zfill(4)}')
+    multi_ppo = (load_sb3_model(f'ppo_{i}', f'{file_base}{str(i).zfill(4)}')
                  for i in range(14, 17))
 
     file_base_v3v3 = 'scripts/rl/output/v3v3/history_'
-    multi_ppo_v3v3 = lambda: (load_model_new(f'ppo_{i}', f'{file_base_v3v3}{str(i).zfill(4)}')
+    multi_ppo_v3v3 = lambda: (load_sb3_model(f'ppo_{i}', f'{file_base_v3v3}{str(i).zfill(4)}')
                               for i in range(17, 33))
     it = multi_ppo_v3v3()
     best_ppo_yet = next(it)
     best_next_18 = next(it)
 
     file_base_v3v3v1 = 'scripts/rl/output/v3v3-1/history_'
-    multi_ppo_v3v3v1 = lambda: (load_model_new(f'ppo_{i}', f'{file_base_v3v3v1}{str(i).zfill(4)}')
+    multi_ppo_v3v3v1 = lambda: (load_sb3_model(f'ppo_{i}', f'{file_base_v3v3v1}{str(i).zfill(4)}')
                                 for i in [24, 32, 33, 37])  # 32 univerzalno bolji
 
     file_base_v4 = 'scripts/rl/output/v4/history_'
-    multi_ppo_v4 = lambda: (load_model_new(f'ppo_{i}', f'{file_base_v4}{str(i).zfill(4)}')
+    multi_ppo_v4 = lambda: (load_sb3_model(f'ppo_{i}', f'{file_base_v4}{str(i).zfill(4)}')
                             for i in range(42, 49))
 
     file_base = 'scripts/rl/output/paral/base/v0/history_'
-    multi_ppo_paral_v0 = (load_model_new(f'ppo_{i}', f'{file_base}{str(i).zfill(4)}')
+    multi_ppo_paral_v0 = (load_sb3_model(f'ppo_{i}', f'{file_base}{str(i).zfill(4)}')
                           for i in [8, 9, 10])
 
     file_base = 'scripts/rl/output/paral/base/v1/history_'
-    multi_ppo_paral_v1 = (load_model_new(f'ppo_{i}', f'{file_base}{str(i).zfill(4)}')
+    multi_ppo_paral_v1 = (load_sb3_model(f'ppo_{i}', f'{file_base}{str(i).zfill(4)}')
                           for i in [1, 2, 3, 4, 5])
 
     file_base = 'scripts/rl/output/paral/base/v1.1/history_'
-    multi_ppo_paral_v11 = (load_model_new(f'ppo_{i}', f'{file_base}{str(i).zfill(4)}')
+    multi_ppo_paral_v11 = (load_sb3_model(f'ppo_{i}', f'{file_base}{str(i).zfill(4)}')
                            for i in [1, 2, 3, 4, 5])
 
     # file_base = 'scripts/rl/scripts/rl/test-working/ppo/1/history_'
-    # multi_ppo = (load_model_new(f'ppo_{i}_bigg rollouts', f'{file_base}{str(i).zfill(4)}')
+    # multi_ppo = (load_sb3_model(f'ppo_{i}_bigg rollouts', f'{file_base}{str(i).zfill(4)}')
     #              for i in range(14, 19))
 
     mcts_param = {'max_time': math.inf,
@@ -97,8 +95,6 @@ if __name__ == '__main__':
                    'c': 1.41,
                    'verbose': 0}
     pmcts = load_parallel_mcts_model(params=pmcts_param)
-
-
 
     azero_folder = 'models_output/alpha-zero/FINAL/layer64-LAST-v4/'  # f'models_output/alpha-zero/FINAL/layer64-LAST-v3/'
     azero_model_location = f'{azero_folder}model_4.pt'  # 3
@@ -159,40 +155,40 @@ if __name__ == '__main__':
     from sb3_contrib.ppo_mask import MaskablePPO
 
     file_base_ars = 'scripts/rl/output/phase2/ars/mlp/base/history_'
-    multi_ars = lambda: (load_model_new(f'ars_{i}',
+    multi_ars = lambda: (load_sb3_model(f'ars_{i}',
                                         f'{file_base_ars}{str(i).zfill(4)}',
                                         cls=MaskableArs,
                                         policy_cls=CustomMlpArsPolicy)
                          for i in [140, 141, 142, 143, 144, 145, 669, 671])  # num 15 je najbolji
 
     # file_base_dqn = 'scripts/rl/scripts/rl/test-working/dqn/4v1/history_'
-    # multi_dqn = lambda: (load_model_new(f'dqn_{i}',
+    # multi_dqn = lambda: (load_sb3_model(f'dqn_{i}',
     #                                     f'{file_base_dqn}{str(i).zfill(4)}',
     #                                     MaskableDQN)
     #                      for i in range(1, 75))  # num 15 je najbolji
     #
     # file_base_ppo_cnn = 'scripts/rl/scripts/rl/test-working/ppo/1/history_'
-    # multi_ppo_cnn_paral_v0 = lambda: (load_model_new(f'ppo_{i}',
+    # multi_ppo_cnn_paral_v0 = lambda: (load_sb3_model(f'ppo_{i}',
     #                                                  f'{file_base}{str(i).zfill(4)}',
     #                                                  cnn=True)
     #                                   for i in [1, 2, 3, 4])
     #
     # file_base_trpo_cnn = 'scripts/rl/scripts/rl/test-working/trpo/test/history_'
-    # multi_trpo_cnn = lambda: (load_model_new(f'trpo_{i}',
+    # multi_trpo_cnn = lambda: (load_sb3_model(f'trpo_{i}',
     #                                          f'{file_base_trpo_cnn}{str(i).zfill(4)}',
     #                                          MaskableTrpo,
     #                                          cnn=True)
     #                           for i in range(1, 9))
 
     file_ppo_base2_cnn = 'scripts/rl/output/phase2/ppo/cnn/base-v3/history_'
-    ppo_base2_cnn = lambda: (load_model_new(f'ppo_cnn{i}',
+    ppo_base2_cnn = lambda: (load_sb3_model(f'ppo_cnn{i}',
                                             f'{file_ppo_base2_cnn}{str(i).zfill(4)}',
                                             cnn=True,
                                             policy_cls=CustomCnnPPOPolicy)
                              for i in range(10, 26))  # range(1, 52))
 
     file_base_trpo = 'scripts/rl/output/phase2/trpo/mlp/base2/history_'
-    multi_trpo = lambda: (load_model_new(f'trpo_mlp{i}',
+    multi_trpo = lambda: (load_sb3_model(f'trpo_mlp{i}',
                                          f'{file_base_trpo}{str(i).zfill(4)}',
                                          MaskableTrpo,
                                          cnn=False,
@@ -203,14 +199,14 @@ if __name__ == '__main__':
     from scripts.rl.env.train_model_ppo_alt import CustomCnnPPOPolicy as CNNPolicy_changed
 
     file_ppo_new_reward_cnn = 'scripts/rl/output/alternate/ppo/cnn/base/history_'
-    ppo_new_reward_cnn = lambda: (load_model_new(f'ppo_cnn new reward {i}',
+    ppo_new_reward_cnn = lambda: (load_sb3_model(f'ppo_cnn new reward {i}',
                                                  f'{file_ppo_new_reward_cnn}{str(i).zfill(4)}',
                                                  cnn=True,
                                                  policy_cls=CNNPolicy_changed)
                                   for i in [])  # range(1, 52))
 
     file_ppo_base4_cnn = 'scripts/rl/output/phase2/ppo/cnn/base-v4/history_'
-    ppo_base4_cnn = lambda: (load_model_new(f'ppo_cnn{i}',
+    ppo_base4_cnn = lambda: (load_sb3_model(f'ppo_cnn{i}',
                                             f'{file_ppo_base4_cnn}{str(i).zfill(4)}',
                                             cnn=True,
                                             policy_cls=CustomCnnPPOPolicy)
@@ -220,22 +216,22 @@ if __name__ == '__main__':
     l1 = list([best_ppo_yet])
     l2 = list(multi_ars())
 
-    pmcts.open_pool(4) #  need to use to open pool, also need to close manually it to not waste resources
+    # pmcts.open_pool(4)  # need to use to open pool, also need to close manually it to not waste resources
 
     for agent2 in ppo_base4_cnn():
         bench_both_sides(
             # best_ppo_yet,
-            # ai_random,
+            ai_random,
             # best_ppo_yet.set_deterministic(False),
-            # ga_vpn_5,
+            ga_vpn_5.set_deterministic(False),
             # alpha,
             # agent2.set_deterministic(False),
-            pmcts,
-            mcts_model,
+            # pmcts,
+            # mcts_model,
             # best_ppo_yet,
             # ppo_del2.set_deterministic(False),#agent,
-            times=3,
+            times=10,
             timed=True,
             verbose=1)
 
-        pmcts.clean_pool()
+        # pmcts.clean_pool()

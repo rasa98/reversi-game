@@ -210,7 +210,7 @@ class MaskedPPOWrapperNew(ModelInterface):
         return (move,), None
 
 
-def load_model_new(name, file, cls=MaskablePPO, cnn=False, policy_cls=None):  # TODO generalize this module
+def load_sb3_model(name, file, cls=MaskablePPO, cnn=False, policy_cls=None):  # TODO generalize this module
     '''for ppo cnn it doesnt pickle policy class BUG, so you need to supply it'''
     custom_objects = {'lr_schedule': lambda _: 0.0005,  # only cuz of warnings...
                       'learning_rate': 0.0005,

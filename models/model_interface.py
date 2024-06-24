@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from game_logic import Othello
+import numpy as np
 
 
 class ModelInterface(ABC):
@@ -15,6 +16,11 @@ class ModelInterface(ABC):
     def predict_best_move(self, game: Othello):
         """Abstract method to make predictions."""
         pass
+
+    @staticmethod
+    def choose_stochastic(action_prob):
+        encoded_action = np.random.choice(len(action_prob), p=action_prob)
+        return Othello.get_decoded_field(encoded_action)
 
     def __str__(self):
         return self.name
