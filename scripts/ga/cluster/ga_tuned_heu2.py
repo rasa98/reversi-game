@@ -133,9 +133,9 @@ if __name__ == "__main__":
     else:
         CORES = int(os.environ['SLURM_CPUS_ON_NODE']) // 2
 
-    population_size = 20#0
-    TOURNAMENTS = 100#0
-    ROUNDS = 10#0
+    population_size = 200
+    TOURNAMENTS = 1000
+    ROUNDS = 100
 
     SAVE_FREQ = 10
     SEL_CROSSOVER = (0.35, 0.25)

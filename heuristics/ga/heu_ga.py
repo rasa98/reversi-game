@@ -2,9 +2,10 @@ import itertools
 import random
 
 import numpy as np
-# from heuristics.heu1 import (count_chips, count_corners, count_danger_early_game,
-#                              minimize_opponent_moves)
-from heuristics.ga.heu_func import (CountChips, CountDangerEarlyGame, CountCorners,
+
+from heuristics.ga.heu_func import (CountChips,
+                                    CountDangerEarlyGame,
+                                    CountCorners,
                                     CountSaferEarlyGame,
                                     MaximizeMyMoves)
 
@@ -72,14 +73,14 @@ class HeuFuncIndividual:
         elif len(missing_heu_func) == max_num_of_missing:
             self.add_heu_random()
         else:
-            match random.randint(0, 2):
-                case 0:
-                    self.remove_heu_random()
-                case 1:
-                    self.add_heu_random()
-                case _:
-                    self.remove_heu_random()
-                    self.add_heu_random()  # can bring back removed, but it will have diff values
+            x = random.randint(0, 2)
+            if x == 0:
+                self.remove_heu_random()
+            elif x == 1:
+                self.add_heu_random()
+            else:
+                self.remove_heu_random()
+                self.add_heu_random()  # can bring back removed, but it will have diff values
 
     def remove_heu_random(self):
         to_remove = list(self.heuclass_to_instance.keys())
@@ -120,11 +121,12 @@ class HeuFuncIndividual:
         num_of_elements = len(list_of_elements)
         res = []
 
+        limit = survive_rate * num_of_elements
         id_to_el = {el.id: el for el in list_of_elements}
         survive, mutate = [], []
         for idx, (k, v) in enumerate(id_to_score_desc.items()):
             elem = id_to_el[k]
-            if idx < survive_rate * num_of_elements:  # TODO: on the edge el have same score
+            if idx < limit:  # TODO: on the edge el have same score
                 elem.gen += 1
                 survive.append(elem)
             else:
@@ -135,21 +137,23 @@ class HeuFuncIndividual:
         #  crossover
         unique_pairs = set()
         num_of_crossover = int(crossover_rate * num_of_elements)
+        half_num_of_crossover = (num_of_crossover // 2)
         for idx in range(num_of_crossover):
-            pair = tuple(random.sample(survive, 2))
-            while pair in unique_pairs or (pair[1], pair[0]) in unique_pairs:
-                pair = tuple(random.sample(survive, 2))
-            el1, el2 = pair
-            unique_pairs.add(pair)
+            if idx < half_num_of_crossover:
+                el = random.choice(survive)
+                res.append(el.crossover(HeuFuncIndividual.create()))  # add some variability win new elements
+                continue
 
-            if idx < (num_of_crossover // 2):
-                res.append(el1.crossover(HeuFuncIndividual.create()))  # add some variability win new elements
-            else:
-                res.append(el1.crossover(el2))
+            pair = frozenset(random.sample(survive, 2))
+            while pair in unique_pairs:
+                pair = frozenset(random.sample(survive, 2))
+            el1, el2 = tuple(pair)
+            unique_pairs.add(pair)
+            res.append(el1.crossover(el2))
 
         #  mutate + some new population
         number_of_rest = num_of_elements - len(res)
-        number_of_randoms = number_of_rest // 2
+        number_of_randoms = number_of_rest // 4
         for _ in range(number_of_randoms):
             res.append(HeuFuncIndividual.create())
 

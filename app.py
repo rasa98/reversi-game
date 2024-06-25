@@ -223,7 +223,7 @@ if __name__ == '__main__':
             # best_ppo_yet,
             ai_random,
             # best_ppo_yet.set_deterministic(False),
-            ga_vpn_5,
+            ga_0,
             # alpha,
             # agent2.set_deterministic(False),
             # pmcts,

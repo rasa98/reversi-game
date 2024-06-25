@@ -1,13 +1,5 @@
 import numpy as np
-from models.model_interface import ModelInterface
 from game_logic import Othello
-from heuristics.heu1 import heuristic, heuristic2
-from heuristics.heu2 import create_heuristic
-from heuristics.ga.heu_func import (CountChips,
-                                    CountDangerEarlyGame,
-                                    CountCorners,
-                                    MaximizeMyMoves)
-from heuristics.ga.heu_ga import create_heuristic as create_heuristic2
 
 
 def fixed_depth_f(d):

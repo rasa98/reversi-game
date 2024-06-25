@@ -102,12 +102,26 @@ class CountDangerEarlyGame(CountChips):
 
     @classmethod
     def create(cls):
-        danger_divisor = random.uniform(1.0, 20.0)
+        danger_divisor = random.uniform(1.0, 10.0)
         return CountDangerEarlyGame(danger_divisor)
+
+    def delta(self, idx):
+        match idx:
+            case 0:
+                return random.uniform(-1.5, 1.5)
+            case _:
+                raise IndexError('index out of bounds for heu parameters!')
+
+    def bound_param(self, idx, val):
+        match idx:
+            case 0:
+                return (val - 1) % 9 + 1
+            case _:
+                raise IndexError('index out of bounds for heu parameters!')
 
     def evaluate_state(self, game):
         stats = self.get_game_stats(game)
-        return count_danger_early_game(stats, lambda turn: (65 - turn) // self.get_params()[0])
+        return count_danger_early_game(stats, lambda turn: (25 - turn) // self.get_params()[0])
 
     def __str__(self):
         return f'danger divisor: {self.params[0]}'
@@ -195,4 +209,3 @@ class MaximizeMyMoves(HeuFunctionInterface):
 
     def __str__(self):
         return f'max my score: {self.params[0]}'
-
