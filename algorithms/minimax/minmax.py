@@ -63,18 +63,9 @@ class Minimax:
 
             encoded_move = game.__class__.get_encoded_field(move)
             action_probs[encoded_move] = probs[idx]
-        # if np.sum(action_probs) > 1.1:
-        #     pass
         # action_probs /= np.sum(action_probs)
-        # if np.any(np.isnan(action_probs)):
-        #     pass
 
         return action_probs
-
-        # print(f'turn: {turn}, --- choose depth: {self.depth} --- estimate: {best_estimate}, All moves: {self.all_moves}')
-        # print(f'All moves: {self.all_moves}')
-
-        # return tuple(self.best_moves_to_play), best_estimate
 
     def _main(self, depth, a, b, game: Othello):
         winner = game.get_winner()

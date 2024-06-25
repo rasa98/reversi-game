@@ -1,52 +1,28 @@
-import sys
-# sys.path.append('/home/rasa/PycharmProjects/reversiProject/')  # TODO fix this hack
+import itertools
 import os
-source_dir = os.path.abspath(os.path.join(os.getcwd(), '../../'))
-sys.path.append(source_dir)
-
-from heuristics.ga.heu_ga import HeuFuncIndividual
-from models.minmax import Minimax
-from game_modes import ai_vs_ai_cli
-import random, itertools
-import timeit, time
+import random
+import sys
+# import time
 import concurrent.futures
 from collections import defaultdict
+from tqdm import trange
 
-random_seed = time.time()
-population_size = 200
-TOURNAMENTS = 1000
-ROUNDS = 100
-CORES = os.cpu_count()
-SAVE_FREQ = 10
-SEL_CROSSOVER = (0.5, 0.4)
-REMATCH = False
+if os.environ['USER'] != 'student':
+    source_dir = os.path.abspath(os.path.join(os.getcwd(), '../../../'))
+    sys.path.append(source_dir)
 
-LOG_DIR = '../../../trainings/ga/2/train_logs'
-os.makedirs(LOG_DIR, exist_ok=True)
-
-print(f"run params:\npop: {population_size}\ntournaments: {TOURNAMENTS}\nrounds: {ROUNDS}\nratio: {SEL_CROSSOVER}\nrematch: {REMATCH}\n\n")
-# -----------------------------------------------------
-import subprocess
-
-def get_cpu_info():
-    try:
-        result = subprocess.run(['lscpu'], capture_output=True, text=True)
-        return result.stdout
-    except Exception as e:
-        return f"Error: {e}"
-
-cpu_info = get_cpu_info()
-print(f"CPU Info:\n{cpu_info}\n")
-# ------------------------------------------------------
-
+from heuristics.ga.heu_ga import HeuFuncIndividual
+from models.MiniMaxAgent import load_minimax_agent
+from game_modes import ai_vs_ai_cli
 
 
 def generate_all_pairs(ps, rounds):
     ps = list(ps)
     res = []
     l = len(ps)
-    if l % 2 != 0 or rounds >= l:
-        raise Exception("cant be odd number of population, or rounds >= than len of pop")
+
+    assert l % 2 == 0, "cant be odd number of population"
+    assert rounds < l, "rounds cant be >= than len of population"
 
     res += [(ps[i], ps[l - 1 - i]) for i in range(l // 2)]
     for _ in range(rounds - 1):
@@ -65,15 +41,16 @@ def add_rematches(gen_matches):
 
 
 def simulate_tournament(matches):
+    seed = get_seed()
+    random.seed(seed)
+
     score = defaultdict(int)
     for pair in matches:
         x, y = pair
-        mm1 = Minimax(lambda _: 1, x.get_heuristic())
-        mm2 = Minimax(lambda _: 1, y.get_heuristic())
-        ai1 = {"name": "bot1", "f": mm1.predict_best_move}
-        ai2 = {"name": "bot2", "f": mm2.predict_best_move}
+        mm1 = load_minimax_agent('bot 1', lambda _: 1, x.get_heuristic())
+        mm2 = load_minimax_agent('bot 2', lambda _: 1, y.get_heuristic())
 
-        winner = ai_vs_ai_cli(ai1, ai2)
+        winner = ai_vs_ai_cli(mm1, mm2)
         if winner != 0:
             winner_idx = winner - 1
             winner_model = pair[winner_idx]
@@ -86,21 +63,19 @@ def simulate_tournament(matches):
     return score
 
 
-def parallel_process_list(players, func, num_processes=1, rematch=True):
+def parallel_process_list(players, func, rematch=True):
     match_pairs = generate_all_pairs(players, ROUNDS)
     if rematch:
         match_pairs = add_rematches(match_pairs)
     # print(f'len of matches pairs: {len(match_pairs)}\n\n')
 
-    chunk_size = len(match_pairs) // num_processes
+    chunk_size = len(match_pairs) // CORES
     partitions = [match_pairs[i:i + chunk_size] for i in range(0, len(match_pairs), chunk_size)]
 
-    with concurrent.futures.ProcessPoolExecutor(max_workers=num_processes) as executor:
-        # Map the function to th
 
-        results = list(executor.map(func, partitions))
+    results = list(executor.map(func, partitions))
 
-    # print(f'cores: {num_processes} \nlista vracena: {results}\n')
+    # print(f'cores: {CORES} \nlista vracena: {results}\n')
     merged_dict = {p.id: 0 for p in players}
 
     for result_dict in results:
@@ -122,36 +97,67 @@ def save_current_list(player_list, id_to_score, rounds):
 
 
 def save_start_list(player_list):
-    sorted_list = player_list #sorted(player_list, key=lambda obj: obj.params, reverse=True)
+    sorted_list = player_list  # sorted(player_list, key=lambda obj: obj.params, reverse=True)
 
     with open(f'{LOG_DIR}/start_list.txt', 'w') as f:
         for el in sorted_list:
             f.write(f'gen alive: {el.gen}, params: {str(el)}, id: {el.id}\n')
 
 
+def get_seed():
+    random_data = os.urandom(8)
+    seed = int.from_bytes(random_data, byteorder="big")
+    return seed % (2 ** 32 - 1)
+
+
 def run_ga():
-    random.seed(random_seed)
     players = [HeuFuncIndividual.create() for _ in range(population_size)]
     inner_players = players
     save_counter = 0
     save_start_list(players)
-    for tour_num in range(1, TOURNAMENTS + 1):
-        id_to_score_desc = parallel_process_list(inner_players, simulate_tournament,
-                                                 num_processes=CORES, rematch=REMATCH)
+    for tour_num in trange(1, TOURNAMENTS + 1):
+        id_to_score_desc = parallel_process_list(inner_players,
+                                                 simulate_tournament,
+                                                 rematch=REMATCH)
 
         if tour_num % SAVE_FREQ == 0:
             save_counter += 1
-            save_current_list(inner_players, id_to_score_desc, save_counter*SAVE_FREQ)
+            save_current_list(inner_players, id_to_score_desc, save_counter * SAVE_FREQ)
 
         inner_players = HeuFuncIndividual.selection(inner_players, id_to_score_desc, rates=SEL_CROSSOVER)
 
-        if tour_num % SAVE_FREQ == 0:
-            print(f'Done {int(tour_num / TOURNAMENTS * 100)}%')
+        # if tour_num % SAVE_FREQ == 0:
+        #     print(f'Done {int(tour_num / TOURNAMENTS * 100)}%')
 
 
-start = time.perf_counter()
-run_ga()
-end = time.perf_counter()
-print(f'Done in {end - start} seconds,'
-      f' {(end - start) // 60} mins or'
-      f' {(end - start) // 3600} hours')
+if __name__ == "__main__":
+    if os.environ['USER'] != 'student':
+        os.chdir('../../../')
+        CORES = 2
+    else:
+        CORES = int(os.environ['SLURM_CPUS_ON_NODE']) // 2
+
+    population_size = 20#200
+    TOURNAMENTS = 100#1000
+    ROUNDS = 10#100
+
+    SAVE_FREQ = 10
+    SEL_CROSSOVER = (0.5, 0.4)
+    REMATCH = False
+    LOG_DIR = 'models_output/ga/train_logs/'
+
+    os.makedirs(LOG_DIR, exist_ok=True)
+
+    print(
+        f"params:\n\npop: {population_size}\n"
+        f"tournaments: {TOURNAMENTS}\nrounds: {ROUNDS}\n"
+        f"ratio: {SEL_CROSSOVER}\nrematch: {REMATCH}\n"
+        f"cores: {CORES}\n\n")
+
+    # start = time.perf_counter()
+    with concurrent.futures.ProcessPoolExecutor(max_workers=CORES) as executor:
+        run_ga()
+    # end = time.perf_counter()
+    # print(f'Done in {end - start} seconds,'
+    #       f' {(end - start) // 60} mins or'
+    #       f' {(end - start) // 3600} hours')
