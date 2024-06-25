@@ -2,12 +2,11 @@ import itertools
 import os
 import random
 import sys
-# import time
 import concurrent.futures
 from collections import defaultdict
 from tqdm import trange
 
-if os.environ['USER'] != 'student':
+if __name__ == '__main__' and os.environ['USER'] != 'student':
     source_dir = os.path.abspath(os.path.join(os.getcwd(), '../../../'))
     sys.path.append(source_dir)
 
@@ -126,9 +125,6 @@ def run_ga():
 
         inner_players = HeuFuncIndividual.selection(inner_players, id_to_score_desc, rates=SEL_CROSSOVER)
 
-        # if tour_num % SAVE_FREQ == 0:
-        #     print(f'Done {int(tour_num / TOURNAMENTS * 100)}%')
-
 
 if __name__ == "__main__":
     if os.environ['USER'] != 'student':
@@ -137,14 +133,14 @@ if __name__ == "__main__":
     else:
         CORES = int(os.environ['SLURM_CPUS_ON_NODE']) // 2
 
-    population_size = 20#200
-    TOURNAMENTS = 100#1000
-    ROUNDS = 10#100
+    population_size = 20#0
+    TOURNAMENTS = 100#0
+    ROUNDS = 10#0
 
     SAVE_FREQ = 10
-    SEL_CROSSOVER = (0.5, 0.4)
+    SEL_CROSSOVER = (0.35, 0.25)
     REMATCH = False
-    LOG_DIR = 'models_output/ga/train_logs/'
+    LOG_DIR = 'models_output/ga/1/'
 
     os.makedirs(LOG_DIR, exist_ok=True)
 
@@ -154,10 +150,6 @@ if __name__ == "__main__":
         f"ratio: {SEL_CROSSOVER}\nrematch: {REMATCH}\n"
         f"cores: {CORES}\n\n")
 
-    # start = time.perf_counter()
     with concurrent.futures.ProcessPoolExecutor(max_workers=CORES) as executor:
         run_ga()
-    # end = time.perf_counter()
-    # print(f'Done in {end - start} seconds,'
-    #       f' {(end - start) // 60} mins or'
-    #       f' {(end - start) // 3600} hours')
+

@@ -1,7 +1,9 @@
 import random
 from abc import ABC, abstractmethod
 
-from heuristics.heu1 import (count_chips, count_corners, count_danger_early_game,
+from heuristics.heu1 import (count_chips,
+                             count_corners,
+                             count_danger_early_game,
                              count_safer,
                              max_my_moves)
 

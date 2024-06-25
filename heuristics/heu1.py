@@ -1,19 +1,15 @@
 import numpy as np
 from numba import njit
 
-if __name__ != '__main__':
-    from game_logic import Othello
-    from heuristics.critical_fields import danger_fields, safe_fields, corners
-else:
-    from critical_fields import danger_fields, safe_fields, corners
+if __name__ == '__main__':
+    import os
+    import sys
 
-    Othello = None
+    source_dir = os.path.abspath(os.path.join(os.getcwd(), '../'))
+    sys.path.append(source_dir)
 
-
-# def count_white_black(board: np.ndarray):
-#     white = np.count_nonzero(board == 1)
-#     black = np.count_nonzero(board == 2)
-#     return white, black
+from game_logic import Othello
+from heuristics.critical_fields import danger_fields, safe_fields, corners, corners2
 
 
 @njit(cache=True)
@@ -28,6 +24,7 @@ def count_white_black(board: np.ndarray):
             black += 1
 
     return white, black
+
 
 
 def count_chips(stats, f=lambda x: (x // 10) + 1):
@@ -50,9 +47,9 @@ def count_corners(stats, f=lambda x: ((60 - x) // 3) ** 2):
     return factor * (white_corners - black_corners)
 
 
-def count_danger_early_game(stats, f=lambda x: (65 - x) // 10):
+def count_danger_early_game(stats, f=lambda x: (25 - x) // 5):
     _, turn, board = stats
-    if np.any(safe_fields(board) == 0):  # if board still has moves in center, then penalize
+    if turn <= 20:  # np.any(safe_fields(board) == 0):  # if board still has moves in center, then penalize
         danger_view = danger_fields(board)
         white, black = count_white_black(danger_view)
 
@@ -61,36 +58,29 @@ def count_danger_early_game(stats, f=lambda x: (65 - x) // 10):
     return 0
 
 
-def count_safer(stats, f=lambda x: (65 - x) // 10):
+def count_safer(stats, f=lambda x: 1):
     _, turn, board = stats
-    safe_view = safe_fields(board)
-    white, black = count_white_black(safe_view)
+    if turn <= 20:
+        safe_view = safe_fields(board)
+        white, black = count_white_black(safe_view)
 
-    factor = f(turn)
-    return factor * (white - black)
-
-
-# def minimize_opponent_moves(game: Othello, max_score):
-#     factor = -1 if game.last_turn == 2 else 1  # if minimizer -> -1, maximizer -> 1
-#     opponent_num_of_moves = 0
-#     if game.player_turn != game.last_turn:  # if they are equal, means opponent didnt have any move.
-#         opponent_num_of_moves = len(game.valid_moves())
-#     score = max_score * (1 / ((opponent_num_of_moves + 1) ** 1.5))
-#     return factor * score
+        factor = f(turn)
+        return factor * (white - black)
+    return 0
 
 
 def max_my_moves(game: Othello, max_score):
     """
-    if opponent didnt have a move returns 1.5 x max_score.
+    if opponent didnt have a move returns 3 x max_score.
     else the more moves you have available the more score it returns
     """
     sign = 1 if game.player_turn == 1 else -1  # if minimizer -> -1, maximizer -> 1
     if game.player_turn != game.last_turn:  # if they are equal, means opponent didnt have any move.
         my_num_of_moves = len(game.valid_moves())
-        score_to_remove = max_score * (1 / (my_num_of_moves * 1.25))
-        return sign * (max_score - score_to_remove)
+        new_score = max_score * (1 - (1 / (my_num_of_moves * 1.25)))
+        return sign * new_score
     else:
-        return sign * 1.5 * max_score
+        return sign * 3 * max_score
 
 
 def heuristic(game: Othello):
@@ -105,41 +95,13 @@ def heuristic2(game: Othello):
     stats = (game.chips, game.turn, game.board)
     res = (count_chips(stats, lambda turn: (turn // 5) + 1) +
            count_corners(stats) +
-           count_danger_early_game(stats, lambda turn: (65 - turn) // 5))
+           count_danger_early_game(stats, lambda turn: (25 - turn) // 3))
     return res
 
 
-# def create_heuristic(chip_divisor, corner_divisor, corner_exponent, danger_divisor):
-#     # chip_divisor      - [1, 2, 3..., 20]
-#     # corner_divisor    - [1, 2, 3..., 20]
-#     # corner_exponent   - range [1.0 - 3.0]
-#     # danger_divisor    - [1, 2, 3..., 20]
-#     def heu(game: Othello):
-#         stats = (game.chips, game.turn, game.board)
-#         res = (count_chips(stats, lambda turn: (turn // chip_divisor) + 1) +
-#                count_corners(stats, lambda x: ((60 - x) // corner_divisor) ** corner_exponent) +
-#                count_danger_early_game(stats, lambda turn: (65 - turn) // danger_divisor))
-#         return res
-#
-#     return heu
-#
-#
-# def create_heuristic2(chip_divisor, corner_divisor, corner_exponent, danger_divisor):
-#     # chip_divisor      - [1, 2, 3..., 20]
-#     # corner_divisor    - [1, 2, 3..., 20]
-#     # corner_exponent   - range [1.0 - 3.0]
-#     # danger_divisor    - [1, 2, 3..., 20]
-#     def heu(game: Othello):
-#         stats = (game.chips, game.turn, game.board)
-#         res = (count_chips(stats, lambda turn: (turn // chip_divisor) + 1) +
-#                count_corners(stats, lambda x: ((60 - x) // corner_divisor) ** corner_exponent) +
-#                count_danger_early_game(stats, lambda turn: (65 - turn) // danger_divisor))
-#         return res
-#
-#     return heu
-
-
 if __name__ == '__main__':
+    import time
+
     board = [[1, 1, 1, 1, 1, 0, 0, 1],
              [2, 1, 0, 2, 2, 0, 0, 2],
              [0, 2, 1, 0, 0, 0, 2, 2],
@@ -149,5 +111,22 @@ if __name__ == '__main__':
              [0, 0, 0, 1, 1, 2, 1, 2],
              [1, 2, 2, 2, 2, 0, 2, 1]]
     board = np.array(board)
-    c = count_corners((_, 35, board))
+
+    c = count_corners(("", 35, board))
+
     print(c)
+
+    mat_gen_f = lambda: np.random.randint(0, 3, size=(8, 8))
+
+
+    times = 10000
+    mats = [mat_gen_f() for _ in range(times)]
+
+    start = time.perf_counter()
+
+    for i in range(times):
+        count_white_black(mats[i])
+
+    end = time.perf_counter()
+    print(f'time needed: {end - start} secs')
+
