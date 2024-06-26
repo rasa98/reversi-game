@@ -120,10 +120,10 @@ class Minimax:
 def scaled_softmax(values):
     # Check if a high win value is present
     has_win = np.any(values >= 90000)
-    
+
     # Determine the temperature based on the presence of a high win value
     temp = 0.05 if has_win else 0.4
-    
+
     # Adjust values to handle extreme negative values
     ignore_mask = (values == -100000)
     valid_values = values[~ignore_mask]

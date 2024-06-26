@@ -8,7 +8,9 @@ from models.MiniMaxAgent import (load_minimax_agent,
                                  ga_0,
                                  ga_1,
                                  ga_2,
-                                 ga_vpn_5)
+                                 ga_vpn_5,
+                                 ga_new,
+                                 ga_human)
 from models.sb3_model import load_sb3_model
 from models.model_interface import ai_random
 from models.MctsModel import load_mcts_model
@@ -221,16 +223,19 @@ if __name__ == '__main__':
     for agent2 in ppo_base4_cnn():
         bench_both_sides(
             # best_ppo_yet,
-            ai_random,
+            # ai_random,
             # best_ppo_yet.set_deterministic(False),
-            ga_0,
+            ga_new.set_deterministic(False),
+            # ga_0.set_deterministic(False),
+            ga_human.set_deterministic(False),
+            # ga_vpn_5.set_deterministic(False),
             # alpha,
             # agent2.set_deterministic(False),
             # pmcts,
             # mcts_model,
             # best_ppo_yet,
             # ppo_del2.set_deterministic(False),#agent,
-            times=10,
+            times=1000,
             timed=True,
             verbose=1)
 
