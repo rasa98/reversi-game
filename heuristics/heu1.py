@@ -32,18 +32,21 @@ def count_chips(stats, f=lambda x: (x // 10) + 1):
     # The more it has the position is "better" if its near end,
     # but everything can change in a few moves
     ((white_count, black_count), turn, _) = stats
-
-    ratio = f(turn)
-    return ratio * (white_count - black_count)
+    if turn >= 50:
+        ratio = f(turn)
+        return ratio * (white_count - black_count)
+    return 0
 
 
 def count_corners(stats, f=lambda x: ((60 - x) // 3) ** 2):
     # who has more => better
     _, turn, board = stats
-    c = corners(board)
-    white_corners, black_corners = count_white_black(c)
-    ratio = f(turn)
-    return ratio * (white_corners - black_corners)
+    if 5 <= turn <= 50:
+        c = corners(board)
+        white_corners, black_corners = count_white_black(c)
+        ratio = f(turn)
+        return ratio * (white_corners - black_corners)
+    return 0
 
 
 def count_danger_early_game(stats, f=lambda x: (25 - x) // 5):
@@ -73,7 +76,7 @@ def max_my_moves(game: Othello, max_score, f_turn=lambda _: 1):
     if opponent didnt have a move returns 3 x max_score.
     else the more moves you have available the more score it returns
     """
-    ratio = f_turn(turn)
+    ratio = f_turn(game.turn)
     sign = 1 if game.player_turn == 1 else -1  # if minimizer -> -1, maximizer -> 1
     if game.player_turn != game.last_turn:  # if they are equal, means opponent didnt have any move.
         my_num_of_moves = len(game.valid_moves())

@@ -10,8 +10,8 @@ if __name__ == '__main__' and os.environ['USER'] != 'student':
     source_dir = os.path.abspath(os.path.join(os.getcwd(), '../../../'))
     sys.path.append(source_dir)
 
-from heuristics.ga.heu_ga import HeuFuncIndividual
-# from heuristics.ga.heu_ga2 import HeuFuncIndividual
+# from heuristics.ga.heu_ga import HeuFuncIndividual
+from heuristics.ga.heu_ga2 import HeuFuncIndividual
 from models.MiniMaxAgent import load_minimax_agent
 from game_modes import ai_vs_ai_cli
 
@@ -124,7 +124,7 @@ def run_ga():
             save_counter += 1
             save_current_list(inner_players, id_to_score_desc, save_counter * SAVE_FREQ)
 
-        inner_players = HeuFuncIndividual.selection(inner_players, id_to_score_desc, rates=SEL_CROSSOVER)
+        inner_players = HeuFuncIndividual.selection(inner_players, id_to_score_desc, survive_num=SURVIVE, rates=SELECTION_CROSSOVER)
 
 
 if __name__ == "__main__":
@@ -134,13 +134,13 @@ if __name__ == "__main__":
     else:
         CORES = int(os.environ['SLURM_CPUS_ON_NODE']) // 2
 
-    population_size = 200
-    TOURNAMENTS = 1000
+    population_size = 500
+    TOURNAMENTS = 300
     ROUNDS = 100
-
-    SAVE_FREQ = 10
-    SEL_CROSSOVER = (0.35, 0.25)
+    SURVIVE = 10
+    SELECTION_CROSSOVER = (0.5, 0.7)
     REMATCH = False
+    SAVE_FREQ = 20
     LOG_DIR = 'models_output/ga/1/'
 
     os.makedirs(LOG_DIR, exist_ok=True)
@@ -148,7 +148,8 @@ if __name__ == "__main__":
     print(
         f"params:\n\npop: {population_size}\n"
         f"tournaments: {TOURNAMENTS}\nrounds: {ROUNDS}\n"
-        f"ratio: {SEL_CROSSOVER}\nrematch: {REMATCH}\n"
+        f"survive: {SURVIVE}\n"
+        f"ratio: {SELECTION_CROSSOVER}\nrematch: {REMATCH}\n"
         f"cores: {CORES}\n\n")
 
     with concurrent.futures.ProcessPoolExecutor(max_workers=CORES) as executor:

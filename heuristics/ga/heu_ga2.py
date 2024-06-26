@@ -6,13 +6,13 @@ import numpy as np
 from heuristics.ga.heu_func2 import (CountChips,
                                      CountDangerEarlyGame,
                                      CountCorners,
-                                     CountSaferEarlyGame,
+    # CountSaferEarlyGame,
                                      MaximizeMyMoves)
 
 HEU_FUNCTION_CLASSES = (CountChips,
                         CountDangerEarlyGame,
                         CountCorners,
-                        CountSaferEarlyGame,
+                        # CountSaferEarlyGame,
                         MaximizeMyMoves)
 
 
@@ -53,13 +53,15 @@ class HeuFuncIndividual:
         return HeuFuncIndividual(res)
 
     def mutate(self):  # TODO add missing heuFuct maybe, or remove some
-        mutated = False
+        self = self.copy()
+        # mutated = False
         for heu_obj in self.heuclass_to_instance.values():
-            if random.randint(0, 1):
-                heu_obj.mutate()
-                mutated = True
+            # if random.randint(0, 1):
+            heu_obj.mutate()
+            # mutated = True
 
-        if not mutated or random.randint(0, 1):
+        # if not mutated or random.randint(0, 1):
+        if random.randint(0, 1):
             self.add_or_remove_heu_func()
 
         self.gen = 1
@@ -99,54 +101,62 @@ class HeuFuncIndividual:
         common_keys = set(a.keys()) & set(b.keys())
         if len(common_keys) == 0:
             deep_copy_b = {k: v.copy() for k, v in b.items()}
-            a.update(deep_copy_b)  # TODO: change maybe not all maybe some?
-        elif len(a) == 1 and len(b) == 1:
-            this_copy.mutate()  # can i mutate this then???
+            all_heu_list = list(a.items()) + list(deep_copy_b.items())
+            some_heu_list = random.sample(all_heu_list,
+                                          random.randint(2, len(all_heu_list)))
+            this_copy.heuclass_to_instance = dict(some_heu_list)
         else:
+            if len(a) == 1 and len(b) == 1:
+                this_copy.add_heu_random()
+
             max_crossover = len(common_keys)
             if len(common_keys) == len(a) and len(a) == len(b):  # so not for a to become basicly b
                 max_crossover -= 1
             for heu_class in random.sample(list(common_keys), random.randint(1, max_crossover)):
                 a[heu_class].crossover(b[heu_class])
 
-        this_copy.gen = (self.gen + other.gen) // 2  # TODO reset to 1
+        this_copy.gen = 1  # (self.gen + other.gen) // 2  # TODO reset to 1
         return this_copy
 
     @classmethod
-    def selection(cls, list_of_elements, id_to_score_desc, rates=(0.5, 0.25)):
-        if rates[0] + rates[1] > 0.999:
-            raise Exception('Selection rates are not configured correctly. Sum must be less than 1')
+    def selection(cls, list_of_elements, id_to_score_desc, survive_num=10, rates=(0.5, 0.8)):
 
-        survive_rate, crossover_rate = rates
         num_of_elements = len(list_of_elements)
+
+        # survive_rate, crossover_rate = rates
+        interesting_population_ratio, crossover_ratio = rates
+        assert crossover_ratio * num_of_elements <= num_of_elements - survive_num, \
+            "crossover ratio * num_of_elements >= num_of_elements - survive_num. Reduce it."
+
         res = []
 
-        limit = survive_rate * num_of_elements
+        limit = interesting_population_ratio * num_of_elements
         id_to_el = {el.id: el for el in list_of_elements}
-        survive, mutate = [], []
+
+        interesting_population = []
         for idx, (k, v) in enumerate(id_to_score_desc.items()):
             elem = id_to_el[k]
             if idx < limit:  # TODO: on the edge el have same score
-                elem.gen += 1
-                survive.append(elem)
+                if idx < survive_num:
+                    elem.gen += 1
+                    res.append(elem)
+                interesting_population.append(elem)
             else:
-                mutate.append(elem)
-
-        res += survive
+                break
 
         #  crossover
         unique_pairs = set()
-        num_of_crossover = int(crossover_rate * num_of_elements)
-        half_num_of_crossover = (num_of_crossover // 2)
+        num_of_crossover = int(crossover_ratio * num_of_elements)
+        # half_num_of_crossover = (num_of_crossover // 2)
         for idx in range(num_of_crossover):
-            if idx < half_num_of_crossover:
-                el = random.choice(survive)
-                res.append(el.crossover(HeuFuncIndividual.create()))  # add some variability win new elements
-                continue
+            # if idx < half_num_of_crossover:
+            #     el = random.choice(survive)
+            #     res.append(el.crossover(HeuFuncIndividual.create()))  # add some variability win new elements
+            #     continue
 
-            pair = frozenset(random.sample(survive, 2))
+            pair = frozenset(random.sample(interesting_population, 2))
             while pair in unique_pairs:
-                pair = frozenset(random.sample(survive, 2))
+                pair = frozenset(random.sample(interesting_population, 2))
             el1, el2 = tuple(pair)
             unique_pairs.add(pair)
             res.append(el1.crossover(el2))
@@ -157,7 +167,7 @@ class HeuFuncIndividual:
         for _ in range(number_of_randoms):
             res.append(HeuFuncIndividual.create())
 
-        els = random.sample(mutate, number_of_rest - number_of_randoms)
+        els = random.sample(interesting_population, number_of_rest - number_of_randoms)
         res += [el.mutate() for el in els]
 
         return res
