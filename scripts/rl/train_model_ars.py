@@ -250,7 +250,7 @@ def get_env(env_factory):
 
 if __name__ == '__main__':
     # Settings
-    SEED = 369  # NOT USED
+    SEED = 69  # NOT USED
     NUM_TIMESTEPS = int(50_000_000)
     EVAL_FREQ = int(200_000)
     EVAL_EPISODES = int(500)
@@ -283,11 +283,11 @@ if __name__ == '__main__':
 
     params = {        
         'n_delta': 100,
-        'n_top': 15,
+        'n_top': 10,
         'zero_policy': False,
-        'n_eval_episodes': 50,
-        'delta_std': 0.03,
-        'learning_rate': LinearSchedule(1e-3),
+        'n_eval_episodes': 100,
+        #'delta_std': 0.03,
+        'learning_rate': 1e-2,#LinearSchedule(1e-2),
         'verbose': 1,
         'seed': SEED,
     }

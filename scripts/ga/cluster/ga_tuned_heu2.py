@@ -133,12 +133,12 @@ if __name__ == "__main__":
     else:
         CORES = int(os.environ['SLURM_CPUS_ON_NODE']) // 2
 
-    population_size = 200
-    TOURNAMENTS = 1000
-    ROUNDS = 100
+    population_size = 500
+    TOURNAMENTS = 150
+    ROUNDS = 250
 
     SAVE_FREQ = 10
-    SEL_CROSSOVER = (0.35, 0.25)
+    SEL_CROSSOVER = (0.3, 0.4)
     REMATCH = False
     LOG_DIR = 'models_output/ga/1/'
 

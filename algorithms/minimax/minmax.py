@@ -118,42 +118,43 @@ class Minimax:
 
 
 def scaled_softmax(values):
-    # Check if 100000 is present
+    # Check if a high win value is present
     has_win = np.any(values >= 90000)
-
-    # Determine the temperature based on the presence of 100000
+    
+    # Determine the temperature based on the presence of a high win value
     temp = 0.05 if has_win else 0.4
-
-    # Adjust values to handle -100000
-    ignore_mask = (values < -90000)
+    
+    # Adjust values to handle extreme negative values
+    ignore_mask = (values == -100000)
     valid_values = values[~ignore_mask]
 
     if len(valid_values) == 0:
-        # If all values are -100000, handle this edge case
-        probabilities = np.zeros_like(values)
-        probabilities[values == -100000] = 1.0
-        probabilities = probabilities / np.sum(probabilities)
-        return probabilities
+        # If all values are extremely negative, assign probability 1.0 to those values
+        probabilities = np.zeros_like(values, dtype=float)
+        probabilities[ignore_mask] = 1.0
+        return probabilities / np.sum(probabilities)
 
-    # If there's only one value, return 1.0
+    # If there's only one valid value, assign probability 1.0 to that value
     if len(valid_values) == 1:
-        probabilities = np.zeros_like(values)
+        probabilities = np.zeros_like(values, dtype=float)
         probabilities[values == valid_values[0]] = 1.0
         return probabilities
 
-    # Min-max normalization excluding -100000
+    # Min-max normalization excluding extreme negative values
     max_val = np.max(valid_values)
     min_val = np.min(valid_values)
 
-    # Edge case: if min_val equals max_val, handle gracefully
     if min_val == max_val:
-        scaled_values = np.ones_like(values)
-        scaled_values[values == min_val] = 1.0
+        # If min_val equals max_val, all valid values are the same
+        scaled_values = np.zeros_like(values, dtype=float)
+        scaled_values[~ignore_mask] = 1.0
     else:
-        scaled_values = (values - min_val) / (max_val - min_val)
+        scaled_values = np.zeros_like(values, dtype=float)
+        scaled_values[~ignore_mask] = (valid_values - min_val) / (max_val - min_val)
 
     # Apply scaled softmax with temperature
     exp_values = np.exp(scaled_values / temp)
+    exp_values[ignore_mask] = 0  # Ensure -100000 values have zero probability
     probabilities = exp_values / np.sum(exp_values)
 
     return probabilities

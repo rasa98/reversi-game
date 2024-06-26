@@ -26,6 +26,7 @@ from stable_baselines3.common.monitor import Monitor
 from scripts.rl.env.old_game_env import (BasicEnv,
                                          SelfPlayCallback,
                                          ReversiCNN)
+from scripts.rl.env.sp_env import TrainEnv as RewardEnv
 
 import stable_baselines3.common.callbacks as callbacks_module
 from sb3_contrib.common.maskable.evaluation import evaluate_policy as masked_evaluate_policy
@@ -62,11 +63,13 @@ class CustomMlpPolicy(ActorCriticPolicy):
         # Evaluate the values for the given observations
         values = self.value_net(latent_vf)
         distribution = self._get_action_dist_from_latent(latent_pi)
-
-        action_masks = th.tensor(action_masks, dtype=th.float32, device=self.device)
+        
+        my_action_mask = th.tensor(action_masks, dtype=th.float32, device=self.device)
 
         # Neutralizing logits for invalid actions by setting them to a very low value
-        distribution.distribution.logits -= (1.0 - action_masks) * 1e6
+        distribution.distribution.logits -= (1.0 - my_action_mask) * 1e6
+        
+        del my_action_mask
 
         actions = distribution.get_actions(deterministic=deterministic)
         log_prob = distribution.log_prob(actions)
@@ -177,7 +180,7 @@ class MaskableTrpo(TRPO):
         """
         assert self._last_obs is not None, "No previous observation was provided"
         # Switch to eval mode (this affects batch norm / dropout)
-        self.policy.set_training_mode(False)
+        self.policy.set_training_mode(False)        
 
         n_steps = 0
         rollout_buffer.reset()
@@ -283,17 +286,17 @@ if __name__ == '__main__':
     device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
     # Settings
-    SEED = 113  # NOT USED
+    SEED = 13  # NOT USED
     NUM_TIMESTEPS = int(50_000_000)
-    EVAL_FREQ = int(20_500 * 30)
-    EVAL_EPISODES = int(400)
+    EVAL_FREQ = int(2500)
+    EVAL_EPISODES = int(500)
     BEST_THRESHOLD = 0.18  # must achieve a mean score above this to replace prev best self
     RENDER_MODE = False  # set this to false if you plan on running for full 1000 trials.
     # LOGDIR = 'scripts/rl/test-working/ppo/v1/'  # "ppo_masked/test/"
-    LOGDIR = 'scripts/rl/output/phase2/trpo/mlp/base-v3/'  # "ppo_masked/test/"
-    CNN_POLICY = False
-    CONTINUE_FROM_MODEL = None #'scripts/rl/output/phase2/trpo/mlp/base2/history_0095'
-    TRAIN_ENV = BasicEnv
+    LOGDIR = 'scripts/rl/output/phase2/trpo/cnn/base-rewards/' #'scripts/rl/output/phase2/trpo/mlp/base-v4-Rewards/'
+    CNN_POLICY = True #False
+    CONTINUE_FROM_MODEL = None #'scripts/rl/output/phase2/trpo/mlp/base-v3/history_0003'
+    TRAIN_ENV = RewardEnv #BasicEnv
 
     print(f'seed: {SEED} \nnum_timesteps: {NUM_TIMESTEPS} \neval_freq: {EVAL_FREQ}',
           f'\neval_episoded: {EVAL_EPISODES} \nbest_threshold: {BEST_THRESHOLD}',
@@ -301,16 +304,16 @@ if __name__ == '__main__':
 
     policy_kwargs = {
         'net_arch': {
-            'pi': [128, 128] * 4,
-            'vf': [64, 64] * 4
+            'pi': [64] * 4,
+            'vf': [64] * 2
         }
     }
 
     params = {
-        'learning_rate': LinearSchedule(0.000051),
-        'n_steps': 2048 * 3 * 10,
+        'learning_rate': LinearSchedule(0.0001),
+        'n_steps': 2048,#30,
         'batch_size': 128,
-        'gae_lambda': 0.96,  # Factor for GAE
+        'gae_lambda': 0.95,  # Factor for GAE
         #'target_kl': 0.025,  # Maximum KL divergence between old and new policies        
         #'line_search_max_iter': 15,  # Value function coefficient        
         #'cg_max_steps': 10,  # Maximum number of conjugate gradient steps
@@ -378,5 +381,5 @@ if __name__ == '__main__':
     )
 
     model.learn(total_timesteps=NUM_TIMESTEPS,
-                log_interval=10,
+                log_interval=1,
                 callback=eval_callback)

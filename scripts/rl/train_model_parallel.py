@@ -38,14 +38,15 @@ if __name__ == '__main__':
 
     # Settings
     SEED = 19  # NOT USED
-    NUM_TIMESTEPS = int(160_000_000)
-    N_STEPS = 2048 * 30
-    EVAL_EPISODES = int(1000)
-    BEST_THRESHOLD = 0.24  # must achieve a mean score above this to replace prev best self
+    NUM_TIMESTEPS = int(30_000_000)
+    N_STEPS = 2048 * 3
+    EVAL_EPISODES = int(300)
+    EVAL_FREQ = int(N_STEPS + 100)
+    BEST_THRESHOLD = 0.15  # must achieve a mean score above this to replace prev best self
     RENDER_MODE = False  # set this to false if you plan on running for full 1000 trials.
-    LOGDIR = "scripts/rl/output/phase2/ppo/cnn/base-v4/"
+    LOGDIR = "scripts/rl/output/phase2/ppo/cnn/base-v5/"
     CNN_POLICY = True
-    CONTINUE_FROM_MODEL = 'scripts/rl/output/phase2/ppo/cnn/base-v3/history_0024'  # None
+    CONTINUE_FROM_MODEL = 'scripts/rl/output/phase2/ppo/cnn/base-v4/history_0003'  # None
     TRAIN_ENV = BasicEnv
 
     mp.set_start_method('forkserver')
@@ -57,7 +58,7 @@ if __name__ == '__main__':
         num_envs = 2
     print(f'\nnum parallel processes: {num_envs}\n')
 
-    EVAL_FREQ = int(N_STEPS * num_envs + 1000)
+    
 
     env = TRAIN_ENV
     eval_env = BasicEnv
@@ -83,12 +84,12 @@ if __name__ == '__main__':
           f'\nlogdir: {LOGDIR} \ncnn_policy: {CNN_POLICY} \ncontinueFrom_model: {CONTINUE_FROM_MODEL}', flush=True)
 
     params = {
-        'learning_rate': 7e-5,
+        'learning_rate': 3e-6,
         'n_steps': N_STEPS,
-        'n_epochs': 5,
-        'clip_range': 0.18,
+        'n_epochs': 10,
+        'clip_range': 0.25,
         'batch_size': 128,
-        'ent_coef': 0.01,
+        #'ent_coef': 0.01,
         # 'gamma': 0.99,
         'verbose': 100,
         'seed': SEED,
