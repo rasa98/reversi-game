@@ -11,6 +11,7 @@ if __name__ == '__main__' and os.environ['USER'] != 'student':
     sys.path.append(source_dir)
 
 from heuristics.ga.heu_ga import HeuFuncIndividual
+# from heuristics.ga.heu_ga2 import HeuFuncIndividual
 from models.MiniMaxAgent import load_minimax_agent
 from game_modes import ai_vs_ai_cli
 
