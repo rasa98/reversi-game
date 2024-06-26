@@ -12,7 +12,8 @@ from heuristics.heu1 import heuristic, heuristic2
 from heuristics.ga.heu_func import (CountChips,
                                     CountDangerEarlyGame,
                                     CountCorners,
-                                    MaximizeMyMoves)
+                                    MaximizeMyMoves,
+                                    CountSaferEarlyGame)
 from heuristics.ga.heu_ga import create_heuristic
 
 from models.model_interface import ModelInterface
@@ -46,6 +47,15 @@ mm2_dynamic = load_minimax_agent('dyn depth',
                                  dynamic_depth_f,
                                  heuristic2)
 
+human_heu = {CountChips: CountChips(1.5),
+             CountCorners: CountCorners(8, 2.5),
+             CountDangerEarlyGame: CountDangerEarlyGame(5),
+             MaximizeMyMoves: MaximizeMyMoves(100),
+             CountSaferEarlyGame: CountSaferEarlyGame(40)}
+ga_human = load_minimax_agent("human set",
+                              fixed_depth_f(1),
+                              # dynamic_depth_f,
+                              create_heuristic(human_heu))
 
 heu_params = {CountChips: CountChips(14.110659370384004),
               CountCorners: CountCorners(1.6725387766365891,
@@ -75,8 +85,15 @@ vpn_5 = {CountCorners: CountCorners(1.6619678910885987, 2.1102043167782876),
          CountDangerEarlyGame: CountDangerEarlyGame(5.025284240347834),
          MaximizeMyMoves: MaximizeMyMoves(120.00812831528076)}
 ga_vpn_5 = load_minimax_agent("depth dyn GA-vpn-5",
-                              # fixed_depth_f(1),
-                              dynamic_depth_f,
+                              fixed_depth_f(1),
+                              # dynamic_depth_f,
                               create_heuristic(vpn_5))
 
-
+new_heu = {CountCorners: CountCorners(1.894404927981066, 1.3218629263416726),
+           CountDangerEarlyGame: CountDangerEarlyGame(1.0433194853622616),
+           MaximizeMyMoves: MaximizeMyMoves(125.60263840811217),
+           CountSaferEarlyGame: CountSaferEarlyGame(1.2743229470941557)}
+ga_new = load_minimax_agent("depth dyn GA-new",
+                            fixed_depth_f(1),
+                            # dynamic_depth_f,
+                            create_heuristic(new_heu))
