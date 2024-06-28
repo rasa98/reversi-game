@@ -1,7 +1,7 @@
 import random
 import numpy as np
 from itertools import permutations
-
+from tqdm import trange
 from game_modes import ai_vs_ai_cli
 
 
@@ -43,11 +43,12 @@ class EloRating:
 
 
 class Tournament:
-    def __init__(self, agents, log_dir, rounds=100):
+    def __init__(self, agents, log_dir, rounds=100, verbose=0):
         self.rounds = rounds
         self.log_dir = log_dir
         self.players = [Player(agent) for agent in agents]
         self.elo = EloRating()
+        self.verbose = verbose
 
     @staticmethod
     def get_actual_score(winner):
@@ -60,9 +61,11 @@ class Tournament:
 
     def simulate(self):
         pairs = list(permutations(self.players, 2))
-        for _ in range(self.rounds):
+        for _ in trange(self.rounds):
             random.shuffle(pairs)
             for pl1, pl2 in pairs:
+                if self.verbose:
+                    print(f'{pl1.agent} vs {pl2.agent}')
                 winner = ai_vs_ai_cli(pl1.agent, pl2.agent)
                 actual_score_1 = self.get_actual_score(winner)
                 self.elo.calculate_new_rating(pl1, pl2, actual_score_1)

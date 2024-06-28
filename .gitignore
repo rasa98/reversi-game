@@ -7,3 +7,4 @@ __pycache__/
 training/
 game-venv/
 models/alpha-zero/
+all_agents.py

@@ -16,7 +16,7 @@ class AlphaZeroAgent(ModelInterface):
 
     def predict_best_move(self, game: Othello):
         action_probs = self.model.simulate(game)
-        if self.deterministic or game.turn > 20:
+        if self.deterministic or game.turn > 10:
             best_action = self.model.best_moves()
             return best_action, None
         else:
