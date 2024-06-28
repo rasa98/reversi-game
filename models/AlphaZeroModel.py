@@ -16,17 +16,17 @@ class AlphaZeroAgent(ModelInterface):
 
     def predict_best_move(self, game: Othello):
         action_probs = self.model.simulate(game)
-        if self.deterministic:
+        if self.deterministic or game.turn > 10:
             best_action = self.model.best_moves()
             return best_action, None
         else:
             best_action = self.choose_stochastic(action_probs)
             return (best_action,), None
 
-    @staticmethod
-    def choose_stochastic(action_prob):
-        encoded_action = np.random.choice(len(action_prob), p=action_prob)
-        return Othello.get_decoded_field(encoded_action)
+    # @staticmethod
+    # def choose_stochastic(action_prob):
+    #     encoded_action = np.random.choice(len(action_prob), p=action_prob)
+    #     return Othello.get_decoded_field(encoded_action)
 
 
 def load_azero_model(name, file=None, model=None, params=None):

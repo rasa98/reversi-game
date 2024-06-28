@@ -14,6 +14,10 @@ from heuristics.ga.heu_func import (CountChips,
                                     CountCorners,
                                     MaximizeMyMoves,
                                     CountSaferEarlyGame)
+from heuristics.ga.heu_func2 import (CountChips as CountChips2,
+                                     CountDangerEarlyGame as CountDangerEarlyGame2,
+                                     CountCorners as CountCorners2,
+                                     MaximizeMyMoves as MaximizeMyMoves2)
 from heuristics.ga.heu_ga import create_heuristic
 
 from models.model_interface import ModelInterface
@@ -27,7 +31,7 @@ class MiniMaxAgent(ModelInterface):
     def predict_best_move(self, game: Othello):
         action_probs = self.model.simulate(game)
 
-        if self.deterministic:  # No need to change to non deter, since its randomly simulating games, and wont play same moves if other player/agents plays same moves.
+        if self.deterministic or game.turn > 20:
             best_action = self.model.best_moves()  # list of best moves if multiple have same eval
             return best_action, None
         else:
@@ -47,11 +51,11 @@ mm2_dynamic = load_minimax_agent('dyn depth',
                                  dynamic_depth_f,
                                  heuristic2)
 
-human_heu = {CountChips: CountChips(1.5),
+human_heu = {#CountChips: CountChips(1.5),
              CountCorners: CountCorners(8, 2.5),
              CountDangerEarlyGame: CountDangerEarlyGame(5),
              MaximizeMyMoves: MaximizeMyMoves(100),
-             CountSaferEarlyGame: CountSaferEarlyGame(40)}
+             }
 ga_human = load_minimax_agent("human set",
                               fixed_depth_f(1),
                               # dynamic_depth_f,
@@ -89,11 +93,20 @@ ga_vpn_5 = load_minimax_agent("depth dyn GA-vpn-5",
                               # dynamic_depth_f,
                               create_heuristic(vpn_5))
 
-new_heu = {CountCorners: CountCorners(1.894404927981066, 1.3218629263416726),
-           CountDangerEarlyGame: CountDangerEarlyGame(1.0433194853622616),
-           MaximizeMyMoves: MaximizeMyMoves(125.60263840811217),
-           CountSaferEarlyGame: CountSaferEarlyGame(1.2743229470941557)}
+new_heu1 = {CountCorners: CountCorners(1.894404927981066, 1.3218629263416726),
+            CountDangerEarlyGame: CountDangerEarlyGame(1.0433194853622616),
+            MaximizeMyMoves: MaximizeMyMoves(125.60263840811217),
+            CountSaferEarlyGame: CountSaferEarlyGame(1.2743229470941557)}
 ga_new = load_minimax_agent("depth dyn GA-new",
                             fixed_depth_f(1),
                             # dynamic_depth_f,
-                            create_heuristic(new_heu))
+                            create_heuristic(new_heu1))
+
+heu2 = {CountCorners2: CountCorners2(1.345726455834431, 2.1073849836637555),
+        CountDangerEarlyGame2: CountDangerEarlyGame2(5.214213407375362),
+        MaximizeMyMoves2: MaximizeMyMoves2(88.59176079991997, 16.676433765717864)
+        }
+ga2_best = load_minimax_agent("depth dyn GA2-best",
+                              fixed_depth_f(1),
+                              # dynamic_depth_f,
+                              create_heuristic(heu2))

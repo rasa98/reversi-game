@@ -87,7 +87,7 @@ class AlphaZero:
             timed=True,
             verbose=1)
         a1_win_rate = a1_wins / (2 * times)
-        return a1_wins, a2_wins, a1_win_rate   
+        return a1_wins, a2_wins, a1_win_rate
 
     def save_if_passes_bench(self, folder, iteration):
         params = dict(self.mcts_params)
@@ -95,8 +95,7 @@ class AlphaZero:
         params['dirichlet_epsilon'] = 0.15  # for some variability when simulating
         params['uct_exploration_const'] = 1.41
         params['decay_steps'] = -1  # so that alpha is set to final alpha for both
-        params['final_alpha'] = 0.1        
-
+        params['final_alpha'] = 0.1
 
         assert params is not self.mcts_params, \
             'You changed azero obj field mcts_params!!'
@@ -395,9 +394,9 @@ if __name__ == "__main__":
         'final_temp': 0.6,
         'temp_decay_steps': 5,
         'num_parallel_games': num_parallel_games,
-        'max_fail_times': 99999,#2,
-        'scheduler_step_size': 8, 
-        'scheduler_gamma':0.7,
+        'max_fail_times': 99999,  # 2,
+        'scheduler_step_size': 8,
+        'scheduler_gamma': 0.7,
         'model_output': 'models_output/alpha-zero/FINAL/layer64-LAST-v4/',
         'train_ratio': 0.66,
         'buffer_times': 2.4,  # how many times is bigger than 1 iter of generated games by selfplay

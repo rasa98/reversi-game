@@ -1,9 +1,7 @@
 import torch.nn as nn
 import torch.nn.functional as F
 from game_logic import ALL_FIELDS_SIZE
-
 import torch
-import torch.nn as nn
 
 
 class Net(nn.Module):
