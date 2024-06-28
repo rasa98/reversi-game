@@ -1,9 +1,14 @@
 import numpy as np
 from game_logic import Othello
+from functools import partial
 
 
 def fixed_depth_f(d):
-    return lambda _: d
+    return partial(return_x, d)
+
+
+def return_x(x, _):
+    return x
 
 
 def dynamic_depth_f(turn):

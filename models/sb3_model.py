@@ -201,9 +201,12 @@ class MaskedPPOWrapperNew(ModelInterface):
             encoded_state = game.get_encoded_state_as_img()
         else:
             encoded_state = game.get_encoded_state().reshape(-1)  #  for Mlp
+        det = self.deterministic
+        if game.turn > 20:
+            det = True
         action, _ = self.model.predict(encoded_state,
                                        action_masks=action_masks(game),
-                                       deterministic=self.deterministic)
+                                       deterministic=det)
 
         move = Othello.get_decoded_field(action)  # from [0, 63] -> (0-7, 0-7)
         # print(f'action : {action}, - {action_game}')

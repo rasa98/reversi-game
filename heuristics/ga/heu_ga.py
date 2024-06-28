@@ -1,5 +1,6 @@
 import itertools
 import random
+from functools import partial
 
 import numpy as np
 
@@ -20,13 +21,14 @@ def create_heuristic(heu_func_param_dict):
     if len(heu_func_param_dict) == 0:
         raise Exception('heu_func_param_dict is empty...')
 
-    def heu(game):
-        res = 0
-        for obj in heu_func_param_dict.values():
-            res += obj.evaluate_state(game)
-        return res
+    return partial(heu, heu_func_param_dict)
 
-    return heu
+
+def heu(heu_func_param_dict, game):
+    res = 0
+    for obj in heu_func_param_dict.values():
+        res += obj.evaluate_state(game)
+    return res
 
 
 class HeuFuncIndividual:

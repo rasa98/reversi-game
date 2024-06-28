@@ -1,0 +1,79 @@
+import random
+import numpy as np
+from itertools import permutations
+
+from game_modes import ai_vs_ai_cli
+
+
+class Player:
+    def __init__(self, agent):
+        self.agent = agent
+        self.rating = 1200
+        self.played_matches = 0
+
+    def inc(self):
+        self.played_matches += 1
+    # def predict_best_move(self, game):
+    #     return self.agent.predict_best_move(game)
+
+
+class EloRating:
+    def __init__(self, win=1, draw=0.5, loss=0):
+        self.win = win
+        self.draw = draw
+        self.loss = loss
+
+    @staticmethod
+    def get_factor_k(pl):
+        if pl.played_matches < 30:
+            return 40
+        return 10
+
+    @staticmethod
+    def expected_score(pl1, pl2):
+        pl_1_expected = 1 / (1 + 10 ** ((pl2.rating - pl1.rating) / 400))
+        pl_2_expected = 1 / (1 + 10 ** ((pl1.rating - pl2.rating) / 400))
+        return pl_1_expected, pl_2_expected
+
+    def calculate_new_rating(self, pl1, pl2, ac_score_1):
+        ac_score_2 = 1 - ac_score_1
+        ex_score_1, ex_score_2 = self.expected_score(pl1, pl2)
+        pl1.rating = pl1.rating + self.get_factor_k(pl1) * (ac_score_1 - ex_score_1)
+        pl2.rating = pl2.rating + self.get_factor_k(pl2) * (ac_score_2 - ex_score_2)
+
+
+class Tournament:
+    def __init__(self, agents, log_dir, rounds=100):
+        self.rounds = rounds
+        self.log_dir = log_dir
+        self.players = [Player(agent) for agent in agents]
+        self.elo = EloRating()
+
+    @staticmethod
+    def get_actual_score(winner):
+        """from perspective of first player"""
+        if winner == 1:
+            return 1
+        elif winner == 2:
+            return 0
+        return 0.5  # its a draw
+
+    def simulate(self):
+        pairs = list(permutations(self.players, 2))
+        for _ in range(self.rounds):
+            random.shuffle(pairs)
+            for pl1, pl2 in pairs:
+                winner = ai_vs_ai_cli(pl1.agent, pl2.agent)
+                actual_score_1 = self.get_actual_score(winner)
+                self.elo.calculate_new_rating(pl1, pl2, actual_score_1)
+                pl1.inc()
+                pl2.inc()
+
+        self.players.sort(key=lambda player: player.rating, reverse=True)
+        self.save_simulation()
+
+    def save_simulation(self):
+        with open(f'{self.log_dir}.txt', 'w') as f:
+            f.write(f'Elo ranking after {self.rounds} rounds:\n')
+            for pl in self.players:
+                f.write(f'\tAgent: {pl.agent}: {pl.rating}\n')

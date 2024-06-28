@@ -10,7 +10,8 @@ from models.MiniMaxAgent import (load_minimax_agent,
                                  ga_2,
                                  ga_vpn_5,
                                  ga_new,
-                                 ga_human)
+                                 ga_human,
+                                 ga2_best)
 from models.sb3_model import load_sb3_model
 from models.model_interface import ai_random
 from models.MctsModel import load_mcts_model
@@ -101,7 +102,8 @@ if __name__ == '__main__':
     azero_folder = 'models_output/alpha-zero/FINAL/layer64-LAST-v4/'  # f'models_output/alpha-zero/FINAL/layer64-LAST-v3/'
     azero_model_location = f'{azero_folder}model_4.pt'  # 3
     alpha_params = {'hidden_layer': 64, 'max_iter': 30,
-                    'dirichlet_epsilon': 0.1, "uct_exploration_const": 1.41,
+                    'dirichlet_epsilon': 0,#0.1,
+                    "uct_exploration_const": 1.41,
                     "final_alpha": 0.1}
 
     alpha = load_azero_model(f'model 3 64',
@@ -215,28 +217,39 @@ if __name__ == '__main__':
                              for i in [3])  # range(1, 52))
 
     # multi_ars, ppo_base2_cnn, multi_trpo
-    l1 = list([best_ppo_yet])
-    l2 = list(multi_ars())
+    # l1 = list([best_ppo_yet])
+    # l2 = list(multi_ars())
 
     # pmcts.open_pool(4)  # need to use to open pool, also need to close manually it to not waste resources
 
-    for agent2 in ppo_base4_cnn():
-        bench_both_sides(
-            # best_ppo_yet,
-            # ai_random,
-            # best_ppo_yet.set_deterministic(False),
-            ga_new.set_deterministic(False),
-            # ga_0.set_deterministic(False),
-            ga_human.set_deterministic(False),
-            # ga_vpn_5.set_deterministic(False),
-            # alpha,
-            # agent2.set_deterministic(False),
-            # pmcts,
-            # mcts_model,
-            # best_ppo_yet,
-            # ppo_del2.set_deterministic(False),#agent,
-            times=1000,
-            timed=True,
-            verbose=1)
+    # for agent2 in ppo_base4_cnn():
+    #     bench_both_sides(
+    #         # best_ppo_yet,
+    #         # ai_random,
+    #         # best_ppo_yet.set_deterministic(False),
+    #         ga_new.set_deterministic(False),
+    #         # ga_0.set_deterministic(False),
+    #         ga2_best.set_deterministic(False),
+    #         # ga_human.set_deterministic(False),
+    #         # ga_vpn_5.set_deterministic(False),
+    #         # alpha,
+    #         # agent2.set_deterministic(False),
+    #         # pmcts,
+    #         # mcts_model,
+    #         # best_ppo_yet,
+    #         # ppo_del2.set_deterministic(False),#agent,
+    #         times=1000,
+    #         timed=True,
+    #         verbose=1)
 
         # pmcts.clean_pool()
+
+    from elo_rating import Tournament as Tour
+
+    agents = [ga_human, ga2_best, ai_random, alpha, mcts_model]
+    [agent.set_deterministic(False) for agent in agents]
+
+    log_dir = 'demo elo rating'
+    rounds = 50
+    t = Tour(agents, log_dir, rounds=rounds)
+    t.simulate()
