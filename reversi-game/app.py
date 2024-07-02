@@ -62,31 +62,31 @@ if __name__ == '__main__':
     random.seed(seed)
     np.random.seed(seed)
 
-    best_mlp_ppo = load_sb3_model(f'ppo_mlp', 'scripts/rl/output/paral/v3v3-1/history_0032')
+    best_mlp_ppo = load_sb3_model(f'ppo_mlp', 'models/ppo_mlp')
 
     mcts_agent_30 = load_mcts_agent_by_depth(30)
     mcts_agent_200 = load_mcts_agent_by_depth(200)
     mcts_agent_500 = load_mcts_agent_by_depth(500)
 
-    azero_folder = 'models_output/alpha-zero/FINAL/layer64-LAST-v4/'  # f'models_output/alpha-zero/FINAL/layer64-LAST-v3/'
-    azero_model_location = f'{azero_folder}model_4.pt'  # 3
+    azero_folder = 'models/'  # f'models_output/alpha-zero/FINAL/layer64-LAST-v3/'
+    azero_model_location = f'{azero_folder}azero.pt'  # 3
 
     alpha_30 = load_azero_agent_by_depth(30, azero_model_location)
     alpha_200 = load_azero_agent_by_depth(200, azero_model_location)
 
-    file_base_ars = 'scripts/rl/output/phase2/ars/mlp/base-new/history_0201'
+    file_base_ars = 'models/ars_mlp'
     best_ars = load_sb3_model(f'ars 201',
                               file_base_ars,
                               cls=MaskableArs,
                               policy_cls=CustomMlpArsPolicy)
 
-    file_ppo_cnn = 'scripts/rl/output/phase2/ppo/cnn/base-v5/history_0019'
+    file_ppo_cnn = 'models/ppo_cnn'
     ppo_cnn = load_sb3_model(f'ppo_cnn 19',
                              file_ppo_cnn,
                              cnn=True,
                              policy_cls=CustomCnnPPOPolicy)
 
-    file_base_trpo = 'scripts/rl/output/phase2/trpo/cnn/base-rewards/history_0048'
+    file_base_trpo = 'models/trpo_cnn'
     cnn_trpo = load_sb3_model(f'trpo_cnn 48',
                               file_base_trpo,
                               MaskableTrpo,
