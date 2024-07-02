@@ -62,7 +62,7 @@ if __name__ == '__main__':
     random.seed(seed)
     np.random.seed(seed)
 
-    best_mlp_ppo = load_sb3_model(f'ppo_mlp', 'scripts/rl/output/v3v3-1/history_0032')
+    best_mlp_ppo = load_sb3_model(f'ppo_mlp', 'scripts/rl/output/paral/v3v3-1/history_0032')
 
     mcts_agent_30 = load_mcts_agent_by_depth(30)
     mcts_agent_200 = load_mcts_agent_by_depth(200)

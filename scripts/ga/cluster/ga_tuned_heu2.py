@@ -137,11 +137,11 @@ if __name__ == "__main__":
     population_size = 500
     TOURNAMENTS = 300
     ROUNDS = 100
-    SURVIVE = 10
-    SELECTION_CROSSOVER = (0.5, 0.7)
+    SURVIVE = 50
+    SELECTION_CROSSOVER = (0.5, 0.75)
     REMATCH = False
-    SAVE_FREQ = 20
-    LOG_DIR = 'models_output/ga/1/'
+    SAVE_FREQ = 10
+    LOG_DIR = 'models_output/ga/2/'
 
     os.makedirs(LOG_DIR, exist_ok=True)
 
