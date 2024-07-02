@@ -17,7 +17,7 @@ Before running the project, ensure you have the following installed:
 
 ## Benchmarking Results - Elo Ranking After 100 Rounds
 
-In this project, various AI models for the Reversi game were evaluated and ranked based on their Elo ratings after 100 rounds of testing. Below is a description of each model:
+In this project, various AI models for the Reversi game were evaluated and ranked based on their Elo ratings after 100 rounds of every model playing against every other both as first and second starting player. Below is a description of each model:
 
 - **Alpha-MCTS - Depth 200:** An AlphaZero-style model utilizing Monte Carlo Tree Search (MCTS) with a search depth of 200. This model uses deep reinforcement learning to enhance its gameplay.
 
