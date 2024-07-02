@@ -6,5 +6,8 @@ __pycache__/
 *.txt
 training/
 game-venv/
-agents/alpha-zero/
-all_agents.py
+reversi-game/agents/alpha-zero/
+reversi-game/all_agents.py
+venv/
+venv2/
+venv310/
