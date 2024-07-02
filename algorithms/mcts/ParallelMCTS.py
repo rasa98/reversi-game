@@ -4,7 +4,7 @@ import multiprocessing
 import random
 import numpy as np
 
-# from models.model_interface import ModelInterface
+# from agents.model_interface import ModelInterface
 from .montecarlo import MCTS
 from collections import Counter
 from contextlib import contextmanager

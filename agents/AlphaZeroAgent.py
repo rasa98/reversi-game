@@ -6,10 +6,10 @@ import numpy as np
 from game_logic import Othello
 from algorithms.alphazero.AlphaZero import load_model
 from algorithms.alphazero.alpha_mcts import MCTS
-from models.model_interface import ModelInterface
+from agents.agent_interface import AgentInterface
 
 
-class AlphaZeroAgent(ModelInterface):
+class AlphaZeroAgent(AgentInterface):
     def __init__(self, name, model):
         super().__init__(name)
         self.model: MCTS = model
@@ -78,7 +78,7 @@ def model_generator_all(file_location, params):
     file_names = [f for f in os.listdir(d)
                   if os.path.isfile(os.path.join(d, f)) and f.startswith('model')]
 
-    # In the meantime if new models were created, also detect them
+    # In the meantime if new agents were created, also detect them
     previous_contents = set()
 
     while True:

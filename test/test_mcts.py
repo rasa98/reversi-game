@@ -5,7 +5,7 @@ import os
 source_dir = os.path.abspath(os.path.join(os.getcwd(), '../'))
 sys.path.append(source_dir)
 
-from models.montecarlo import MCTS
+from agents.montecarlo import MCTS
 
 
 class MyTestCase(unittest.TestCase):

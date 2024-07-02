@@ -6,5 +6,5 @@ __pycache__/
 *.txt
 training/
 game-venv/
-models/alpha-zero/
+agents/alpha-zero/
 all_agents.py

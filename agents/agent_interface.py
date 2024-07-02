@@ -3,7 +3,7 @@ from game_logic import Othello
 import numpy as np
 
 
-class ModelInterface(ABC):
+class AgentInterface(ABC):
     def __init__(self, name):
         self.name = name
         self.deterministic = True
@@ -26,7 +26,7 @@ class ModelInterface(ABC):
         return self.name
 
 
-class RandomModel(ModelInterface):
+class RandomAgent(AgentInterface):
     def __init__(self):
         super().__init__('Random model')
 
@@ -34,4 +34,4 @@ class RandomModel(ModelInterface):
         return list(game.valid_moves()), None
 
 
-ai_random = RandomModel()
+ai_random = RandomAgent()

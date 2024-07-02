@@ -5,7 +5,7 @@ import sys
 sys.path.append('/home/rasa/PycharmProjects/reversi-game/')
 from game_modes import ai_vs_ai_cli
 from game_logic_v2 import Othello as Othello2
-from models.model_interface import ai_random
+from agents.agent_interface import ai_random
 import timeit
 
 random.seed(0)

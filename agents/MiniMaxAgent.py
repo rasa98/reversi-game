@@ -20,10 +20,10 @@ from heuristics.ga.heu_func2 import (CountChips as CountChips2,
                                      MaximizeMyMoves as MaximizeMyMoves2)
 from heuristics.ga.heu_ga import create_heuristic
 
-from models.model_interface import ModelInterface
+from agents.agent_interface import AgentInterface
 
 
-class MiniMaxAgent(ModelInterface):
+class MiniMaxAgent(AgentInterface):
     def __init__(self, name, model):
         super().__init__(name)
         self.model: Minimax = model
