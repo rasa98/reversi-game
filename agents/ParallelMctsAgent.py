@@ -5,10 +5,10 @@ import time
 import numpy as np
 from game_logic import Othello
 from algorithms.mcts.ParallelMCTS import PMCTS
-from models.model_interface import ModelInterface
+from agents.agent_interface import AgentInterface
 
 
-class ParallelMctsAgent(ModelInterface):
+class ParallelMctsAgent(AgentInterface):
     def __init__(self, name, model):
         super().__init__(name)
         self.model: PMCTS = model

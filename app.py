@@ -3,7 +3,7 @@ import time
 import math
 import numpy as np
 
-from models.MiniMaxAgent import (load_minimax_agent,
+from agents.MiniMaxAgent import (load_minimax_agent,
                                  mm_static,
                                  mm2_dynamic,
                                  ga_0,
@@ -13,12 +13,12 @@ from models.MiniMaxAgent import (load_minimax_agent,
                                  ga_new,
                                  ga_human,
                                  ga2_best)
-from models.sb3_model import load_sb3_model
-from models.model_interface import ai_random
-from models.MctsModel import load_mcts_model
-from models.ParallelMctsModel import load_parallel_mcts_model
+from agents.sb3_agent import load_sb3_model
+from agents.agent_interface import ai_random
+from agents.MctsAgent import load_mcts_model
+from agents.ParallelMctsAgent import load_parallel_mcts_model
 
-from models.AlphaZeroModel import (load_azero_model,
+from agents.AlphaZeroAgent import (load_azero_model,
                                    multi_folder_load_models,
                                    multi_folder_load_some_models)
 

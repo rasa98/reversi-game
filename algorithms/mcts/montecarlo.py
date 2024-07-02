@@ -5,7 +5,7 @@ import time
 import gc
 # from game_logic import Othello
 from game_modes import ai_vs_ai_cli
-from models.model_interface import ai_random
+from agents.agent_interface import ai_random
 from collections import Counter
 
 # from .model_interface import ModelInterface

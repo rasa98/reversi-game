@@ -22,11 +22,11 @@ from game_logic import Othello, ALL_FIELDS_SIZE
 from algorithms.alphazero.alpha_mcts_batch import MCTS
 from algorithms.alphazero.utils.neural_net import Net
 
-from models.sb3_model import load_sb3_model
+from agents.sb3_agent import load_sb3_model
 from bench_agent import bench_both_sides
 
-from models.model_interface import ai_random
-from models.AlphaZeroModel import load_azero_model
+from agents.agent_interface import ai_random
+from agents.AlphaZeroAgent import load_azero_model
 
 
 class AlphaZero:
