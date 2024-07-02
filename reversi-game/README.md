@@ -33,7 +33,7 @@ In this project, various AI models for the Reversi game were evaluated and ranke
 
 - **MinMax (depth 1) with Human Set Heuristics:** A MinMax algorithm enhanced with heuristics manually set by a human for improved performance.
 
-- **MinMax (depth 1) depth dyn GA2-best:** A MinMax algorithm optimized using a genetic algorithm (GA) to determine the best parameters.
+- **MinMax (depth 1) GA:** A MinMax algorithm optimized using a genetic algorithm (GA) to determine the best parameters.
 
 - **MCTS Iteration Limit 30:** A model using MCTS with a limit of 30 iterations.
 
