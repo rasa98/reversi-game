@@ -187,8 +187,8 @@ class MCTS:
     def set_root_new(self, game):
         """create new root Node."""
         game_copy = game.get_snapshot()
-        encoded_state = game_copy.get_encoded_state()
-        policy, _ = self.run_model(encoded_state, game_copy, add_noise=True)
+        # encoded_state = game_copy.get_encoded_state()
+        policy, _ = self.run_model(game_copy, add_noise=True)
         self.root = Node(game_copy, None, visited=1)
         self.root.explore_all_children(policy)
 
@@ -252,7 +252,7 @@ class MCTS:
                     value = -1  # else it stays 0
                 break  # return node
             elif not node.explored():
-                encoded_state = node.game.get_encoded_state()
+                # encoded_state = node.game.get_encoded_state()
                 # policy, value = self.model(
                 #     torch.tensor(encoded_state, device=self.model.device).unsqueeze(0)
                 # )
@@ -261,7 +261,7 @@ class MCTS:
                 #
                 # policy *= valid_moves
                 # policy /= np.sum(policy)
-                policy, value = self.run_model(encoded_state, node.game)
+                policy, value = self.run_model(node.game)
                 value = value.item()
 
                 node.explore_all_children(policy)  # return node.explore_new_child()
@@ -289,10 +289,11 @@ class MCTS:
         return elapsed_time >= max_time_sec
 
     @torch.no_grad()
-    def run_model(self, encoded_state, game, add_noise=False):
-        policy, value = self.model(
-            torch.tensor(encoded_state, device=self.model.device).unsqueeze(0)
-        )
+    def run_model(self, game, add_noise=False):
+        encoded_state = game.get_encoded_state()
+        tensor_state = torch.tensor(encoded_state, device=self.model.device).unsqueeze(0)
+
+        policy, value = self.model(tensor_state)
         policy = torch.softmax(policy, dim=1).squeeze(0).cpu().numpy()
 
         if add_noise:

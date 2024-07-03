@@ -8,8 +8,6 @@ import numpy as np
 from gymnasium.spaces import Discrete, Box
 
 
-
-
 def action_masks(game):
     valid_moves = game.valid_moves()
     mask = np.zeros(game.board.shape, dtype=bool)

@@ -7,6 +7,7 @@ from game_logic import Othello
 from algorithms.alphazero.AlphaZero import load_model
 from algorithms.alphazero.alpha_mcts import MCTS
 from agents.agent_interface import AgentInterface
+from sb3_contrib.common.maskable.policies import MaskableActorCriticPolicy
 
 
 class AlphaZeroAgent(AgentInterface):
@@ -23,13 +24,8 @@ class AlphaZeroAgent(AgentInterface):
             best_action = self.choose_stochastic(action_probs)
             return (best_action,), None
 
-    # @staticmethod
-    # def choose_stochastic(action_prob):
-    #     encoded_action = np.random.choice(len(action_prob), p=action_prob)
-    #     return Othello.get_decoded_field(encoded_action)
 
-
-def load_azero_model(name, file=None, model=None, params=None):
+def load_azero_agent(name, file=None, model=None, params=None):
     if file is None and model is None:
         raise Exception('azero model or file path needs to be supplied!!!')
 
@@ -49,6 +45,9 @@ def load_azero_model(name, file=None, model=None, params=None):
     if model is None:
         model = load_model(file, hidden_layer)
         # model = load_model(file, res_blocks, hidden_layer)
+    elif isinstance(model, MaskableActorCriticPolicy):
+        model = WrapPPOPolicy(model)
+
     model.eval()
 
     mcts = MCTS(model,
@@ -65,7 +64,9 @@ def model_generator(file_location, model_idxs, params):
     for i in model_idxs:
         model_location = f'{file_location}/model_{i}.pt'
         try:
-            model = load_azero_model(f'{i}' ,file=model_location, params=params)
+            model = load_azero_agent(f'{i}',
+                                     file=model_location,
+                                     params=params)
         except FileNotFoundError as e:
             print(e)
             break
@@ -85,9 +86,10 @@ def model_generator_all(file_location, params):
         current_contents = file_names
         new_files = current_contents - previous_contents
         if new_files:
-            for i, f in enumerated(sorted(list(new_files))):
+            for i, f in enumerate(sorted(list(new_files))):
                 model_location = f'{file_location}/{f}'
-                model = load_azero_model(f'{f[:-3]}' ,file=model_location,
+                model = load_azero_agent(f'{f[:-3]}',
+                                         file=model_location,
                                          params=params)
                 yield model
         else:
@@ -108,3 +110,23 @@ def multi_folder_load_some_models(folder_idxs_params):
         print(f'\n++++++++++++++++ TESTED FOLDER - {folder}++++++++++++++++\n')
         yield from model_generator(folder, model_idxs, params)
         print()
+
+
+class WrapPPOPolicy:
+    def __init__(self, policy):
+        self.iterations_trained = 0
+        self.policy = policy
+        self.device = policy.device
+
+    def forward(self, obs):
+        features = self.policy.extract_features(obs)
+        latent_pi, latent_vf = self.policy.mlp_extractor(features)
+        values = self.policy.value_net(latent_vf)
+        action_logits = self.policy.action_net(latent_pi)
+        return action_logits, values
+
+    def eval(self):
+        self.policy.eval()
+
+    def __call__(self, obs):
+        return self.forward(obs)
