@@ -4,9 +4,6 @@ __pycache__/
 *.pt
 *.npz
 *.txt
-training/
-game-venv/
-reversi-game/agents/alpha-zero/
 reversi-game/all_agents.py
 venv/
 venv2/

@@ -26,7 +26,7 @@ from agents.sb3_agent import load_sb3_model
 from bench_agent import bench_both_sides
 
 from agents.agent_interface import ai_random
-from agents.AlphaZeroAgent import load_azero_model
+from agents.AlphaZeroAgent import load_azero_agent
 
 
 class AlphaZero:

@@ -26,7 +26,7 @@ from algorithms.alphazero.utils.neural_net import Net
 
 from agents.sb3_agent import load_sb3_model
 from agents.agent_interface import ai_random
-from agents.AlphaZeroAgent import load_azero_model
+from agents.AlphaZeroAgent import load_azero_agent
 
 
 class AlphaZero:
@@ -100,8 +100,8 @@ class AlphaZero:
         assert params is not self.mcts_params, \
             'You changed azero obj field mcts_params!!'
 
-        current_agent = load_azero_model("current", model=self.model, params=params)
-        best_agent = load_azero_model('best yet', model=self.best_model, params=params)
+        current_agent = load_azero_agent("current", model=self.model, params=params)
+        best_agent = load_azero_agent('best yet', model=self.best_model, params=params)
         test_agent = self.test_agent
 
         print(f'\n×××××  benchmarking model after training  ×××××')
