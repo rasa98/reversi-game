@@ -25,7 +25,7 @@ class ACAgent(AgentInterface):
 
         action_probs = policy
 
-        if self.deterministic or game.turn > 10:
+        if self.deterministic or game.turn > 15:
             indices_of_max = np.where(action_probs == np.amax(action_probs))[0]
 
             # Convert indices to a list

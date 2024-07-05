@@ -25,7 +25,7 @@ class ParallelMctsAgent(AgentInterface):
     def predict_best_move(self, game: Othello):
         action_probs = self.model.simulate(game)
 
-        if self.deterministic or game.turn > 20:  # No need to change to non deter, since its randomly simulating games, and wont play same moves if other player/agents plays same moves.
+        if self.deterministic or game.turn > 15:  # No need to change to non deter, since its randomly simulating games, and wont play same moves if other player/agents plays same moves.
             best_action = self.model.best_moves()
             return best_action, None
         else:

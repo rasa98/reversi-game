@@ -37,9 +37,12 @@ def load_azero_agent(name, file=None, model=None, params=None):
     time_limit = params.get('max_time', math.inf)
     iter_limit = params.get('max_iter', 100)
     c = params.get('uct_exploration_const', 1.41)
-    dirichlet_epsilon = params.get('dirichlet_epsilon', 0)
-    # initial_alpha = params.get('initial_alpha', 0.4)
-    # final_alpha = params.get('final_alpha', 0.1)
+    dirichlet_epsilon = params.get('dirichlet_epsilon', 0.1)
+
+    decay_steps = params.get('decay_steps', -1)  # so that alpha is set to final alpha for both
+    final_alpha = params.get('final_alpha', 0.05)
+    initial_alpha = params.get('initial_alpha', 0.05)
+
     verbose = params.get('verbose', 0)  # 0 means no logging
 
     if model is None:
@@ -55,6 +58,9 @@ def load_azero_agent(name, file=None, model=None, params=None):
                 max_iter=iter_limit,
                 uct_exploration_const=c,
                 dirichlet_epsilon=dirichlet_epsilon,
+                decay_steps=decay_steps,
+                final_alpha=final_alpha,
+                initial_alpha=initial_alpha,
                 verbose=verbose)
 
     return AlphaZeroAgent(f'alpha-mcts - {name}', mcts)

@@ -33,7 +33,7 @@ class MaskedPPOWrapper(AgentInterface):
         else:
             encoded_state = game.get_encoded_state().reshape(-1)  # for Mlp
         det = self.deterministic
-        if game.turn > 20:
+        if game.turn > 15:
             det = True
         action, _ = self.model.predict(encoded_state,
                                        action_masks=action_masks(game),
