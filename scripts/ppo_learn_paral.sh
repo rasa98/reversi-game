@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #SBATCH --nodes=1
-#SBATCH --ntasks-per-node=32
+#SBATCH --ntasks-per-node=30
 #SBATCH --partition=cuda
 #SBATCH --time=100:00:00
 #SBATCH --job-name=ppo-par-v4
@@ -13,6 +13,9 @@
 #module load python/3.10
 #  module load python/3.10
 
+
+# Activate your virtual environment
+source ../venv2/bin/activate
 
 
 # Detect cuda, cpu & gpu combo
@@ -27,9 +30,6 @@ CURRENT_DIR=$(pwd)
 # Change to the project directory
 cd ../$PROJECT_DIR
 
-
-# Activate your virtual environment
-source ../venv2/bin/activate
 
 # Ensure Python can find the modules in the project directory
 export PYTHONPATH=$(pwd)

@@ -24,6 +24,8 @@ import sb3_contrib.ars.ars as ars
 from stable_baselines3.common.distributions import CategoricalDistribution
 from stable_baselines3.common.monitor import Monitor
 from scripts.rl.env.old_game_env import BasicEnv, SelfPlayCallback
+from scripts.rl.env.sp_env import TrainEnv
+
 
 import stable_baselines3.common.callbacks as callbacks_module
 from sb3_contrib.common.maskable.evaluation import evaluate_policy as masked_evaluate_policy
@@ -250,14 +252,14 @@ def get_env(env_factory):
 
 if __name__ == '__main__':
     # Settings
-    SEED = 69  # NOT USED
-    NUM_TIMESTEPS = int(50_000_000)
-    EVAL_FREQ = int(200_000)
-    EVAL_EPISODES = int(500)
-    BEST_THRESHOLD = 0.4  # must achieve a mean score above this to replace prev best self
+    SEED = 121  # NOT USED
+    NUM_TIMESTEPS = int(100_000_000)
+    EVAL_FREQ = int(1_250_000)
+    EVAL_EPISODES = int(1000)
+    BEST_THRESHOLD = 0.12  # must achieve a mean score above this to replace prev best self
     RENDER_MODE = False  # set this to false if you plan on running for full 1000 trials.
-    LOGDIR = 'scripts/rl/output/phase2/ars/mlp/base-new/'  # "ppo_masked/test/"    
-    CONTINUE_FROM_MODEL = None
+    LOGDIR = 'scripts/rl/output/phase2/ars/mlp/base-new-2/'  # "ppo_masked/test/"    
+    CONTINUE_FROM_MODEL = 'scripts/rl/output/phase2/ars/mlp/base-new/history_0183' #None
     TRAIN_ENV = BasicEnv
 
     print(f'seed: {SEED} \nnum_timesteps: {NUM_TIMESTEPS} \neval_freq: {EVAL_FREQ}',
@@ -287,7 +289,7 @@ if __name__ == '__main__':
         'zero_policy': False,
         'n_eval_episodes': 100,
         #'delta_std': 0.03,
-        'learning_rate': 1e-2,#LinearSchedule(1e-2),
+        'learning_rate': LinearSchedule(5e-3),
         'verbose': 1,
         'seed': SEED,
     }
@@ -306,7 +308,7 @@ if __name__ == '__main__':
         params['policy_class'] = CustomMlpPolicy
         model = MaskableArs.load(starting_model_filepath,
                                  env=env,
-                                 device=device,
+                                 device=device,                                 
                                  custom_objects=params)
 
     print(f'\nparams: {params}\n')

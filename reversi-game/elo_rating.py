@@ -43,9 +43,10 @@ class EloRating:
 
 
 class Tournament:
-    def __init__(self, agents, log_dir, rounds=100, verbose=0):
+    def __init__(self, agents, log_dir, rounds=100, save_nth=5, verbose=0):
         self.rounds = rounds
         self.log_dir = log_dir
+        self.save_nth = save_nth
         self.players = [Player(agent) for agent in agents]
         self.elo = EloRating()
         self.verbose = verbose
@@ -61,7 +62,7 @@ class Tournament:
 
     def simulate(self):
         pairs = list(permutations(self.players, 2))
-        for _ in trange(self.rounds):
+        for r in trange(self.rounds):
             random.shuffle(pairs)
             for pl1, pl2 in pairs:
                 if self.verbose:
@@ -71,12 +72,13 @@ class Tournament:
                 self.elo.calculate_new_rating(pl1, pl2, actual_score_1)
                 pl1.inc()
                 pl2.inc()
+            
+            if (r+1) % self.save_nth == 0:
+                self.players.sort(key=lambda player: player.rating, reverse=True)
+                self.save_simulation(r+1)
 
-        self.players.sort(key=lambda player: player.rating, reverse=True)
-        self.save_simulation()
-
-    def save_simulation(self):
-        with open(f'{self.log_dir}.txt', 'w') as f:
-            f.write(f'Elo ranking after {self.rounds} rounds:\n')
+    def save_simulation(self, round_num):
+        with open(f'{self.log_dir}_{round_num}.txt', 'w') as f:
+            f.write(f'Elo ranking after {round_num} rounds:\n')
             for pl in self.players:
                 f.write(f'\tAgent: {pl.agent}: {pl.rating}\n')

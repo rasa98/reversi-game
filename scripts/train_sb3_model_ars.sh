@@ -5,7 +5,7 @@
 #SBATCH --partition=cuda
 #SBATCH --time=100:00:00
 #SBATCH --job-name=ars-mlp
-#SBATCH --nodelist=n16
+#SBATCH --nodelist=n19
 #SBATCH --output=../reversi-game/scripts/rl/output/phase2/ars/mlp/base_%j.txt
 
 
@@ -13,7 +13,7 @@
 #module load python/3
 
 # Activate your virtual environment
-source ../venv2/bin/activate
+source ../venv310/bin/activate
 
 # Detect cuda, cpu & gpu combo
 python3 cpu-gpu-info.py

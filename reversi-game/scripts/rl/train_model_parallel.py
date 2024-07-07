@@ -19,6 +19,7 @@ from sb3_contrib.common.maskable.policies import MaskableActorCriticPolicy
 from sb3_contrib.ppo_mask import MaskablePPO
 from scripts.rl.env.old_game_env import (BasicEnv,
                                          SelfPlayCallback)
+from scripts.rl.env.sp_env import TrainEnv
 from scripts.rl.train_model_ppo import CustomCnnPPOPolicy
 
 
@@ -37,16 +38,16 @@ if __name__ == '__main__':
     device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
     # Settings
-    SEED = 19  # NOT USED
-    NUM_TIMESTEPS = int(30_000_000)
+    SEED = 119  # NOT USED
+    NUM_TIMESTEPS = int(200_000_000)
     N_STEPS = 2048 * 3
-    EVAL_EPISODES = int(300)
+    EVAL_EPISODES = int(500)
     EVAL_FREQ = int(N_STEPS + 100)
-    BEST_THRESHOLD = 0.15  # must achieve a mean score above this to replace prev best self
+    BEST_THRESHOLD = 0.18  # must achieve a mean score above this to replace prev best self
     RENDER_MODE = False  # set this to false if you plan on running for full 1000 trials.
-    LOGDIR = "scripts/rl/output/phase2/ppo/cnn/base-v5/"
+    LOGDIR = "scripts/rl/output/phase2/ppo/cnn/base-v7/"
     CNN_POLICY = True
-    CONTINUE_FROM_MODEL = 'scripts/rl/output/phase2/ppo/cnn/base-v4/history_0003'  # None
+    CONTINUE_FROM_MODEL = 'scripts/rl/output/phase2/ppo/cnn/base-v6/history_0072'  # None
     TRAIN_ENV = BasicEnv
 
     mp.set_start_method('forkserver')
@@ -86,10 +87,10 @@ if __name__ == '__main__':
     params = {
         'learning_rate': 3e-6,
         'n_steps': N_STEPS,
-        'n_epochs': 10,
-        'clip_range': 0.25,
+        'n_epochs': 3,
+        #'clip_range': 0.20,
         'batch_size': 128,
-        #'ent_coef': 0.01,
+        'ent_coef': 0.02,
         # 'gamma': 0.99,
         'verbose': 100,
         'seed': SEED,
