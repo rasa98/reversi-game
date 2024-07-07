@@ -55,10 +55,10 @@ def load_azero_agent_by_depth(iter_depth, azero_model_location, c=1.41):
 
 
 def run_elo_ranking_tournament(agents):
-    log_dir = 'demo elo rating 2 with dirichlet'
+    log_dir = 'elo rating benchmark'
     rounds = 100
     verbose = 0
-    t = Tour(agents, log_dir, rounds=rounds, verbose=verbose)
+    t = Tour(agents, log_dir, rounds=rounds, save_nth=5,verbose=verbose)
     t.simulate()
 
 
@@ -88,13 +88,13 @@ if __name__ == '__main__':
                               policy_cls=CustomMlpArsPolicy)
 
     file_ppo_cnn = 'models/ppo_cnn'
-    ppo_cnn = load_sb3_model(f'ppo_cnn 19',
+    ppo_cnn = load_sb3_model(f'ppo_cnn 69 v7',
                              file_ppo_cnn,
                              cnn=True,
                              policy_cls=CustomCnnPPOPolicy)
 
     file_base_trpo = 'models/trpo_cnn'
-    cnn_trpo = load_sb3_model(f'trpo_cnn 48',
+    cnn_trpo = load_sb3_model(f'trpo_cnn base1 193',
                               file_base_trpo,
                               MaskableTrpo,
                               cnn=True,
@@ -103,18 +103,18 @@ if __name__ == '__main__':
     # ----------------------------------------
     ac_agent = load_ac_agent("bare nn from azero", azero_model_location)
 
-    agents = [ac_agent, alpha_100_with_ppo, cnn_trpo, best_mlp_ppo,
+    agents = [cnn_trpo, best_mlp_ppo,
               ppo_cnn, best_ars, ga_human, ga2_best, ai_random,
-              alpha_30,
-              alpha_200,
+              alpha_30, alpha_200,
               mcts_agent_30, mcts_agent_200, mcts_agent_500]
+
     for agent in agents:
         agent.set_deterministic(False)
 
     # run_elo_ranking_tournament(agents)
 
     from bench_agent import bench_both_sides
-    bench_both_sides(alpha_100_with_ppo, alpha_30, times=5, verbose=1)
+    bench_both_sides(ga_human, ga2_best, times=10, verbose=1)
 
     # azero with ppo as model performce worse cuz value function
     # doesnt do the same thing azero alg expects

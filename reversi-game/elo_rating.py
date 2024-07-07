@@ -3,6 +3,7 @@ import numpy as np
 from itertools import permutations
 from tqdm import trange
 from game_modes import ai_vs_ai_cli
+import os
 
 
 class Player:
@@ -78,7 +79,9 @@ class Tournament:
                 self.save_simulation(r+1)
 
     def save_simulation(self, round_num):
-        with open(f'{self.log_dir}_{round_num}.txt', 'w') as f:
+        folder = 'elo output'
+        os.makedirs(folder, exist_ok=True)
+        with open(f'{folder}/{self.log_dir}_{round_num}.txt', 'w') as f:
             f.write(f'Elo ranking after {round_num} rounds:\n')
             for pl in self.players:
                 f.write(f'\tAgent: {pl.agent}: {pl.rating}\n')
