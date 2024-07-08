@@ -36,9 +36,9 @@ In this project, various AI models for the Reversi game were evaluated and ranke
 
 - **MCTS Iteration Limit 200:** A model using MCTS with a limit of 200 iterations.
 
-- **MinMax (depth 1) with Human Set Heuristics:** A MinMax algorithm enhanced with heuristics manually set by a human for improved performance.
+- **MinMax (depth 1 / dynamic) with Human Set Heuristics:** A MinMax algorithm enhanced with heuristics manually set by a human for improved performance.
 
-- **MinMax (depth 1) GA:** A MinMax algorithm optimized using a genetic algorithm (GA) to determine the best parameters.
+- **MinMax (depth 1 / dynamic) GA:** A MinMax algorithm optimized using a genetic algorithm (GA) to determine the best parameters.
 
 - **MCTS Iteration Limit 30:** A model using MCTS with a limit of 30 iterations.
 
@@ -51,17 +51,20 @@ In this project, various AI models for the Reversi game were evaluated and ranke
 Below is the table showing the results:
 
 
-| Agent                          | Elo Rating |
-|--------------------------------|------------|
-| alpha-mcts - depth 200         | 1967.70    |
-| alpha-mcts - depth 30          | 1682.13    |
-| ppo_mlp                        | 1428.76    |
-| Mcts depth 500                 | 1398.65    |
-| ppo_cnn                        | 1268.30    |
-| Mcts depth 200                 | 1257.60    |
-| MinMax GA                      | 1050.63    |
-| MinMax human                   | 1035.34    |
-| Mcts depth 30                  | 977.79     |
-| ars                            | 964.15     |
-| trpo_cnn                       | 779.77     |
-| Random model                   | 633.45     |
+| Agent                          | Score    |
+|--------------------------------|----------|
+| alpha-mcts - depth 200         | 1910.32  |
+| alpha-mcts - depth 30          | 1651.31  |
+| ppo_mlp                        | 1383.41  |
+| Mcts iter_limit 500            | 1286.51  |
+| ppo_cnn                        | 1283.64  |
+| MinMax minmax human depth dyn  | 1229.74  |
+| Mcts iter_limit 200            | 1210.36  |
+| MinMax minmax GA depth dyn     | 1177.19  |
+| MinMax minmax GA depth 1       | 1050.34  |
+| trpo_cnn                       | 1001.35  |
+| Mcts iter_limit 30             | 988.64   |
+| ars                            | 984.94   |
+| MinMax minmax human - depth 1  | 963.82   |
+| Random model                   | 611.16   |
+

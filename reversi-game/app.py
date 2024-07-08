@@ -7,8 +7,10 @@ import numpy as np
 from agents.actor_critic_agent import (load_ac_agent)
 from agents.AlphaZeroAgent import (load_azero_agent)
 from agents.MctsAgent import load_mcts_model
-from agents.MiniMaxAgent import (ga_human,
-                                 ga2_best)
+from agents.MiniMaxAgent import (minmax_ga_best_depth_1,
+                                 minmax_human_depth_1,
+                                 minmax_ga_depth_dyn,
+                                 minmax_human_depth_dyn)
 from agents.agent_interface import ai_random
 from agents.sb3_agent import load_sb3_model
 from elo_rating import Tournament as Tour
@@ -58,7 +60,7 @@ def run_elo_ranking_tournament(agents):
     log_dir = 'elo rating benchmark'
     rounds = 100
     verbose = 0
-    t = Tour(agents, log_dir, rounds=rounds, save_nth=5,verbose=verbose)
+    t = Tour(agents, log_dir, rounds=rounds, save_nth=5, verbose=verbose)
     t.simulate()
 
 
@@ -82,19 +84,19 @@ if __name__ == '__main__':
     alpha_200 = load_azero_agent_by_depth(200, azero_model_location)
 
     file_base_ars = 'models/ars_mlp'
-    best_ars = load_sb3_model(f'ars 201',
+    best_ars = load_sb3_model(f'ars_mlp',  # final1/42
                               file_base_ars,
                               cls=MaskableArs,
                               policy_cls=CustomMlpArsPolicy)
 
     file_ppo_cnn = 'models/ppo_cnn'
-    ppo_cnn = load_sb3_model(f'ppo_cnn 69 v7',
+    ppo_cnn = load_sb3_model(f'ppo_cnn', #  69 v7
                              file_ppo_cnn,
                              cnn=True,
                              policy_cls=CustomCnnPPOPolicy)
 
     file_base_trpo = 'models/trpo_cnn'
-    cnn_trpo = load_sb3_model(f'trpo_cnn base1 193',
+    cnn_trpo = load_sb3_model(f'trpo_cnn', #  base1 193
                               file_base_trpo,
                               MaskableTrpo,
                               cnn=True,
@@ -104,7 +106,10 @@ if __name__ == '__main__':
     ac_agent = load_ac_agent("bare nn from azero", azero_model_location)
 
     agents = [cnn_trpo, best_mlp_ppo,
-              ppo_cnn, best_ars, ga_human, ga2_best, ai_random,
+              ppo_cnn, best_ars, minmax_ga_best_depth_1,
+              minmax_human_depth_1,
+              minmax_ga_depth_dyn,
+              minmax_human_depth_dyn, ai_random,
               alpha_30, alpha_200,
               mcts_agent_30, mcts_agent_200, mcts_agent_500]
 
@@ -114,7 +119,8 @@ if __name__ == '__main__':
     # run_elo_ranking_tournament(agents)
 
     from bench_agent import bench_both_sides
-    bench_both_sides(ga_human, ga2_best, times=10, verbose=1)
+
+    bench_both_sides(minmax_ga_best_depth_1, minmax_human_depth_dyn, times=10, verbose=1)
 
     # azero with ppo as model performce worse cuz value function
     # doesnt do the same thing azero alg expects

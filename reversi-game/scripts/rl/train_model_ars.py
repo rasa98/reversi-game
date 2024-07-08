@@ -1,31 +1,28 @@
+import copy
 import os
 import sys
-from typing import Union, Dict, Optional, Tuple
+from functools import partial
+from typing import Union, Dict, Optional, Tuple, List
 
 import numpy as np
-import random
 from gymnasium import spaces
+from sb3_contrib.common.vec_env import AsyncEval
 
 if __name__ == '__main__' and os.environ['USER'] != 'student':
     source_dir = os.path.abspath(os.path.join(os.getcwd(), '../../'))
     sys.path.append(source_dir)
     os.chdir('../../')
 
-import torch
-from stable_baselines3.common.vec_env import VecEnv, DummyVecEnv, sync_envs_normalization
+from stable_baselines3.common.vec_env import DummyVecEnv
 
 import torch
-from torch import nn
-import torch.nn.functional as F
 
 from sb3_contrib.ars.policies import LinearPolicy, MlpPolicy
 import sb3_contrib.ars.ars as ars
 
-from stable_baselines3.common.distributions import CategoricalDistribution
 from stable_baselines3.common.monitor import Monitor
 from scripts.rl.env.old_game_env import BasicEnv, SelfPlayCallback
-from scripts.rl.env.sp_env import TrainEnv
-
+from scripts.rl.env.selfplay_env import SelfPlayEnv
 
 import stable_baselines3.common.callbacks as callbacks_module
 from sb3_contrib.common.maskable.evaluation import evaluate_policy as masked_evaluate_policy
@@ -213,6 +210,10 @@ class CustomMlpPolicy(MlpPolicy):
 
 
 class MaskableArs(ars.ARS):
+    def __init__(self, eval_env=None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.eval_env = eval_env
+
     def predict(
             self,
             observation: Union[np.ndarray, Dict[str, np.ndarray]],
@@ -236,6 +237,111 @@ class MaskableArs(ars.ARS):
         """
         return self.policy.predict(observation, state, episode_start, action_masks, deterministic)
 
+    def evaluate_candidates(
+            self, candidate_weights: th.Tensor,
+            callback: callbacks_module.BaseCallback,
+            async_eval: Optional[AsyncEval]
+    ) -> th.Tensor:
+        """
+        Evaluate each candidate.
+
+        :param candidate_weights: The candidate weights to be evaluated.
+        :param callback: Callback that will be called at each step
+            (or after evaluation in the multiprocess version)
+        :param async_eval: The object for asynchronous evaluation of candidates.
+        :return: The episodic return for each candidate.
+        """
+
+        batch_steps = 0
+        # returns == sum of rewards
+        candidate_returns = th.zeros(self.pop_size, device=self.device)
+        train_policy = copy.deepcopy(self.policy)
+        # Empty buffer to show only mean over one iteration (one set of candidates) in the logs
+        self.ep_info_buffer = []
+        callback.on_rollout_start()
+
+        if async_eval is not None:
+            # Multiprocess asynchronous version
+            async_eval.send_jobs(candidate_weights, self.pop_size)
+            results = async_eval.get_results()
+
+            for weights_idx, (episode_rewards, episode_lengths) in results:
+                # Update reward to cancel out alive bonus if needed
+                candidate_returns[weights_idx] = sum(episode_rewards) + self.alive_bonus_offset * sum(episode_lengths)
+                batch_steps += np.sum(episode_lengths)
+                self._mimic_monitor_wrapper(episode_rewards, episode_lengths)
+
+            # Combine the filter stats of each process for normalization
+            for worker_obs_rms in async_eval.get_obs_rms():
+                if self._vec_normalize_env is not None:
+                    # worker_obs_rms.count -= self.old_count
+                    self._vec_normalize_env.obs_rms.combine(worker_obs_rms)
+                    # Hack: don't count timesteps twice (between the two are synced)
+                    # otherwise it will lead to overflow,
+                    # in practice we would need two RunningMeanStats
+                    self._vec_normalize_env.obs_rms.count -= self.old_count
+
+            # Synchronise VecNormalize if needed
+            if self._vec_normalize_env is not None:
+                async_eval.sync_obs_rms(self._vec_normalize_env.obs_rms.copy())
+                self.old_count = self._vec_normalize_env.obs_rms.count
+
+            # Hack to have Callback events
+            for _ in range(batch_steps // len(async_eval.remotes)):
+                self.num_timesteps += len(async_eval.remotes)
+                callback.on_step()
+        else:
+            # Single process, synchronous version
+            for weights_idx in range(self.pop_size):
+                # Load current candidate weights
+                train_policy.load_from_vector(candidate_weights[weights_idx].cpu())
+                # Evaluate the candidate
+                episode_rewards, episode_lengths = masked_evaluate_policy(
+                    train_policy,
+                    self.eval_env,
+                    n_eval_episodes=self.n_eval_episodes,
+                    return_episode_rewards=True,
+                    # Increment num_timesteps too (slight mismatch with multi envs)
+                    callback=partial(self._trigger_callback, callback=callback, n_envs=self.eval_env.num_envs),
+                    warn=False,
+                )
+                # Update reward to cancel out alive bonus if needed
+                candidate_returns[weights_idx] = sum(episode_rewards) + self.alive_bonus_offset * sum(episode_lengths)
+                batch_steps += sum(episode_lengths)
+                self._mimic_monitor_wrapper(episode_rewards, episode_lengths)
+
+            # Note: we increment the num_timesteps inside the evaluate_policy()
+            # however when using multiple environments, there will be a slight
+            # mismatch between the number of timesteps used and the number
+            # of calls to the step() method (cf. implementation of evaluate_policy())
+            # self.num_timesteps += batch_steps
+
+        callback.on_rollout_end()
+
+        return candidate_returns
+
+    def _excluded_save_params(self) -> List[str]:
+        """
+        Returns the names of the parameters that should be excluded from being
+        saved by pickling. E.g. replay buffers are skipped by default
+        as they take up a lot of space. PyTorch variables should be excluded
+        with this so they can be stored with ``th.save``.
+
+        :return: List of parameters that should be excluded from being saved with pickle.
+        """
+        return [
+            "policy",
+            "device",
+            "env",
+            "eval_env",
+            "replay_buffer",
+            "rollout_buffer",
+            "_vec_normalize_env",
+            "_episode_storage",
+            "_logger",
+            "_custom_logger",
+        ]
+
 
 class LinearSchedule:
     def __init__(self, initial_value):
@@ -254,13 +360,13 @@ if __name__ == '__main__':
     # Settings
     SEED = 121  # NOT USED
     NUM_TIMESTEPS = int(100_000_000)
-    EVAL_FREQ = int(1_250_000)
-    EVAL_EPISODES = int(1000)
+    EVAL_FREQ = int(5000)
+    EVAL_EPISODES = int(100)
     BEST_THRESHOLD = 0.12  # must achieve a mean score above this to replace prev best self
     RENDER_MODE = False  # set this to false if you plan on running for full 1000 trials.
-    LOGDIR = 'scripts/rl/output/phase2/ars/mlp/base-new-2/'  # "ppo_masked/test/"    
-    CONTINUE_FROM_MODEL = 'scripts/rl/output/phase2/ars/mlp/base-new/history_0183' #None
-    TRAIN_ENV = BasicEnv
+    LOGDIR = 'scripts/rl/output/phase2/ars/mlp/DELETE/'  # "ppo_masked/test/"
+    CONTINUE_FROM_MODEL = None #'scripts/rl/output/phase2/ars/mlp/base-new/history_0183'  # None
+    TRAIN_ENV = SelfPlayEnv  # BasicEnv
 
     print(f'seed: {SEED} \nnum_timesteps: {NUM_TIMESTEPS} \neval_freq: {EVAL_FREQ}',
           f'\neval_episoded: {EVAL_EPISODES} \nbest_threshold: {BEST_THRESHOLD}',
@@ -282,21 +388,21 @@ if __name__ == '__main__':
         net_arch=[64] * 4
     )
 
-
-    params = {        
-        'n_delta': 100,
-        'n_top': 10,
+    params = {
+        'n_delta': 10,
+        'n_top': 1,
         'zero_policy': False,
-        'n_eval_episodes': 100,
-        #'delta_std': 0.03,
-        'learning_rate': LinearSchedule(5e-3),
+        'n_eval_episodes': 5,
+        # 'delta_std': 0.03,
+        'learning_rate': LinearSchedule(2e-2),
         'verbose': 1,
         'seed': SEED,
     }
 
     if CONTINUE_FROM_MODEL is None:
         params['policy_kwargs'] = policy_kwargs
-        model = MaskableArs(policy=CustomMlpPolicy,
+        model = MaskableArs(eval_env=eval_env,
+                            policy=CustomMlpPolicy,
                             env=env,
                             device=device,
                             **params)
@@ -308,18 +414,18 @@ if __name__ == '__main__':
         params['policy_class'] = CustomMlpPolicy
         model = MaskableArs.load(starting_model_filepath,
                                  env=env,
-                                 device=device,                                 
+                                 device=device,
                                  custom_objects=params)
+        model.eval_env = eval_env
 
     print(f'\nparams: {params}\n')
 
-    #start_model_copy = model.load(starting_model_filepath, custom_objects={'policy_class': CustomMlpPolicy})
-    #env.envs[0].unwrapped.change_to_latest_agent(start_model_copy)
+    # start_model_copy = model.load(starting_model_filepath, custom_objects={'policy_class': CustomMlpPolicy})
+    # env.envs[0].unwrapped.change_to_latest_agent(start_model_copy)
     eval_env.env_method('change_to_latest_agent',
                         model.__class__,
                         starting_model_filepath,
                         model.policy_class)
-
 
     params = {
         'eval_env': eval_env,
