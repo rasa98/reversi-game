@@ -23,6 +23,9 @@ class OthelloGameGui:
         self.player_turn = None
         self.ai = None
 
+        self.last_played_move = None
+        self.last_flipped_fields = set()
+
     def set_match_conf(self, ai, player_turn):
         self.player_turn = player_turn
         self.ai = ai
@@ -40,6 +43,8 @@ class OthelloGameGui:
         self.white = (255, 255, 255)
         self.green = (0, 128, 0)
         self.red = (255, 0, 0)
+        self.lighter_green = (20, 198, 20)
+        self.green_yellow = (154, 205, 50)
 
         # Set up the display
         self.screen = pygame.display.set_mode(self.size)
@@ -52,8 +57,14 @@ class OthelloGameGui:
         top_space = 50  # Space for labels at the top
         for row in range(self.rows):
             for col in range(self.cols):
-                rect = pygame.Rect(col * self.square_size, top_space + row * self.square_size, self.square_size, self.square_size)
-                pygame.draw.rect(self.screen, self.green, rect)
+                field_color = self.green
+                if (row, col) == self.last_played_move:
+                    field_color = self.lighter_green
+                # elif (row, col) in self.last_flipped_fields:
+                #     field_color = self.green_yellow
+                rect = pygame.Rect(col * self.square_size, top_space + row * self.square_size, self.square_size,
+                                   self.square_size)
+                pygame.draw.rect(self.screen, field_color, rect)
                 pygame.draw.rect(self.screen, self.black, rect, 1)
 
     def draw_disc(self, row, col, color):
@@ -62,6 +73,28 @@ class OthelloGameGui:
         x = col * self.square_size + self.square_size // 2
         y = top_space + row * self.square_size + self.square_size // 2
         pygame.draw.circle(self.screen, color, (x, y), self.disc_radius)
+
+    def draw_diamond(self, row, col, color):
+        """Draw a diamond (rotated square) centered in the board cell."""
+        # Calculate the center of the cell
+        top_space = 50
+        center_x = col * self.square_size + self.square_size // 2
+        center_y = top_space + row * self.square_size + self.square_size // 2
+
+        # Calculate the size of the diamond relative to the cell
+        diamond_size = self.square_size - 2 * self.padding
+        half_diamond_size = diamond_size / 2
+
+        # Define the points of the diamond centered at the calculated position
+        points = [
+            (center_x, center_y - half_diamond_size),  # Top point
+            (center_x + half_diamond_size, center_y),  # Right point
+            (center_x, center_y + half_diamond_size),  # Bottom point
+            (center_x - half_diamond_size, center_y)  # Left point
+        ]
+
+        # Draw the diamond
+        pygame.draw.polygon(self.screen, color, points)
 
     def draw_game_over(self):
         """Display the game-over screen."""
@@ -90,12 +123,17 @@ class OthelloGameGui:
         top_space = 50
         self.screen.fill(self.green)
         self.draw_board()
+
         for row in range(self.rows):
             for col in range(self.cols):
+                draw_shape_f = self.draw_disc
+                if (row, col) in self.last_flipped_fields:
+                    draw_shape_f = self.draw_diamond
+
                 if self.game.board[row, col] == 1:
-                    self.draw_disc(row, col, self.white)
+                    draw_shape_f(row, col, self.white)
                 elif self.game.board[row, col] == 2:
-                    self.draw_disc(row, col, self.black)
+                    draw_shape_f(row, col, self.black)
 
         if self.player_turn == self.game.player_turn:
             highlight_color = (144, 238, 144)
@@ -163,21 +201,28 @@ class OthelloGameGui:
                 # print(ai_think_time)
                 if 2 - ai_think_time > 0:
                     time.sleep(2 - ai_think_time)
+                fields_to_flip = self.game.valid_moves_to_reverse[field]
                 self.game.play_move(field)
             else:
-                self.human_move()
+                field, fields_to_flip = self.human_move()
+            self.last_played_move = field
+            self.last_flipped_fields = fields_to_flip
+
         self.draw_game_over()
 
     def human_move(self):
         valid_moves = self.game.valid_moves()
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
-            elif event.type == pygame.MOUSEBUTTONDOWN:
-                clicked_field = self.handle_click(pygame.mouse.get_pos())
-                if clicked_field in valid_moves:
-                    self.game.play_move(clicked_field)
+        while True:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    clicked_field = self.handle_click(pygame.mouse.get_pos())
+                    if clicked_field in valid_moves:
+                        fields_to_flip = self.game.valid_moves_to_reverse[clicked_field]
+                        self.game.play_move(clicked_field)
+                        return clicked_field, fields_to_flip
 
     def play_ai_turn(self):
         fields, _ = self.ai.predict_best_move(self.game)
@@ -186,5 +231,5 @@ class OthelloGameGui:
 
 if __name__ == "__main__":
     game = OthelloGameGui()
-    game.set_match_conf(alpha_200, 2)
+    game.set_match_conf(alpha_200, 1)
     game.main()
