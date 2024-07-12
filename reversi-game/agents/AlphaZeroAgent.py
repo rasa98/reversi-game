@@ -14,9 +14,11 @@ class AlphaZeroAgent(AgentInterface):
     def __init__(self, name, model):
         super().__init__(name)
         self.model: MCTS = model
+        self.action_probs = None
 
     def predict_best_move(self, game: Othello):
         action_probs = self.model.simulate(game)
+        self.action_probs = action_probs
         if self.deterministic or game.turn > 10:
             best_action = self.model.best_moves()
             return best_action, None

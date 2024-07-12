@@ -1,5 +1,7 @@
 import random
 import time
+
+import numpy as np
 import pygame
 import sys
 import os
@@ -10,10 +12,10 @@ if __name__ == '__main__' and os.environ['USER'] != 'student':
     print(f'cwd is : {os.getcwd()}')
     os.chdir('../')
 from game_logic import Othello
-from read_all_agents import alpha_30
+from read_all_agents import alpha_200
 
 
-class OthelloGame:
+class OthelloGameGui:
     def __init__(self):
         pygame.init()
         self.game = Othello()
@@ -27,7 +29,7 @@ class OthelloGame:
 
     def setup_display(self):
         """Set up the display window and font."""
-        self.size = self.width, self.height = 800, 800
+        self.size = self.width, self.height = 800, 850  # Increased height for space above the board
         self.rows, self.cols = 8, 8
         self.square_size = self.width // self.cols
         self.padding = 10
@@ -42,32 +44,32 @@ class OthelloGame:
         # Set up the display
         self.screen = pygame.display.set_mode(self.size)
         pygame.display.set_caption('Othello')
-        self.font = pygame.font.Font(None, 55)
+        self.font = pygame.font.Font(None, 95)
+        self.label_font = pygame.font.Font(None, 50)  # Smaller font for labels
 
     def draw_board(self):
-        """Draw the Othello board."""
+        """Draw the Othello board with space for labels."""
+        top_space = 50  # Space for labels at the top
         for row in range(self.rows):
             for col in range(self.cols):
-                rect = pygame.Rect(col * self.square_size, row * self.square_size, self.square_size, self.square_size)
+                rect = pygame.Rect(col * self.square_size, top_space + row * self.square_size, self.square_size, self.square_size)
                 pygame.draw.rect(self.screen, self.green, rect)
                 pygame.draw.rect(self.screen, self.black, rect, 1)
 
     def draw_disc(self, row, col, color):
         """Draw a disc on the board."""
+        top_space = 50
         x = col * self.square_size + self.square_size // 2
-        y = row * self.square_size + self.square_size // 2
+        y = top_space + row * self.square_size + self.square_size // 2
         pygame.draw.circle(self.screen, color, (x, y), self.disc_radius)
 
     def draw_game_over(self):
         """Display the game-over screen."""
+        top_space = 50
         self.update_display()
         winner_label = 'you' if self.game.get_winner() == self.player_turn else 'ai'
-        text = self.font.render(f'{self.game.chips}'
-                                f' {winner_label}'
-                                f' Won!',
-                                True,
-                                self.red)
-        text_rect = text.get_rect(center=(self.width // 2, self.height // 2))
+        text = self.font.render(f'{self.game.chips} {winner_label} Won!', True, self.red)
+        text_rect = text.get_rect(center=(self.width // 2, top_space + (self.height - top_space) // 2))
         self.screen.blit(text, text_rect)
         pygame.display.flip()
 
@@ -85,6 +87,7 @@ class OthelloGame:
 
     def update_display(self):
         """Update the display with the current game state."""
+        top_space = 50
         self.screen.fill(self.green)
         self.draw_board()
         for row in range(self.rows):
@@ -99,17 +102,32 @@ class OthelloGame:
         else:
             highlight_color = self.red
         self.draw_valid_moves(highlight_color)
+
+        # Draw score label
+        w, b = self.game.chips
+
+        if self.player_turn == 1:
+            text = f"Score: White (human) {w} - Black {b}"
+        else:
+            text = f"Score: White {w} - Black (human) {b}"
+        score_label = self.label_font.render(text,
+                                             True,
+                                             self.black)
+        score_label_rect = score_label.get_rect(center=(self.width // 2, top_space // 2))
+        self.screen.blit(score_label, score_label_rect)
+
         pygame.display.flip()
 
     def draw_valid_moves(self, highlight_color):
-        """Draw a light green border around valid move positions."""
+        """Draw a border around valid move positions."""
+        top_space = 50
         valid_moves = self.game.valid_moves()
         border_thickness = 3
         for move in valid_moves:
             row, col = move
             rect = pygame.Rect(
                 col * self.square_size + border_thickness,
-                row * self.square_size + border_thickness,
+                top_space + row * self.square_size + border_thickness,
                 self.square_size - 2 * border_thickness,
                 self.square_size - 2 * border_thickness
             )
@@ -117,8 +135,9 @@ class OthelloGame:
 
     def handle_click(self, pos):
         """Handle mouse clicks."""
+        top_space = 50
         col = pos[0] // self.square_size
-        row = pos[1] // self.square_size
+        row = (pos[1] - top_space) // self.square_size
         print(f"Clicked on cell ({row}, {col})")
         return row, col
 
@@ -132,7 +151,18 @@ class OthelloGame:
                 start_time = time.perf_counter()
                 field = self.play_ai_turn()
                 end_time = time.perf_counter()
-                time.sleep(2 - (end_time - start_time))
+                ai_think_time = end_time - start_time
+
+                try:
+                    array_2d = self.ai.action_probs.reshape(8, 8)
+                    array_2d_rounded = np.round(array_2d, 2)
+                    print(array_2d_rounded)
+                except AttributeError as e:
+                    print(f"Save action_probs for this agent!")
+
+                # print(ai_think_time)
+                if 2 - ai_think_time > 0:
+                    time.sleep(2 - ai_think_time)
                 self.game.play_move(field)
             else:
                 self.human_move()
@@ -155,6 +185,6 @@ class OthelloGame:
 
 
 if __name__ == "__main__":
-    game = OthelloGame()
-    game.set_match_conf(alpha_30, 2)
+    game = OthelloGameGui()
+    game.set_match_conf(alpha_200, 2)
     game.main()

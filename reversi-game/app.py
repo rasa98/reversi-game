@@ -25,8 +25,8 @@ if __name__ == '__main__':
     random.seed(seed)
     np.random.seed(seed)
 
-    for agent in agents:
-        agent.set_deterministic(False)
+    # for agent in agents:
+    #     agent.set_deterministic(False)
 
     # run_elo_ranking_tournament(agents)
 

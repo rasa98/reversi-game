@@ -80,13 +80,13 @@ best_ars = load_sb3_model(f'ars_mlp',  # final1/42
                           policy_cls=CustomMlpArsPolicy)
 
 file_ppo_cnn = 'models/ppo_cnn'
-ppo_cnn = load_sb3_model(f'ppo_cnn', #  69 v7
+ppo_cnn = load_sb3_model(f'ppo_cnn',  # 69 v7
                          file_ppo_cnn,
                          cnn=True,
                          policy_cls=CustomCnnPPOPolicy)
 
 file_base_trpo = 'models/trpo_cnn'
-cnn_trpo = load_sb3_model(f'trpo_cnn', #  base1 193
+cnn_trpo = load_sb3_model(f'trpo_cnn',  # base1 193
                           file_base_trpo,
                           MaskableTrpo,
                           cnn=True,
@@ -102,3 +102,6 @@ agents = [cnn_trpo, best_mlp_ppo,
           minmax_human_depth_dyn, ai_random,
           alpha_30, alpha_200,
           mcts_agent_30, mcts_agent_200, mcts_agent_500]
+
+for agent in agents:
+    agent.set_deterministic(False)
