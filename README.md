@@ -21,9 +21,11 @@ Before running the project, ensure you have the following installed:
 - download and unzip models folder and put it in reversi-game folder - [Link to g drive](https://drive.google.com/drive/folders/14qqvrT65f06vb5iivH9EdJtylYMtIpWh?usp=sharing)
 
 ## Demo
-  - How to run elo ranking tournament
-  - How to benchmark 2 agents for x matches
-  - How to play against some agent with gui, or watch two agents play against each other
+
+Inside a demo folder you can find scripts onto:
+  - how to run elo ranking tournament
+  - how to benchmark 2 agents for x matches
+  - how to play against some agent with gui, or watch two agents play against each other
   ![Alt text](images/othello_game_gui.png)
 
 ## Benchmarking Results - Elo Ranking After 100 Rounds
