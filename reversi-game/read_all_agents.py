@@ -49,7 +49,7 @@ def load_azero_agent_by_depth(iter_depth, azero_model_location, c=1.41):
                     'decay_steps': -1,
                     "final_alpha": 0.03}
 
-    alpha = load_azero_agent(f'depth {iter_depth}',
+    alpha = load_azero_agent(f'{iter_depth}',
                              file=azero_model_location,
                              params=alpha_params)
     return alpha

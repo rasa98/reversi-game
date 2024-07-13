@@ -7,6 +7,7 @@ class AgentInterface(ABC):
     def __init__(self, name):
         self.name = name
         self.deterministic = True
+        self.action_probs = None
 
     def set_deterministic(self, det):
         self.deterministic = det

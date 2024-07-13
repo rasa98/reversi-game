@@ -6,33 +6,51 @@ import pygame
 import sys
 import os
 
+
 if __name__ == '__main__' and os.environ['USER'] != 'student':
     source_dir = os.path.abspath(os.path.join(os.getcwd(), '../'))
     sys.path.append(source_dir)
     print(f'cwd is : {os.getcwd()}')
     os.chdir('../')
 from game_logic import Othello
-from read_all_agents import alpha_200
+
+
+class HumanPlayer:
+    def __init__(self, name):
+        self.name = name
+
+
+human_player = HumanPlayer('You')
 
 
 class OthelloGameGui:
-    def __init__(self):
+    def __init__(self, min_turn_time=2, verbose=1):
         pygame.init()
         self.game = Othello()
         self.setup_display()
+
+        self.players = None
         self.player_turn = None
         self.ai = None
+
+        self.min_turn_time = min_turn_time
+        self.verbose = verbose
 
         self.last_played_move = None
         self.last_flipped_fields = set()
 
-    def set_match_conf(self, ai, player_turn):
-        self.player_turn = player_turn
-        self.ai = ai
+    def play_human_vs_ai(self, ai_agent, human_turn=1):
+        if human_turn == 1:
+            self.players = [human_player, ai_agent]
+        else:
+            self.players = [ai_agent, human_player]
+
+    def play_ai_vs_ai(self, ai1, ai2):
+        self.players = [ai1, ai2]
 
     def setup_display(self):
         """Set up the display window and font."""
-        self.size = self.width, self.height = 800, 850  # Increased height for space above the board
+        self.size = self.width, self.height = 800, 900  # Increased height for space above the board
         self.rows, self.cols = 8, 8
         self.square_size = self.width // self.cols
         self.padding = 10
@@ -50,7 +68,7 @@ class OthelloGameGui:
         self.screen = pygame.display.set_mode(self.size)
         pygame.display.set_caption('Othello')
         self.font = pygame.font.Font(None, 95)
-        self.label_font = pygame.font.Font(None, 50)  # Smaller font for labels
+        self.label_font = pygame.font.Font(None, 35)  # Smaller font for labels
 
     def draw_board(self):
         """Draw the Othello board with space for labels."""
@@ -100,8 +118,14 @@ class OthelloGameGui:
         """Display the game-over screen."""
         top_space = 50
         self.update_display()
-        winner_label = 'you' if self.game.get_winner() == self.player_turn else 'ai'
-        text = self.font.render(f'{self.game.chips} {winner_label} Won!', True, self.red)
+        # winner_label = 'you' if self.game.get_winner() == self.player_turn else 'ai'
+        if self.game.get_winner() == 1:
+            winner_label = self.players[0].name + ' Won!'
+        elif self.game.get_winner() == 2:
+            winner_label = self.players[1].name + ' Won!'
+        else:
+            winner_label = 'Its draw!'
+        text = self.font.render(f'{self.game.chips} {winner_label}', True, self.red)
         text_rect = text.get_rect(center=(self.width // 2, top_space + (self.height - top_space) // 2))
         self.screen.blit(text, text_rect)
         pygame.display.flip()
@@ -135,32 +159,38 @@ class OthelloGameGui:
                 elif self.game.board[row, col] == 2:
                     draw_shape_f(row, col, self.black)
 
-        if self.player_turn == self.game.player_turn:
-            highlight_color = (144, 238, 144)
+        is_1st_player_turn = self.game.player_turn == 1
+        if is_1st_player_turn:
+            highlight_color = self.white #(144, 238, 144)
         else:
-            highlight_color = self.red
+            highlight_color = self.black
         self.draw_valid_moves(highlight_color)
 
         # Draw score label
         w, b = self.game.chips
+        text = f"({self.players[0].name}) White {w} - {b} Black ({self.players[1].name})"
+        center = (self.width // 2, top_space // 2)
+        self.render_text(text, center)
 
-        if self.player_turn == 1:
-            text = f"Score: White (human) {w} - Black {b}"
-        else:
-            text = f"Score: White {w} - Black (human) {b}"
-        score_label = self.label_font.render(text,
-                                             True,
-                                             self.black)
-        score_label_rect = score_label.get_rect(center=(self.width // 2, top_space // 2))
-        self.screen.blit(score_label, score_label_rect)
+        text = f"{self.ai} turn"
+        center = (self.width // 2, self.height - top_space // 2)
+        turn_text_color = self.white if is_1st_player_turn else self.black
+        self.render_text(text, center, color=turn_text_color)
 
         pygame.display.flip()
+
+    def render_text(self, text, center, color=(0, 0, 0)):
+        score_label = self.label_font.render(text,
+                                             True,
+                                             color)
+        score_label_rect = score_label.get_rect(center=center)
+        self.screen.blit(score_label, score_label_rect)
 
     def draw_valid_moves(self, highlight_color):
         """Draw a border around valid move positions."""
         top_space = 50
         valid_moves = self.game.valid_moves()
-        border_thickness = 3
+        border_thickness = 5
         for move in valid_moves:
             row, col = move
             rect = pygame.Rect(
@@ -181,36 +211,50 @@ class OthelloGameGui:
 
     def main(self):
         """Main game loop."""
-        assert self.ai is not None, "You need to select ai agent!"
+        assert self.players is not None, "You need to set configuration by calling set_match_conf method!"
 
         while not self.game.is_game_over():
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+
+            self.ai = self.players[self.game.player_turn - 1]
             self.update_display()
-            if self.player_turn != self.game.player_turn:
-                start_time = time.perf_counter()
-                field = self.play_ai_turn()
-                end_time = time.perf_counter()
-                ai_think_time = end_time - start_time
+            field, fields_to_flip = self.make_move()
 
-                try:
-                    array_2d = self.ai.action_probs.reshape(8, 8)
-                    array_2d_rounded = np.round(array_2d, 2)
-                    print(array_2d_rounded)
-                except AttributeError as e:
-                    print(f"Save action_probs for this agent!")
-
-                # print(ai_think_time)
-                if 2 - ai_think_time > 0:
-                    time.sleep(2 - ai_think_time)
-                fields_to_flip = self.game.valid_moves_to_reverse[field]
-                self.game.play_move(field)
-            else:
-                field, fields_to_flip = self.human_move()
             self.last_played_move = field
             self.last_flipped_fields = fields_to_flip
 
         self.draw_game_over()
 
-    def human_move(self):
+    def make_move(self):
+        if isinstance(self.ai, HumanPlayer):
+            return self.make_human_move()
+        return self.make_ai_move()
+
+    def make_ai_move(self):
+        start_time = time.perf_counter()
+        field = self.play_ai_turn()
+        end_time = time.perf_counter()
+        ai_think_time = end_time - start_time
+        if self.verbose:
+            self.print_action_probabilities()
+        # print(ai_think_time)
+        delta_time = self.min_turn_time - ai_think_time
+        if delta_time > 0:
+            time.sleep(delta_time)
+        fields_to_flip = self.game.valid_moves_to_reverse[field]
+        self.game.play_move(field)
+        return field, fields_to_flip
+
+    def print_action_probabilities(self):
+        if self.ai.action_probs is not None:
+            array_2d = self.ai.action_probs.reshape(8, 8)
+            array_2d_rounded = np.round(array_2d, 2)
+            print(array_2d_rounded)
+
+    def make_human_move(self):
         valid_moves = self.game.valid_moves()
         while True:
             for event in pygame.event.get():
@@ -230,6 +274,14 @@ class OthelloGameGui:
 
 
 if __name__ == "__main__":
-    game = OthelloGameGui()
-    game.set_match_conf(alpha_200, 1)
+    from read_all_agents import (alpha_200,
+                                 alpha_30,
+                                 best_ars,
+                                 best_mlp_ppo,
+                                 minmax_ga_best_depth_1,
+                                 mcts_agent_500)
+
+    game = OthelloGameGui(min_turn_time=2)
+    # game.play_human_vs_ai(best_mlp_ppo, 2)
+    game.play_ai_vs_ai(alpha_200, mcts_agent_500)
     game.main()
