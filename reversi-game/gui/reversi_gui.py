@@ -44,9 +44,11 @@ class OthelloGameGui:
             self.players = [human_player, ai_agent]
         else:
             self.players = [ai_agent, human_player]
+        self.main()
 
     def play_ai_vs_ai(self, ai1, ai2):
         self.players = [ai1, ai2]
+        self.main()
 
     def setup_display(self):
         """Set up the display window and font."""
@@ -172,7 +174,7 @@ class OthelloGameGui:
         center = (self.width // 2, top_space // 2)
         self.render_text(text, center)
 
-        text = f"{self.ai} turn"
+        text = f"{self.ai.name} turn"
         center = (self.width // 2, self.height - top_space // 2)
         turn_text_color = self.white if is_1st_player_turn else self.black
         self.render_text(text, center, color=turn_text_color)
@@ -284,4 +286,3 @@ if __name__ == "__main__":
     game = OthelloGameGui(min_turn_time=2)
     # game.play_human_vs_ai(best_mlp_ppo, 2)
     game.play_ai_vs_ai(alpha_200, mcts_agent_500)
-    game.main()

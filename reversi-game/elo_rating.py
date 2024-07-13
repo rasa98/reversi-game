@@ -44,8 +44,9 @@ class EloRating:
 
 
 class Tournament:
-    def __init__(self, agents, log_dir, rounds=100, save_nth=5, verbose=0):
+    def __init__(self, agents, log_filename, log_dir='elo_output', rounds=100, save_nth=5, verbose=0):
         self.rounds = rounds
+        self.log_filename = log_filename
         self.log_dir = log_dir
         self.save_nth = save_nth
         self.players = [Player(agent) for agent in agents]
@@ -79,9 +80,9 @@ class Tournament:
                 self.save_simulation(r+1)
 
     def save_simulation(self, round_num):
-        folder = 'elo output'
-        os.makedirs(folder, exist_ok=True)
-        with open(f'{folder}/{self.log_dir}_{round_num}.txt', 'w') as f:
+        os.makedirs(self.log_dir, exist_ok=True)
+        output_path = os.path.join(self.log_dir, f'{self.log_filename}_{round_num}.txt')
+        with open(output_path, 'w') as f:
             f.write(f'Elo ranking after {round_num} rounds:\n')
             for pl in self.players:
                 f.write(f'\tAgent: {pl.agent}: {pl.rating}\n')
