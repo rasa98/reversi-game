@@ -20,6 +20,12 @@ Before running the project, ensure you have the following installed:
   - torch
 - download and unzip models folder and put it in reversi-game folder - [Link to g drive](https://drive.google.com/drive/folders/14qqvrT65f06vb5iivH9EdJtylYMtIpWh?usp=sharing)
 
+## Demo
+  - How to run elo ranking tournament
+  - How to benchmark 2 agents for x matches
+  - How to play against some agent with gui, or watch two agents play against each other
+  ![Alt text](images/othello_game_gui.png)
+
 ## Benchmarking Results - Elo Ranking After 100 Rounds
 
 In this project, various AI models for the Reversi game were evaluated and ranked based on their Elo ratings after 100 rounds of every model playing against every other both as first and second starting player. Below is a description of each model:

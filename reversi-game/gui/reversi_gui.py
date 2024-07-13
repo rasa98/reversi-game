@@ -174,7 +174,7 @@ class OthelloGameGui:
         center = (self.width // 2, top_space // 2)
         self.render_text(text, center)
 
-        text = f"{self.ai.name} turn"
+        text = f"Player turn: {self.ai.name}"
         center = (self.width // 2, self.height - top_space // 2)
         turn_text_color = self.white if is_1st_player_turn else self.black
         self.render_text(text, center, color=turn_text_color)

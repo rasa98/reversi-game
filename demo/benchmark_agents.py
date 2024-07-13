@@ -23,4 +23,5 @@ from read_all_agents import (alpha_200,
 bench_both_sides(minmax_ga_best_depth_1,
                  best_mlp_ppo,
                  times=10,
+                 timed=True,
                  verbose=1)
