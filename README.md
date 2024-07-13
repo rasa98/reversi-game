@@ -22,11 +22,11 @@ Before running the project, ensure you have the following installed:
 
 ## Demo
 
-Inside a demo folder you can find scripts onto:
-  - how to run elo ranking tournament
-  - how to benchmark 2 agents for x matches
-  - how to play against some agent with gui, or watch two agents play against each other
-  ![Alt text](images/othello_game_gui.png)
+Inside the demo folder, you can find scripts for:
+  - Running an Elo ranking tournament
+  - Benchmarking two agents for X matches
+  - Playing against an agent with a GUI, or watching two agents play against each other
+   ![Alt text](images/othello_game_gui.png)
 
 ## Benchmarking Results - Elo Ranking After 100 Rounds
 
