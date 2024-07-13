@@ -20,8 +20,8 @@ from read_all_agents import (alpha_200,
                              minmax_ga_best_depth_1,
                              mcts_agent_500)
 
-bench_both_sides(minmax_ga_best_depth_1,
+bench_both_sides(alpha_200,
                  best_mlp_ppo,
-                 times=10,
+                 times=100,
                  timed=True,
                  verbose=1)

@@ -6,7 +6,6 @@ import pygame
 import sys
 import os
 
-
 if __name__ == '__main__' and os.environ['USER'] != 'student':
     source_dir = os.path.abspath(os.path.join(os.getcwd(), '../'))
     sys.path.append(source_dir)
@@ -26,29 +25,19 @@ human_player = HumanPlayer('You')
 class OthelloGameGui:
     def __init__(self, min_turn_time=2, verbose=1):
         pygame.init()
-        self.game = Othello()
         self.setup_display()
-
-        self.players = None
-        self.player_turn = None
-        self.ai = None
 
         self.min_turn_time = min_turn_time
         self.verbose = verbose
 
+        self.players = None
+        self.setup_game()
+
+    def setup_game(self):
+        self.game = Othello()
+        self.ai = None
         self.last_played_move = None
         self.last_flipped_fields = set()
-
-    def play_human_vs_ai(self, ai_agent, human_turn=1):
-        if human_turn == 1:
-            self.players = [human_player, ai_agent]
-        else:
-            self.players = [ai_agent, human_player]
-        self.main()
-
-    def play_ai_vs_ai(self, ai1, ai2):
-        self.players = [ai1, ai2]
-        self.main()
 
     def setup_display(self):
         """Set up the display window and font."""
@@ -62,14 +51,14 @@ class OthelloGameGui:
         self.black = (0, 0, 0)
         self.white = (255, 255, 255)
         self.green = (0, 128, 0)
-        self.red = (255, 0, 0)
+        self.red = (220, 0, 0)
         self.lighter_green = (20, 198, 20)
         self.green_yellow = (154, 205, 50)
 
         # Set up the display
         self.screen = pygame.display.set_mode(self.size)
         pygame.display.set_caption('Othello')
-        self.font = pygame.font.Font(None, 95)
+        self.font = pygame.font.Font(None, 90)
         self.label_font = pygame.font.Font(None, 35)  # Smaller font for labels
 
     def draw_board(self):
@@ -128,21 +117,32 @@ class OthelloGameGui:
         else:
             winner_label = 'Its draw!'
         text = self.font.render(f'{self.game.chips} {winner_label}', True, self.red)
-        text_rect = text.get_rect(center=(self.width // 2, top_space + (self.height - top_space) // 2))
+        text_rect = text.get_rect(center=(self.width // 2, top_space + (self.height - 2 * top_space) // (8/3)))
         self.screen.blit(text, text_rect)
+
+        text = self.font.render(f'press space to play again', True, self.red)
+        text_rect = text.get_rect(center=(self.width // 2, top_space + (self.height - 2 * top_space) // 2))
+        self.screen.blit(text, text_rect)
+
         pygame.display.flip()
 
-        self.wait_for_click_to_exit()
+        return self.wait_for_click_to_exit()
 
-    @staticmethod
-    def wait_for_click_to_exit():
+    def wait_for_click_to_exit(self):
+        play_again = False
+        clock = pygame.time.Clock()
         while True:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
-                    pygame.quit()
-                    sys.exit()
-                elif event.type == pygame.MOUSEBUTTONDOWN or event.type == pygame.KEYDOWN:
-                    return
+                    return play_again
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    return play_again
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_SPACE:
+                        self.setup_game()
+                        play_again = True
+                    return play_again
+            clock.tick(10)  # Limit the loop to 10 iterations per second
 
     def update_display(self):
         """Update the display with the current game state."""
@@ -163,7 +163,7 @@ class OthelloGameGui:
 
         is_1st_player_turn = self.game.player_turn == 1
         if is_1st_player_turn:
-            highlight_color = self.white #(144, 238, 144)
+            highlight_color = self.white  # (144, 238, 144)
         else:
             highlight_color = self.black
         self.draw_valid_moves(highlight_color)
@@ -228,7 +228,7 @@ class OthelloGameGui:
             self.last_played_move = field
             self.last_flipped_fields = fields_to_flip
 
-        self.draw_game_over()
+        return self.draw_game_over()
 
     def make_move(self):
         if isinstance(self.ai, HumanPlayer):
@@ -275,6 +275,32 @@ class OthelloGameGui:
         return random.choice(fields)
 
 
+def play_human_vs_ai(ai_agent, human_turn=1, min_turn_time=2):
+    game = OthelloGameGui(min_turn_time=min_turn_time)
+    if human_turn == 1:
+        game.players = [human_player, ai_agent]
+    else:
+        game.players = [ai_agent, human_player]
+
+    # loop if playing again
+    loop_game(game)
+
+
+def play_ai_vs_ai(ai1, ai2, min_turn_time=2):
+    game = OthelloGameGui(min_turn_time=min_turn_time)
+    game.players = [ai1, ai2]
+
+    # loop if playing again
+    loop_game(game)
+
+
+def loop_game(game):
+    while game.main():
+        game.setup_game()
+    pygame.quit()
+    sys.exit()
+
+
 if __name__ == "__main__":
     from read_all_agents import (alpha_200,
                                  alpha_30,
@@ -283,6 +309,4 @@ if __name__ == "__main__":
                                  minmax_ga_best_depth_1,
                                  mcts_agent_500)
 
-    game = OthelloGameGui(min_turn_time=2)
-    # game.play_human_vs_ai(best_mlp_ppo, 2)
-    game.play_ai_vs_ai(alpha_200, mcts_agent_500)
+    play_ai_vs_ai(alpha_200, mcts_agent_500, min_turn_time=2)

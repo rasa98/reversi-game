@@ -11,20 +11,22 @@ os.chdir(relative_proj_dir_path)
 
 
 
-from gui.reversi_gui import OthelloGameGui
+from gui.reversi_gui import (play_human_vs_ai,
+                             play_ai_vs_ai)
 
 # Import any premade agent from 'read_all_agents' module
 from read_all_agents import (alpha_200,
                              alpha_30,
                              best_ars,
                              best_mlp_ppo,
+                             cnn_trpo,
                              minmax_ga_best_depth_1,
-                             mcts_agent_500)
-
-game = OthelloGameGui(min_turn_time=2)
+                             mcts_agent_500,
+                             mcts_agent_30,
+                             )
 
 # if you wanna play against 'best_mlp' as a second turn player
-game.play_human_vs_ai(best_mlp_ppo, 1)
+# play_human_vs_ai(alpha_200, min_turn_time=2)
 
 # if you wanna visually watch two agents playing
-# game.play_ai_vs_ai(alpha_200, mcts_agent_500)
+play_ai_vs_ai(best_ars, best_mlp_ppo, min_turn_time=0)
