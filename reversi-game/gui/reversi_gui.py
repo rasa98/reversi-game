@@ -59,7 +59,9 @@ class OthelloGameGui:
         self.screen = pygame.display.set_mode(self.size)
         pygame.display.set_caption('Othello')
         self.font = pygame.font.Font(None, 90)
+
         self.label_font = pygame.font.Font(None, 35)  # Smaller font for labels
+
 
     def draw_board(self):
         """Draw the Othello board with space for labels."""
@@ -116,17 +118,34 @@ class OthelloGameGui:
             winner_label = self.players[1].name + ' Won!'
         else:
             winner_label = 'Its draw!'
-        text = self.font.render(f'{self.game.chips} {winner_label}', True, self.red)
-        text_rect = text.get_rect(center=(self.width // 2, top_space + (self.height - 2 * top_space) // (8/3)))
-        self.screen.blit(text, text_rect)
 
-        text = self.font.render(f'press space to play again', True, self.red)
-        text_rect = text.get_rect(center=(self.width // 2, top_space + (self.height - 2 * top_space) // 2))
-        self.screen.blit(text, text_rect)
+        center = (self.width // 2, top_space + (self.height - 2 * top_space) // (8/3))
+        label = f'{self.game.chips} {winner_label}'
+        color = self.red
+        self.render_black_outline(self.font, center, label, color)
+
+        label = 'press space to play again'
+        center = (self.width // 2, top_space + (self.height - 2 * top_space) // 2)
+        self.render_black_outline(self.font, center, label, color)
 
         pygame.display.flip()
 
         return self.wait_for_click_to_exit()
+
+    def render_black_outline(self, font, center, label, color):
+        # Render the outline
+        text = font.render(label, True, self.black)
+        for i in [-2, 0, 2]:
+            for j in [-2, 0, 2]:
+                if i != 0 or j != 0:
+                    offset_center = (center[0] + i, center[1] + j)
+                    text_rect = text.get_rect(center=offset_center)
+                    self.screen.blit(text, text_rect)
+
+        # Render the main text
+        text = font.render(label, True, color)
+        text_rect = text.get_rect(center=center)
+        self.screen.blit(text, text_rect)
 
     def wait_for_click_to_exit(self):
         play_again = False
@@ -254,7 +273,7 @@ class OthelloGameGui:
         if self.ai.action_probs is not None:
             array_2d = self.ai.action_probs.reshape(8, 8)
             array_2d_rounded = np.round(array_2d, 2)
-            print(array_2d_rounded)
+            print(array_2d_rounded, '\n')
 
     def make_human_move(self):
         valid_moves = self.game.valid_moves()
