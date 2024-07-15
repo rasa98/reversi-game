@@ -28,7 +28,8 @@ def benchmark(ai1, ai2, times=200, verbose=1):
 
     vals = []
     for _ in my_range(times):
-        winner_str = ai_vs_ai_cli(ai1, ai2)
+        game = ai_vs_ai_cli(ai1, ai2)
+        winner_str = game.get_winner()
         vals.append(winner_str)
     counter = Counter(vals)
     d = {}
@@ -39,6 +40,32 @@ def benchmark(ai1, ai2, times=200, verbose=1):
     if verbose:
         print_results(ai1, ai2, d)
     return d
+
+
+def benchmark_both_sides_last_board_state(ai1, ai2, times=200, verbose=1):
+    """Check how many different finish states are. Good if all are diff.
+       Some agents play strictly 'same' moves, so if pair two of that type,
+       they can play 'same' games."""
+    my_range = range
+    if verbose > 1:
+        my_range = trange
+
+    vals = []
+    for _ in my_range(times):
+        game = ai_vs_ai_cli(ai1, ai2)
+        board = tuple(game.board.reshape(-1))
+        vals.append(board)
+    counter = Counter(vals)
+    frequency_list = list(counter.values())
+    print(frequency_list)
+    vals = []
+    for _ in my_range(times):
+        game = ai_vs_ai_cli(ai2, ai1)
+        board = tuple(game.board.reshape(-1))
+        vals.append(board)
+    counter = Counter(vals)
+    frequency_list = list(counter.values())
+    print(frequency_list)
 
 
 def _bench_both_sides(ai1, ai2, times=200, verbose=1):

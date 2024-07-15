@@ -2,14 +2,13 @@ import os
 import sys
 
 import warnings
+
 warnings.filterwarnings('ignore', category=UserWarning)
 
 relative_proj_dir_path = '../reversi-game/'
 source_dir = os.path.abspath(os.path.join(os.getcwd(), relative_proj_dir_path))
 sys.path.append(source_dir)
 os.chdir(relative_proj_dir_path)
-
-
 
 from gui.reversi_gui import (play_human_vs_ai,
                              play_ai_vs_ai)
@@ -32,4 +31,4 @@ from read_all_agents import (alpha_200,
 # play_human_vs_ai(alpha_200, human_turn=2, min_turn_time=2, verbose=1)
 
 # if you wanna visually watch two agents playing
-# play_ai_vs_ai(ai_random, alpha_30, min_turn_time=0, verbose=1)
+play_ai_vs_ai(cnn_trpo, best_ars, min_turn_time=0, verbose=1)

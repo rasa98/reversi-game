@@ -16,16 +16,22 @@ from elo_rating import Tournament as Tour
 from read_all_agents import (agents,
                              best_ars,
                              best_mlp_ppo,
-                             minmax_ga_best_depth_1)
+                             minmax_ga_best_depth_1,
+                             cnn_trpo)
 
 log_filename = 'elo'
 log_folder_name = 'elo logs'  # outputs will be in this folder
 rounds = 10
 verbose = 0
-t = Tour([best_ars, best_mlp_ppo, minmax_ga_best_depth_1],  # agents,
+
+# shouldnt play against each other, cuz they play 'same' matches
+banned_agent_pairs = {(best_ars, cnn_trpo)}
+
+t = Tour([best_ars, cnn_trpo, best_mlp_ppo, minmax_ga_best_depth_1],  # agents,
          log_filename,
          log_dir=os.path.join(cwd, log_folder_name),
          rounds=rounds,
          save_nth=5,
-         verbose=verbose)
+         verbose=verbose,
+         banned=banned_agent_pairs)
 t.simulate()

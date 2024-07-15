@@ -22,7 +22,7 @@ from game_logic import Othello, ALL_FIELDS_SIZE
 from algorithms.alphazero.alpha_mcts_batch import MCTS
 from algorithms.alphazero.utils.neural_net import Net
 
-from agents.sb3_agent import load_sb3_model
+from agents.sb3_agent import load_sb3_agent
 from bench_agent import bench_both_sides
 
 from agents.agent_interface import ai_random
@@ -52,7 +52,7 @@ class AlphaZero:
     @staticmethod
     def load_test_agent():
         ppo_18_big_rollouts = (
-            load_sb3_model('strong 17 ppo',
+            load_sb3_agent('strong 17 ppo',
                            'scripts/rl/output/v3v3/history_0017'))
 
         return ppo_18_big_rollouts

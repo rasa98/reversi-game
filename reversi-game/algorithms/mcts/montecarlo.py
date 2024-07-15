@@ -58,8 +58,8 @@ class Node:
 
     def simulate_game(self):
         game_copy = self.game.get_snapshot()
-        winner = ai_vs_ai_cli(ai_random, ai_random, game_copy)  # 1, 2, or 0
-        return winner
+        game = ai_vs_ai_cli(ai_random, ai_random, game_copy)  # 1, 2, or 0
+        return game.get_winner()
 
 
 class MCTS:

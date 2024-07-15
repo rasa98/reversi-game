@@ -28,14 +28,12 @@ class MaskedPPOWrapper(AgentInterface):
         else:
             self.obs_space = Box(low=0, high=1, shape=(64 * 3,), dtype=np.float32)
 
-    def _predict_best_move(self, game: Othello):
+    def _predict_best_move(self, det, game: Othello):
         if self.use_cnn:
             encoded_state = game.get_encoded_state_as_img()
         else:
             encoded_state = game.get_encoded_state().reshape(-1)  # for Mlp
-        det = self.deterministic
-        if (game.turn > 15 and random.random() > 0.05) or game.turn > 50:
-            det = True
+
         action, _ = self.model.predict(encoded_state,
                                        action_masks=action_masks(game),
                                        deterministic=det)
@@ -45,7 +43,7 @@ class MaskedPPOWrapper(AgentInterface):
         return (move,), None
 
 
-def load_sb3_model(name, file, cls=MaskablePPO, cnn=False, policy_cls=None):  # TODO generalize this module
+def load_sb3_agent(name, file, cls=MaskablePPO, cnn=False, policy_cls=None):
     '''for ppo cnn it doesnt pickle policy class BUG, so you need to supply it'''
     custom_objects = {'lr_schedule': lambda _: 0.0005,  # only cuz of warnings...
                       'learning_rate': 0.0005,

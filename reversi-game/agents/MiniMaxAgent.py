@@ -28,10 +28,10 @@ class MiniMaxAgent(AgentInterface):
         super().__init__(name)
         self.model: Minimax = model
 
-    def _predict_best_move(self, game: Othello):
+    def _predict_best_move(self, det, game: Othello):
         action_probs = self.model.simulate(game)
 
-        if self.deterministic or game.turn > 15:
+        if det:
             best_action = self.model.best_moves()  # list of best moves if multiple have same eval
             return best_action, None
         else:

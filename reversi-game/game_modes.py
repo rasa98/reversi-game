@@ -72,6 +72,6 @@ def ai_vs_ai_cli(ai1, ai2, game=None):
             ai_moves, estimate = f2(game)
             ai_move_choice = random.choice(ai_moves)
             game.play_move(ai_move_choice)
-    return game.get_winner()
+    return game
 
 

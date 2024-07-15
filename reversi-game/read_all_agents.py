@@ -13,7 +13,7 @@ from agents.MiniMaxAgent import (minmax_ga_best_depth_1,
                                  minmax_human_depth_dyn)
 from agents.actor_critic_agent import (load_ac_agent)
 from agents.agent_interface import ai_random
-from agents.sb3_agent import load_sb3_model
+from agents.sb3_agent import load_sb3_agent
 from scripts.rl.train_model_ars import MaskableArs, CustomMlpPolicy as CustomMlpArsPolicy
 from scripts.rl.train_model_ppo import CustomCnnPPOPolicy
 from scripts.rl.train_model_trpo import (MaskableTrpo,
@@ -70,7 +70,7 @@ seed = int(time.time())
 random.seed(seed)
 np.random.seed(seed)
 
-best_mlp_ppo = load_sb3_model(f'ppo_mlp', 'models/ppo_mlp')
+best_mlp_ppo = load_sb3_agent(f'ppo_mlp', 'models/ppo_mlp')
 
 mcts_agent_30 = load_mcts_agent_by_depth(30)
 mcts_agent_200 = load_mcts_agent_by_depth(200)
@@ -86,19 +86,19 @@ alpha_30 = load_azero_agent_by_depth(30, azero_model_location)
 alpha_200 = load_azero_agent_by_depth(200, azero_model_location)
 
 file_base_ars = 'models/ars_mlp'
-best_ars = load_sb3_model(f'ars_mlp',  # final1/42
+best_ars = load_sb3_agent(f'ars_mlp',  # final1/42
                           file_base_ars,
                           cls=MaskableArs,
                           policy_cls=CustomMlpArsPolicy)
 
 file_ppo_cnn = 'models/ppo_cnn'
-ppo_cnn = load_sb3_model(f'ppo_cnn',  # 69 v7
+ppo_cnn = load_sb3_agent(f'ppo_cnn',  # 69 v7
                          file_ppo_cnn,
                          cnn=True,
                          policy_cls=CustomCnnPPOPolicy)
 
 file_base_trpo = 'models/trpo_cnn'
-cnn_trpo = load_sb3_model(f'trpo_cnn',  # base1 193
+cnn_trpo = load_sb3_agent(f'trpo_cnn',  # base1 193
                           file_base_trpo,
                           MaskableTrpo,
                           cnn=True,
@@ -115,7 +115,10 @@ agents = [cnn_trpo, best_mlp_ppo,
           alpha_30, alpha_200,
           mcts_agent_30, mcts_agent_200, mcts_agent_500]
 
-for agent in agents:
-    agent.set_deterministic(False)
 
-pmcts_agent_500.set_deterministic(False)
+### Chnage so deterministic by default is False
+
+# for agent in agents:
+#     agent.set_deterministic(False)
+#
+# pmcts_agent_500.set_deterministic(False)

@@ -22,20 +22,15 @@ class ParallelMctsAgent(AgentInterface):
     def clean_pool(self):
         self.model.clean()
 
-    def _predict_best_move(self, game: Othello):
+    def _predict_best_move(self, det, game: Othello):
         action_probs = self.model.simulate(game)
 
-        if self.deterministic or game.turn > 15:  # No need to change to non deter, since its randomly simulating games, and wont play same moves if other player/agents plays same moves.
+        if det:
             best_action = self.model.best_moves()
             return best_action, None
         else:
             best_action = self.choose_stochastic(action_probs)
             return (best_action,), None
-
-    # @staticmethod
-    # def choose_stochastic(action_prob):
-    #     encoded_action = np.random.choice(len(action_prob), p=action_prob)
-    #     return Othello.get_decoded_field(encoded_action)
 
 
 def load_parallel_mcts_model(params=None):
