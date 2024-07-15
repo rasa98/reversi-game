@@ -28,7 +28,7 @@ class MaskedPPOWrapper(AgentInterface):
         else:
             self.obs_space = Box(low=0, high=1, shape=(64 * 3,), dtype=np.float32)
 
-    def predict_best_move(self, game: Othello):
+    def _predict_best_move(self, game: Othello):
         if self.use_cnn:
             encoded_state = game.get_encoded_state_as_img()
         else:

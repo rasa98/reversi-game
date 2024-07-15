@@ -6,6 +6,7 @@ import numpy as np
 
 from agents.AlphaZeroAgent import (load_azero_agent)
 from agents.MctsAgent import load_mcts_model
+from agents.ParallelMctsAgent import load_parallel_mcts_model
 from agents.MiniMaxAgent import (minmax_ga_best_depth_1,
                                  minmax_human_depth_1,
                                  minmax_ga_depth_dyn,
@@ -17,6 +18,15 @@ from scripts.rl.train_model_ars import MaskableArs, CustomMlpPolicy as CustomMlp
 from scripts.rl.train_model_ppo import CustomCnnPPOPolicy
 from scripts.rl.train_model_trpo import (MaskableTrpo,
                                          CustomCnnTRPOPolicy)
+
+
+def load_parallel_mcts_agent_by_depth(iter_depth, c=1.41):
+    mcts_params = {'max_time': math.inf,
+                   'max_iter': iter_depth,
+                   'c': c,
+                   'verbose': 0}
+    pmcts = load_parallel_mcts_model(params=mcts_params)
+    return pmcts
 
 
 def load_mcts_agent_by_depth(iter_depth, c=1.41):
@@ -66,6 +76,8 @@ mcts_agent_30 = load_mcts_agent_by_depth(30)
 mcts_agent_200 = load_mcts_agent_by_depth(200)
 mcts_agent_500 = load_mcts_agent_by_depth(500)
 
+pmcts_agent_500 = load_parallel_mcts_agent_by_depth(500)
+
 azero_folder = 'models/'  # f'models_output/alpha-zero/FINAL/layer64-LAST-v3/'
 azero_model_location = f'{azero_folder}azero.pt'  # 3
 
@@ -105,3 +117,5 @@ agents = [cnn_trpo, best_mlp_ppo,
 
 for agent in agents:
     agent.set_deterministic(False)
+
+pmcts_agent_500.set_deterministic(False)

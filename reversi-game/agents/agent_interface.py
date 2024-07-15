@@ -13,10 +13,20 @@ class AgentInterface(ABC):
         self.deterministic = det
         return self
 
-    @abstractmethod
     def predict_best_move(self, game: Othello):
         """Abstract method to make predictions."""
+        if game.turn == 1:
+            return self.make_random_move(game)  # first move is symmetrical so its fine to random it
+        return self._predict_best_move(game)
+
+    @abstractmethod
+    def _predict_best_move(self, game: Othello):
+        """Abstract method to make predictions."""
         pass
+
+    @staticmethod
+    def make_random_move(game: Othello):
+        return list(game.valid_moves()), None
 
     @staticmethod
     def choose_stochastic(action_prob):
@@ -31,8 +41,8 @@ class RandomAgent(AgentInterface):
     def __init__(self):
         super().__init__('Random model')
 
-    def predict_best_move(self, game: Othello):
-        return list(game.valid_moves()), None
+    def _predict_best_move(self, game: Othello):
+        return self.make_random_move(game)
 
 
 ai_random = RandomAgent()

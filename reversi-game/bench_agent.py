@@ -1,6 +1,7 @@
 import time
 from game_modes import ai_vs_ai_cli
 from collections import Counter
+from tqdm import trange
 
 
 def print_results(player1, player2, d):
@@ -21,8 +22,12 @@ def time_function(func):
 
 
 def benchmark(ai1, ai2, times=200, verbose=1):
+    my_range = range
+    if verbose > 1:
+        my_range = trange
+
     vals = []
-    for _ in range(times):
+    for _ in my_range(times):
         winner_str = ai_vs_ai_cli(ai1, ai2)
         vals.append(winner_str)
     counter = Counter(vals)

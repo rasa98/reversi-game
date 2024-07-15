@@ -50,6 +50,7 @@ class OthelloGameGui:
         # Colors
         self.black = (0, 0, 0)
         self.white = (255, 255, 255)
+        self.gray = (128, 128, 128)
         self.green = (0, 128, 0)
         self.red = (220, 0, 0)
         self.lighter_green = (20, 198, 20)
@@ -121,7 +122,7 @@ class OthelloGameGui:
 
         center = (self.width // 2, top_space + (self.height - 2 * top_space) // (8/3))
         label = f'{self.game.chips} {winner_label}'
-        color = self.red
+        color = self.gray
         self.render_black_outline(self.font, center, label, color)
 
         label = 'press space to play again'
@@ -294,8 +295,8 @@ class OthelloGameGui:
         return random.choice(fields)
 
 
-def play_human_vs_ai(ai_agent, human_turn=1, min_turn_time=2):
-    game = OthelloGameGui(min_turn_time=min_turn_time)
+def play_human_vs_ai(ai_agent, human_turn=1, min_turn_time=2, verbose=1):
+    game = OthelloGameGui(min_turn_time=min_turn_time, verbose=verbose)
     if human_turn == 1:
         game.players = [human_player, ai_agent]
     else:
@@ -305,8 +306,8 @@ def play_human_vs_ai(ai_agent, human_turn=1, min_turn_time=2):
     loop_game(game)
 
 
-def play_ai_vs_ai(ai1, ai2, min_turn_time=2):
-    game = OthelloGameGui(min_turn_time=min_turn_time)
+def play_ai_vs_ai(ai1, ai2, min_turn_time=2, verbose=1):
+    game = OthelloGameGui(min_turn_time=min_turn_time, verbose=verbose)
     game.players = [ai1, ai2]
 
     # loop if playing again
@@ -328,4 +329,4 @@ if __name__ == "__main__":
                                  minmax_ga_best_depth_1,
                                  mcts_agent_500)
 
-    play_ai_vs_ai(alpha_200, mcts_agent_500, min_turn_time=2)
+    play_ai_vs_ai(alpha_200, mcts_agent_500, min_turn_time=2, verbose=0)

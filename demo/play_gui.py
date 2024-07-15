@@ -23,11 +23,13 @@ from read_all_agents import (alpha_200,
                              minmax_ga_best_depth_1,
                              mcts_agent_500,
                              mcts_agent_30,
-                             ai_random
+                             ai_random,
+                             load_mcts_agent_by_depth,
+                             load_parallel_mcts_agent_by_depth
                              )
 
 # if you wanna play against 'best_mlp' as a second turn player
-# play_human_vs_ai(alpha_200, min_turn_time=2)
+# play_human_vs_ai(alpha_200, human_turn=2, min_turn_time=2, verbose=1)
 
 # if you wanna visually watch two agents playing
-play_ai_vs_ai(alpha_30, ai_random, min_turn_time=0)
+# play_ai_vs_ai(ai_random, alpha_30, min_turn_time=0, verbose=1)

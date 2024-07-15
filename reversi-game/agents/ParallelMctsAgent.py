@@ -14,7 +14,7 @@ class ParallelMctsAgent(AgentInterface):
         self.model: PMCTS = model
 
     def open_pool(self, num_process=-1):
-        if num_process == -1:
+        if num_process <= -1:
             self.model.open_pool()
         else:
             self.model.open_pool(num_process)
@@ -22,7 +22,7 @@ class ParallelMctsAgent(AgentInterface):
     def clean_pool(self):
         self.model.clean()
 
-    def predict_best_move(self, game: Othello):
+    def _predict_best_move(self, game: Othello):
         action_probs = self.model.simulate(game)
 
         if self.deterministic or game.turn > 15:  # No need to change to non deter, since its randomly simulating games, and wont play same moves if other player/agents plays same moves.
@@ -52,4 +52,4 @@ def load_parallel_mcts_model(params=None):
                        c=c,
                        verbose=verbose)
 
-    return ParallelMctsAgent(f'Pmcts iter_limit {iter_limit}', mcts_model)
+    return ParallelMctsAgent(f'Pmcts {iter_limit}', mcts_model)

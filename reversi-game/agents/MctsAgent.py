@@ -13,7 +13,7 @@ class MctsAgent(AgentInterface):
         super().__init__(name)
         self.model: MCTS = model
 
-    def predict_best_move(self, game: Othello):
+    def _predict_best_move(self, game: Othello):
         action_probs = self.model.simulate(game)
         self.action_probs = action_probs
         if self.deterministic or game.turn > 15:  # No need to change to non deter, since its randomly simulating games, and wont play same moves if other player/agents plays same moves.
