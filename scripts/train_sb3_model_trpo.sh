@@ -5,7 +5,7 @@
 #SBATCH --partition=cuda
 #SBATCH --time=100:00:00
 #SBATCH --job-name=trpo-cnn
-#SBATCH --nodelist=n01
+#SBATCH --nodelist=n19
 #SBATCH --output=../reversi-game/scripts/rl/output/phase2/trpo/cnn/base_%j.txt
 
 

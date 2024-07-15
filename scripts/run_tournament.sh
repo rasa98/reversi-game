@@ -3,7 +3,7 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=2
 #SBATCH --partition=cuda
-#SBATCH --time=100:00:00
+#SBATCH --time=200:00:00
 #SBATCH --job-name=elo
 #SBATCH --nodelist=n19
 #SBATCH --output=elo_ranking_%j.txt

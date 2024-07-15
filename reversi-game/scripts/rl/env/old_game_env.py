@@ -86,10 +86,13 @@ class BasicEnv(gym.Env):
 
     def other_agent_play_move(self):
         obs = self.get_obs()
-
+        
+        det = False
+        if self.game.turn > 20:
+            det = True
         action, _ = self.other_agent.predict(obs,
                                              action_masks=self.action_masks(),
-                                             deterministic=False)
+                                             deterministic=det)
         if isinstance(action, np.ndarray):
             action = action.item()
         game_action = Othello.get_decoded_field(action)

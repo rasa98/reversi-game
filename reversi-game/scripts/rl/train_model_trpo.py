@@ -27,6 +27,7 @@ from scripts.rl.env.old_game_env import (BasicEnv,
                                          SelfPlayCallback,
                                          ReversiCNN)
 from scripts.rl.env.sp_env import TrainEnv as RewardEnv
+from scripts.rl.env.selfplay_env import SelfPlayEnv
 
 import stable_baselines3.common.callbacks as callbacks_module
 from sb3_contrib.common.maskable.evaluation import evaluate_policy as masked_evaluate_policy
@@ -286,16 +287,16 @@ if __name__ == '__main__':
     device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
     # Settings
-    SEED = 3  # NOT USED
+    SEED = 1141  # NOT USED
     NUM_TIMESTEPS = int(50_000_000)
-    EVAL_FREQ = int(7500)
+    EVAL_FREQ = int(10000)
     EVAL_EPISODES = int(1000)
-    BEST_THRESHOLD = 0.18  # must achieve a mean score above this to replace prev best self
+    BEST_THRESHOLD = 0.2  # must achieve a mean score above this to replace prev best self
     RENDER_MODE = False  # set this to false if you plan on running for full 1000 trials.
     # LOGDIR = 'scripts/rl/test-working/ppo/v1/'  # "ppo_masked/test/"
-    LOGDIR = 'scripts/rl/output/phase2/trpo/cnn/base3/' #'scripts/rl/output/phase2/trpo/mlp/base-v4-Rewards/'
+    LOGDIR = 'scripts/rl/output/phase2/trpo/cnn/final-A/' #'scripts/rl/output/phase2/trpo/mlp/base-v4-Rewards/'
     CNN_POLICY = True #False
-    CONTINUE_FROM_MODEL = 'scripts/rl/output/phase2/trpo/cnn/base1/history_0193' #'scripts/rl/output/phase2/trpo/cnn/base-rewards/history_0048'
+    CONTINUE_FROM_MODEL = None #'scripts/rl/output/phase2/trpo/cnn/base1/history_0193' #'scripts/rl/output/phase2/trpo/cnn/base-rewards/history_0048'
     TRAIN_ENV = BasicEnv
 
     print(f'seed: {SEED} \nnum_timesteps: {NUM_TIMESTEPS} \neval_freq: {EVAL_FREQ}',
@@ -304,8 +305,8 @@ if __name__ == '__main__':
 
     policy_kwargs = {
         'net_arch': {
-            'pi': [128] * 4,
-            'vf': [64] * 2
+            'pi': [128] * 8,
+            'vf': [64] * 4
         }
     }
 
@@ -313,7 +314,7 @@ if __name__ == '__main__':
         'learning_rate': LinearSchedule(0.00009),
         'n_steps': 2048,#30,
         'batch_size': 128,
-        'gae_lambda': 0.95,  # Factor for GAE
+        #'gae_lambda': 0.95,  # Factor for GAE
         #'target_kl': 0.02,  # Maximum KL divergence between old and new policies        
         #'line_search_max_iter': 15,  # Value function coefficient        
         #'cg_max_steps': 10,  # Maximum number of conjugate gradient steps
