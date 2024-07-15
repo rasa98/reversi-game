@@ -12,7 +12,12 @@ After training the models, they were benchmarked, and an Elo ranking system was 
 Before running the project, ensure you have the following installed:
 
 - Python 3.6 or higher
-- Required Python packages (listed in `requirements.txt`)
+- Required Python packages (Install them using pip):
+  - stable-baselines3
+  - sb3-contrib
+  - numba
+  - numpy
+  - torch
 - download and unzip models folder and put it in reversi-game folder - [Link to g drive](https://drive.google.com/drive/folders/14qqvrT65f06vb5iivH9EdJtylYMtIpWh?usp=sharing)
 
 ## Benchmarking Results - Elo Ranking After 100 Rounds

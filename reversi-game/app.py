@@ -112,6 +112,7 @@ if __name__ == '__main__':
               minmax_human_depth_dyn, ai_random,
               alpha_30, alpha_200,
               mcts_agent_30, mcts_agent_200, mcts_agent_500]
+
     for agent in agents:
         agent.set_deterministic(False)
 
@@ -119,6 +120,7 @@ if __name__ == '__main__':
 
     #from bench_agent import bench_both_sides
     #bench_both_sides(alpha_100_with_ppo, alpha_30, times=5, verbose=1)
+
 
     # azero with ppo as model performce worse cuz value function
     # doesnt do the same thing azero alg expects

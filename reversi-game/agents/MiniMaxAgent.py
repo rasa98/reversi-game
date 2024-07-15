@@ -44,13 +44,6 @@ def load_minimax_agent(name, depth_f, heu_f):
     return MiniMaxAgent(f'MinMax {name}', minimax_agent)
 
 
-# mm_static = load_minimax_agent('static depth',
-#                                lambda _: 3,
-#                                heuristic)
-# mm2_dynamic = load_minimax_agent('dyn depth',
-#                                  dynamic_depth_f,
-#                                  heuristic2)
-
 human_heu_f = lambda: {CountChips: CountChips(1.5),
                        CountCorners: CountCorners(8, 2.5),
                        CountDangerEarlyGame: CountDangerEarlyGame(5),
@@ -64,6 +57,7 @@ minmax_human_depth_dyn = load_minimax_agent("minmax human depth dynamic",
                                      dynamic_depth_f,
                                      create_heuristic(human_heu_f()))
 
+
 heu2_f = lambda: {CountCorners2: CountCorners2(1.345726455834431, 2.1073849836637555),
                   CountDangerEarlyGame2: CountDangerEarlyGame2(5.214213407375362),
                   MaximizeMyMoves2: MaximizeMyMoves2(88.59176079991997, 16.676433765717864)
@@ -73,6 +67,8 @@ minmax_ga_best_depth_1 = load_minimax_agent("minmax GA depth 1",
                                       fixed_depth_f(1),
                                       create_heuristic(heu2_f()))
 
+
 minmax_ga_depth_dyn = load_minimax_agent("minmax GA depth dyn",
                                         dynamic_depth_f,
                                         create_heuristic(heu2_f()))
+
