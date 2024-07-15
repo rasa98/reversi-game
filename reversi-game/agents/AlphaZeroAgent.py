@@ -15,9 +15,10 @@ class AlphaZeroAgent(AgentInterface):
         super().__init__(name)
         self.model: MCTS = model
 
-    def predict_best_move(self, game: Othello):
+    def _predict_best_move(self, det, game: Othello):
         action_probs = self.model.simulate(game)
-        if self.deterministic or game.turn > 10:
+        self.action_probs = action_probs
+        if det:
             best_action = self.model.best_moves()
             return best_action, None
         else:
@@ -63,7 +64,7 @@ def load_azero_agent(name, file=None, model=None, params=None):
                 initial_alpha=initial_alpha,
                 verbose=verbose)
 
-    return AlphaZeroAgent(f'alpha-mcts - {name}', mcts)
+    return AlphaZeroAgent(f'azero {name}', mcts)
 
 
 def model_generator(file_location, model_idxs, params):

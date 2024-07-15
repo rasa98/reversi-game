@@ -86,9 +86,8 @@ class BasicEnv(gym.Env):
 
     def other_agent_play_move(self):
         obs = self.get_obs()
-        
         det = False
-        if self.game.turn > 20:
+        if self.game.turn > 15:
             det = True
         action, _ = self.other_agent.predict(obs,
                                              action_masks=self.action_masks(),

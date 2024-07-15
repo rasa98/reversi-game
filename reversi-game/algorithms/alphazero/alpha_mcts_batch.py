@@ -6,7 +6,6 @@ import gc
 
 import torch
 from game_logic import Othello, ALL_FIELDS_SIZE
-from game_modes import ai_vs_ai_cli
 from agents.agent_interface import ai_random
 
 

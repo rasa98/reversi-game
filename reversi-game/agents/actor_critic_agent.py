@@ -11,7 +11,7 @@ class ACAgent(AgentInterface):
         super().__init__(name)
         self.model = model
 
-    def predict_best_move(self, game: Othello):
+    def _predict_best_move(self, det, game: Othello):
         # action_probs, value = self.model.forward(game.get_encoded_state())
         encoded_state = game.get_encoded_state()
         policy, _ = self.model(
@@ -25,7 +25,7 @@ class ACAgent(AgentInterface):
 
         action_probs = policy
 
-        if self.deterministic or game.turn > 15:
+        if det:
             indices_of_max = np.where(action_probs == np.amax(action_probs))[0]
 
             # Convert indices to a list

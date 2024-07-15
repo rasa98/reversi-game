@@ -28,10 +28,10 @@ class MiniMaxAgent(AgentInterface):
         super().__init__(name)
         self.model: Minimax = model
 
-    def predict_best_move(self, game: Othello):
+    def _predict_best_move(self, det, game: Othello):
         action_probs = self.model.simulate(game)
 
-        if self.deterministic or game.turn > 15:
+        if det:
             best_action = self.model.best_moves()  # list of best moves if multiple have same eval
             return best_action, None
         else:
@@ -42,6 +42,8 @@ class MiniMaxAgent(AgentInterface):
 def load_minimax_agent(name, depth_f, heu_f):
     minimax_agent = Minimax(depth_f, heu_f)
     return MiniMaxAgent(f'MinMax {name}', minimax_agent)
+
+
 
 
 human_heu_f = lambda: {CountChips: CountChips(1.5),

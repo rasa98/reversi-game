@@ -24,7 +24,7 @@ from algorithms.alphazero.utils.replay_buffer import ReplayBuffer
 from algorithms.alphazero.alpha_mcts_batch import MCTS
 from algorithms.alphazero.utils.neural_net import Net
 
-from agents.sb3_agent import load_sb3_model
+from agents.sb3_agent import load_sb3_agent
 from agents.agent_interface import ai_random
 from agents.AlphaZeroAgent import load_azero_agent
 
@@ -65,7 +65,7 @@ class AlphaZero:
     @staticmethod
     def load_test_agent():
         ppo_18_big_rollouts = (
-            load_sb3_model('strong 17 ppo',
+            load_sb3_agent('strong 17 ppo',
                            'scripts/rl/output/v3v3/history_0017'))
 
         return ppo_18_big_rollouts

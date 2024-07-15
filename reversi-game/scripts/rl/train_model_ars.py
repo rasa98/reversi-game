@@ -368,6 +368,7 @@ if __name__ == '__main__':
     CONTINUE_FROM_MODEL = None #'scripts/rl/output/phase2/ars/mlp/base-new/history_0183'  # None
     TRAIN_ENV = BasicEnv # SelfPlayEnv
 
+
     print(f'seed: {SEED} \nnum_timesteps: {NUM_TIMESTEPS} \neval_freq: {EVAL_FREQ}',
           f'\neval_episoded: {EVAL_EPISODES} \nbest_threshold: {BEST_THRESHOLD}',
           f'\nlogdir: {LOGDIR} \ncontinueFrom_model: {CONTINUE_FROM_MODEL}', flush=True)

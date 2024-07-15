@@ -50,7 +50,8 @@ def simulate_tournament(matches):
         mm1 = load_minimax_agent('bot 1', lambda _: 1, x.get_heuristic())
         mm2 = load_minimax_agent('bot 2', lambda _: 1, y.get_heuristic())
 
-        winner = ai_vs_ai_cli(mm1, mm2)
+        game = ai_vs_ai_cli(mm1, mm2)
+        winner = game.get_winner()
         if winner != 0:
             winner_idx = winner - 1
             winner_model = pair[winner_idx]

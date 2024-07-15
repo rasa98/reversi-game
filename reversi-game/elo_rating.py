@@ -44,13 +44,15 @@ class EloRating:
 
 
 class Tournament:
-    def __init__(self, agents, log_dir, rounds=100, save_nth=5, verbose=0):
+    def __init__(self, agents, log_filename, log_dir='elo_output', rounds=100, save_nth=5, verbose=0, banned=None):
         self.rounds = rounds
+        self.log_filename = log_filename
         self.log_dir = log_dir
         self.save_nth = save_nth
         self.players = [Player(agent) for agent in agents]
         self.elo = EloRating()
         self.verbose = verbose
+        self.banned = set() if banned is None else banned
 
     @staticmethod
     def get_actual_score(winner):
@@ -66,9 +68,12 @@ class Tournament:
         for r in trange(self.rounds):
             random.shuffle(pairs)
             for pl1, pl2 in pairs:
+                if (pl1.agent, pl2.agent) in self.banned or (pl2.agent, pl1.agent) in self.banned:
+                    continue
                 if self.verbose:
                     print(f'{pl1.agent} vs {pl2.agent}')
-                winner = ai_vs_ai_cli(pl1.agent, pl2.agent)
+                game = ai_vs_ai_cli(pl1.agent, pl2.agent)
+                winner = game.get_winner()
                 actual_score_1 = self.get_actual_score(winner)
                 self.elo.calculate_new_rating(pl1, pl2, actual_score_1)
                 pl1.inc()
@@ -79,9 +84,10 @@ class Tournament:
                 self.save_simulation(r+1)
 
     def save_simulation(self, round_num):
-        folder = 'elo output 3'
-        os.makedirs(folder, exist_ok=True)
-        with open(f'{folder}/{self.log_dir}_{round_num}.txt', 'w') as f:
+
+        os.makedirs(self.log_dir, exist_ok=True)
+        output_path = os.path.join(self.log_dir, f'{self.log_filename}_{round_num}.txt')
+        with open(output_path, 'w') as f:
             f.write(f'Elo ranking after {round_num} rounds:\n')
             for pl in self.players:
                 f.write(f'\tAgent: {pl.agent}: {pl.rating}\n')
