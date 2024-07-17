@@ -80,9 +80,10 @@ class MCTS:
         """create new root Node."""
         game_copy = game.get_snapshot()
         # encoded_state = game_copy.get_encoded_state()
-        policy, _ = self.run_model(game_copy, add_noise=True)
+        policy, value = self.run_model(game_copy, add_noise=True)
         self.root = Node(game_copy, None, visited=1)
         self.root.explore_all_children(policy)
+        return value
 
     # def predict_best_move(self, game: Othello, deterministic=True):
     #     self.set_root_new(game)
@@ -102,7 +103,7 @@ class MCTS:
     #     return action_probs
 
     def simulate(self, game: Othello):
-        self.set_root_new(game)
+        estimated_value = self.set_root_new(game)
         self.mcts_search()
         # print(f'\nafter simulating: {dict(self.root.get_all_next_move_counter())}')
         gc.collect()
@@ -113,7 +114,7 @@ class MCTS:
             encoded_move = Othello.get_encoded_field(move)
             action_probs[encoded_move] = child.visited
         action_probs /= np.sum(action_probs)
-        return action_probs
+        return action_probs, estimated_value
 
     def best_move_child_items(self):
         best_items = []
@@ -154,7 +155,6 @@ class MCTS:
                 # policy *= valid_moves
                 # policy /= np.sum(policy)
                 policy, value = self.run_model(node.game)
-                value = value.item()
 
                 node.explore_all_children(policy)  # return node.explore_new_child()
                 break
@@ -196,6 +196,7 @@ class MCTS:
         policy *= valid_moves
         policy /= np.sum(policy)
 
+        value = value.item()
         return policy, value
 
     def get_dirichlet_alpha(self):

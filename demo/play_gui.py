@@ -11,7 +11,8 @@ sys.path.append(source_dir)
 os.chdir(relative_proj_dir_path)
 
 from gui.reversi_gui import (play_human_vs_ai,
-                             play_ai_vs_ai)
+                             play_ai_vs_ai,
+                             play_human_vs_human)
 
 # Import any premade agent from 'read_all_agents' module
 from read_all_agents import (alpha_200,
@@ -24,11 +25,17 @@ from read_all_agents import (alpha_200,
                              mcts_agent_30,
                              ai_random,
                              load_mcts_agent_by_depth,
-                             load_parallel_mcts_agent_by_depth
+                             load_parallel_mcts_agent_by_depth,
+                             load_azero_agent_by_depth
                              )
+# Make alphazero agent with diff params like deeper search
+alpha_1000 = load_azero_agent_by_depth(iter_depth=1000, c=1.73)
+
 
 # if you wanna play against 'best_mlp' as a second turn player
-# play_human_vs_ai(alpha_200, human_turn=2, min_turn_time=2, verbose=1)
+# play_human_vs_ai(alpha_30, human_turn=1, min_turn_time=2, verbose=2)
 
 # if you wanna visually watch two agents playing
-play_ai_vs_ai(cnn_trpo, best_ars, min_turn_time=0, verbose=1)
+# play_ai_vs_ai(alpha_30, best_ars , min_turn_time=0, verbose=1)
+
+play_human_vs_human(verbose=2)

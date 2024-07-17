@@ -5,6 +5,7 @@ import numpy as np
 import pygame
 import sys
 import os
+import platform
 
 if __name__ == '__main__' and os.environ['USER'] != 'student':
     source_dir = os.path.abspath(os.path.join(os.getcwd(), '../'))
@@ -12,6 +13,13 @@ if __name__ == '__main__' and os.environ['USER'] != 'student':
     print(f'cwd is : {os.getcwd()}')
     os.chdir('../')
 from game_logic import Othello
+
+
+def clear_console():
+    if platform.system() == 'Windows':
+        os.system('cls')
+    else:
+        os.system('clear')
 
 
 class HumanPlayer:
@@ -41,10 +49,10 @@ class OthelloGameGui:
 
     def setup_display(self):
         """Set up the display window and font."""
-        self.size = self.width, self.height = 800, 900  # Increased height for space above the board
+        self.size = self.width, self.height = 400, 500#800, 900  # Increased height for space above the board
         self.rows, self.cols = 8, 8
         self.square_size = self.width // self.cols
-        self.padding = 10
+        self.padding = 5 #10
         self.disc_radius = (self.square_size - 2 * self.padding) // 2
 
         # Colors
@@ -62,7 +70,6 @@ class OthelloGameGui:
         self.font = pygame.font.Font(None, 90)
 
         self.label_font = pygame.font.Font(None, 35)  # Smaller font for labels
-
 
     def draw_board(self):
         """Draw the Othello board with space for labels."""
@@ -120,7 +127,7 @@ class OthelloGameGui:
         else:
             winner_label = 'Its draw!'
 
-        center = (self.width // 2, top_space + (self.height - 2 * top_space) // (8/3))
+        center = (self.width // 2, top_space + (self.height - 2 * top_space) // (8 / 3))
         label = f'{self.game.chips} {winner_label}'
         color = self.gray
         self.render_black_outline(self.font, center, label, color)
@@ -160,6 +167,7 @@ class OthelloGameGui:
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_SPACE:
                         self.setup_game()
+                        clear_console()
                         play_again = True
                     return play_again
             clock.tick(10)  # Limit the loop to 10 iterations per second
@@ -228,7 +236,7 @@ class OthelloGameGui:
         top_space = 50
         col = pos[0] // self.square_size
         row = (pos[1] - top_space) // self.square_size
-        print(f"Clicked on cell ({row}, {col})")
+        print(f"You clicked on cell ({row}, {col})\n")
         return row, col
 
     def main(self):
@@ -262,6 +270,7 @@ class OthelloGameGui:
         ai_think_time = end_time - start_time
         if self.verbose:
             self.print_action_probabilities()
+            print(f'{self.ai.name} chose {field}\n')
         # print(ai_think_time)
         delta_time = self.min_turn_time - ai_think_time
         if delta_time > 0:
@@ -274,7 +283,11 @@ class OthelloGameGui:
         if self.ai.action_probs is not None:
             array_2d = self.ai.action_probs.reshape(8, 8)
             array_2d_rounded = np.round(array_2d, 2)
-            print(array_2d_rounded, '\n')
+            print(array_2d_rounded)
+        if self.ai.estimated_value is not None:
+            value = self.ai.estimated_value
+            value_rounded = np.round(value, 2)
+            print(f'win (value) estimate: {value_rounded}')
 
     def make_human_move(self):
         valid_moves = self.game.valid_moves()
@@ -283,6 +296,12 @@ class OthelloGameGui:
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     sys.exit()
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_SPACE:
+                        self.game._swap_player_turn()
+                        self.game._calculate_next_valid_moves()
+                        valid_moves = self.game.valid_moves()
+                        self.update_display()
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     clicked_field = self.handle_click(pygame.mouse.get_pos())
                     if clicked_field in valid_moves:
@@ -293,6 +312,16 @@ class OthelloGameGui:
     def play_ai_turn(self):
         fields, _ = self.ai.predict_best_move(self.game)
         return random.choice(fields)
+
+
+def play_human_vs_human(verbose=1):
+    game = OthelloGameGui(verbose=verbose)
+    pl1 = HumanPlayer('white')
+    pl2 = HumanPlayer('black')
+    game.players = [pl1, pl2]
+
+    # loop if playing again
+    loop_game(game)
 
 
 def play_human_vs_ai(ai_agent, human_turn=1, min_turn_time=2, verbose=1):

@@ -9,6 +9,7 @@ class AgentInterface(ABC):
         self.name = name
         self.deterministic = False
         self.action_probs = None
+        self.estimated_value = None
 
     def set_deterministic(self, det):
         self.deterministic = det
@@ -16,8 +17,11 @@ class AgentInterface(ABC):
 
     def predict_best_move(self, game: Othello):
         """Abstract method to make predictions."""
-        if game.turn == 1:
-            return self.make_random_move(game)  # first move is symmetrical so its fine to random it
+
+        # first move is symmetrical so its fine to random it.
+        # Also if there is only one move, the agent anyway must play it by rules
+        if game.turn == 1 or game.valid_moves_size == 1:
+            return self.make_random_move(game)
         det = self.choose_if_to_play_deterministically(game)
         # print(det)
         return self._predict_best_move(det, game)

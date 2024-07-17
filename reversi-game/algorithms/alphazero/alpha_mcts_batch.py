@@ -226,7 +226,7 @@ class MCTS():
             elif current_value == max_value:
                 best_items.append((move, node))
 
-        return best_itemsselect_expansion_sim
+        return best_items
 
     def best_moves(self):
         items = self.best_move_child_items()  # [(move, child),..]

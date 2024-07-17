@@ -16,8 +16,9 @@ class AlphaZeroAgent(AgentInterface):
         self.model: MCTS = model
 
     def _predict_best_move(self, det, game: Othello):
-        action_probs = self.model.simulate(game)
+        action_probs, estimated_value = self.model.simulate(game)
         self.action_probs = action_probs
+        self.estimated_value = estimated_value
         if det:
             best_action = self.model.best_moves()
             return best_action, None

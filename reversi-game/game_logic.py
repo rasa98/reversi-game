@@ -52,7 +52,6 @@ def njit_get_all_reversed_fields(board, player_turn, fields):  # TODO: maybe mak
             res.append((-1, -1))
             res.append((row, col))
             res.extend(to_reverse)
-
             to_reverse.clear()
     return res
 
@@ -114,10 +113,13 @@ class Othello:
     def _swap_player_turn(self):
         self.player_turn = 3 - self.player_turn
 
+    @staticmethod
+    def give_other_player(player):
+        return 3 - player
+
     def _set_default_board(self):
         self.board = np.full((8, 8), 0)
-        self.board[3:5, 3:5] = [[1, 2],
-                                [2, 1]]
+        self.board[3:5, 3:5] = [[1, 2], [2, 1]]
 
     def valid_moves(self):
         return set(self.valid_moves_to_reverse.keys())
@@ -171,14 +173,19 @@ class Othello:
             self.chips = (y, x)
 
     def _calculate_next_valid_moves(self):  # TODO make test to confirm old and new give same results
+        moves_to_reverse = self.calculate_next_valid_moves(self.player_turn)
+
+        self.valid_moves_to_reverse = moves_to_reverse
+        self.valid_moves_size = len(self.valid_moves_to_reverse)
+
+    def calculate_next_valid_moves(self, player):
         moves_to_reverse = {}
         list_of_fields = []
         if len(self.edge_fields):
             edge_fields = np.array(list(self.edge_fields))
             list_of_fields = njit_get_all_reversed_fields(self.board,
-                                                          self.player_turn,
+                                                          player,
                                                           edge_fields)
-
         idx = 1  # 0 is (-1, -1) if its not empty
         while idx < len(list_of_fields):
             field = list_of_fields[idx]
@@ -191,9 +198,7 @@ class Othello:
 
             moves_to_reverse[field] = to_reverse
             idx += 1
-
-        self.valid_moves_to_reverse = moves_to_reverse
-        self.valid_moves_size = len(self.valid_moves_to_reverse)
+        return moves_to_reverse
 
     def play_move(self, field):
         if self.winner is None:  # if the game haven't ended, you can play

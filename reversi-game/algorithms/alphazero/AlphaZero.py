@@ -32,7 +32,7 @@ class AlphaZero:
         while True:
             player = game.player_turn  # !!! changed get_encoded_state
             encoded_perspective_state = game.get_encoded_state()
-            action_probs = self.mcts.simulate(game)
+            action_probs, _ = self.mcts.simulate(game)
 
             data.append((encoded_perspective_state, action_probs, player))
 

@@ -52,7 +52,7 @@ def load_azero_agent_with_ppo_model(iter_depth, ppo_agent, c=1.41):
     return alpha
 
 
-def load_azero_agent_by_depth(iter_depth, azero_model_location, c=1.41):
+def load_azero_agent_by_depth(iter_depth=100, azero_model_location='models/azero.pt', c=1.41):
     alpha_params = {'hidden_layer': 64, 'max_iter': iter_depth,
                     'dirichlet_epsilon': 0.1,
                     "uct_exploration_const": c,
