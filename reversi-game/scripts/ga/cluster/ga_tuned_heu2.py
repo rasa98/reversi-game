@@ -94,7 +94,7 @@ def save_current_list(player_list, id_to_score, rounds):
 
     with open(f'{LOG_DIR}/board_after_{rounds}_tour.txt', 'w') as f:
         for el in sorted_list:
-            f.write(f'gen alive: {el.gen}, params: {str(el)}, id: {el.id}, score: {id_to_score[el.id]}\n')
+            f.write(f'gen alive: {el.gen}, params: {str(el)}, id: {el.id}, score: {id_to_score[el.id]}/{ROUNDS*3}\n')
 
 
 def save_start_list(player_list):

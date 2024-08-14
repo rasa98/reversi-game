@@ -96,7 +96,7 @@ class CountChips(HeuFunctionInterface):
                            f=lambda turn: ((turn % 10) + 1))
 
     def __str__(self):
-        return f'start_turn: {self.params[0]}'
+        return f'CountChips: start_turn: {self.params[0]}--'
 
 
 class CountDangerEarlyGame(HeuFunctionInterface):
@@ -136,7 +136,7 @@ class CountDangerEarlyGame(HeuFunctionInterface):
                                        f=lambda turn: (25 - turn) * self.get_params()[0])
 
     def __str__(self):
-        return f'danger mult: {self.params[0]}, end_turn: {self.params[1]}'
+        return f'CountDangerEarlyGame: danger mult: {self.params[0]}, end_turn: {self.params[1]}--'
 
 
 class CountCorners(HeuFunctionInterface):
@@ -181,7 +181,7 @@ class CountCorners(HeuFunctionInterface):
                              f=lambda x: ((60 - x) / params[0]) ** params[1])
 
     def __str__(self):
-        return f'corner divisor: {self.params[0]}, corner exponent: {self.params[1]}, end_turn: {self.params[2]}'
+        return f'CountCorners: corner divisor: {self.params[0]}, corner exponent: {self.params[1]}, end_turn: {self.params[2]}--'
 
 
 class CountSaferEarlyGame(HeuFunctionInterface):
@@ -219,7 +219,7 @@ class CountSaferEarlyGame(HeuFunctionInterface):
                            f=lambda turn: (25 - turn) // self.get_params()[0])
 
     def __str__(self):
-        return f'safer divisor: {self.params[0]}, end_turn: {self.params[1]}'
+        return f'CountSaferEarlyGame: safer divisor: {self.params[0]}, end_turn: {self.params[1]}--'
 
 
 class MaximizeMyMoves(HeuFunctionInterface):
@@ -255,7 +255,7 @@ class MaximizeMyMoves(HeuFunctionInterface):
         return max_my_moves(game, params[0], lambda x: (x / params[1]))
 
     def __str__(self):
-        return f'max my score: {self.params[0]}, max ratio div: {self.params[1]}'
+        return f'MaximizeMyMoves: max my score: {self.params[0]}, max ratio div: {self.params[1]}--'
 
 
 class WeightedPieceCounter(HeuFunctionInterface):
@@ -287,4 +287,4 @@ class WeightedPieceCounter(HeuFunctionInterface):
         return weighted_piece_counter(stats, max_turn=params[0])
 
     def __str__(self):
-        return f'max turn: {self.params[0]}'
+        return f'WeightedPieceCounter: max turn: {self.params[0]}--'
