@@ -9,16 +9,23 @@ from algorithms.minimax.minmax import (Minimax,
                                        dynamic_depth_f)
 from heuristics.heu1 import heuristic, heuristic2
 
-from heuristics.ga.heu_func import (CountChips,
-                                    CountDangerEarlyGame,
-                                    CountCorners,
-                                    MaximizeMyMoves,
-                                    CountSaferEarlyGame)
-from heuristics.ga.heu_func2 import (CountChips as CountChips2,
-                                     CountDangerEarlyGame as CountDangerEarlyGame2,
-                                     CountCorners as CountCorners2,
-                                     MaximizeMyMoves as MaximizeMyMoves2,
-                                     WeightedPieceCounter as WeightedPieceCounter2)
+# from heuristics.ga.heu_func import (CountChips,
+#                                     CountDangerEarlyGame,
+#                                     CountCorners,
+#                                     MaximizeMyMoves,
+#                                     CountSaferEarlyGame)
+# from heuristics.ga.heu_func2 import (CountChips as CountChips2,
+#                                      CountSaferEarlyGame as CountSaferEarlyGame2,
+#                                      CountDangerEarlyGame as CountDangerEarlyGame2,
+#                                      CountCorners as CountCorners2,
+#                                      MaximizeMyMoves as MaximizeMyMoves2,
+#                                      WeightedPieceCounter as WeightedPieceCounter2)
+from heuristics.ga.heu_func2 import (CountChips,
+                                     CountSaferEarlyGame,
+                                     CountDangerEarlyGame,
+                                     CountCorners,
+                                     MaximizeMyMoves,
+                                     WeightedPieceCounter)
 from heuristics.ga.heu_ga import create_heuristic
 
 from agents.agent_interface import AgentInterface
@@ -45,49 +52,60 @@ def load_minimax_agent(name, depth_f, heu_f):
     return MiniMaxAgent(f'MinMax {name}', minimax_agent)
 
 
+# human_heu_f = lambda: {CountChips: CountChips(1.5),
+#                        CountCorners: CountCorners(8, 2.5),
+#                        CountDangerEarlyGame: CountDangerEarlyGame(5),
+#                        MaximizeMyMoves: MaximizeMyMoves(100),
+#                        }
+# minmax_human_depth_1 = load_minimax_agent("minmax human - depth 1",
+#                                           fixed_depth_f(1),
+#                                           # dynamic_depth_f,
+#                                           create_heuristic(human_heu_f()))
+# minmax_human_depth_dyn = load_minimax_agent("minmax human depth dynamic",
+#                                             dynamic_depth_f,
+#                                             create_heuristic(human_heu_f()))
 
-
-human_heu_f = lambda: {CountChips: CountChips(1.5),
-                       CountCorners: CountCorners(8, 2.5),
-                       CountDangerEarlyGame: CountDangerEarlyGame(5),
-                       MaximizeMyMoves: MaximizeMyMoves(100),
+human_heu_f = lambda: {CountChips: CountChips(start_turn=50),
+                       CountCorners: CountCorners(corner_divisor=8, corner_exponent=2.5,
+                                                  end_turn=50),
+                       CountSaferEarlyGame: CountSaferEarlyGame(safer_divisor=5, end_turn=20),
+                       CountDangerEarlyGame: CountDangerEarlyGame(danger_mult=5, end_turn=20),
+                       MaximizeMyMoves: MaximizeMyMoves(max_score=100, ratio=10),
+                       WeightedPieceCounter: WeightedPieceCounter(max_turn=50),
                        }
 minmax_human_depth_1 = load_minimax_agent("minmax human - depth 1",
-                                   fixed_depth_f(1),
-                                   # dynamic_depth_f,
-                                   create_heuristic(human_heu_f()))
+                                          fixed_depth_f(1),
+                                          # dynamic_depth_f,
+                                          create_heuristic(human_heu_f()))
 minmax_human_depth_dyn = load_minimax_agent("minmax human depth dynamic",
-                                     dynamic_depth_f,
-                                     create_heuristic(human_heu_f()))
+                                            dynamic_depth_f,
+                                            create_heuristic(human_heu_f()))
 
-
-heu2_f = lambda: {CountCorners2: CountCorners2(1.345726455834431, 2.1073849836637555),
-                  CountDangerEarlyGame2: CountDangerEarlyGame2(5.214213407375362),
-                  MaximizeMyMoves2: MaximizeMyMoves2(88.59176079991997, 16.676433765717864)
+heu2_f = lambda: {CountCorners: CountCorners(1.345726455834431, 2.1073849836637555),
+                  CountDangerEarlyGame: CountDangerEarlyGame(5.214213407375362),
+                  MaximizeMyMoves: MaximizeMyMoves(88.59176079991997, 16.676433765717864)
                   }
 
 minmax_ga_best_depth_1 = load_minimax_agent("minmax GA depth 1",
-                                      fixed_depth_f(1),
-                                      create_heuristic(heu2_f()))
-
+                                            fixed_depth_f(1),
+                                            create_heuristic(heu2_f()))
 
 minmax_ga_depth_dyn = load_minimax_agent("minmax GA depth dyn",
-                                        dynamic_depth_f,
-                                        create_heuristic(heu2_f()))
+                                         dynamic_depth_f,
+                                         create_heuristic(heu2_f()))
 
-# ----------------------------------------------
+# -----------------------ignore-----------------------
 
-xyz_f = lambda: {CountCorners2: CountCorners2(1.345726455834431, 2.1073849836637555),
-                  CountDangerEarlyGame2: CountDangerEarlyGame2(5.214213407375362),
-                  WeightedPieceCounter2: WeightedPieceCounter2(50),
-                  MaximizeMyMoves2: MaximizeMyMoves2(88.59176079991997, 16.676433765717864)
-                  }
+xyz_f = lambda: {CountCorners: CountCorners(1.345726455834431, 2.1073849836637555),
+                 CountDangerEarlyGame: CountDangerEarlyGame(5.214213407375362),
+                 WeightedPieceCounter: WeightedPieceCounter(50),
+                 MaximizeMyMoves: MaximizeMyMoves(88.59176079991997, 16.676433765717864)
+                 }
 
 xyz_depth_1 = load_minimax_agent("minmax XYZ depth 1",
-                                      fixed_depth_f(1),
-                                      create_heuristic(xyz_f()))
+                                 fixed_depth_f(1),
+                                 create_heuristic(xyz_f()))
 
 xyz_depth_dyn = load_minimax_agent("minmax XYZ depth dyn",
-                                      dynamic_depth_f,
-                                      create_heuristic(xyz_f()))
-
+                                   dynamic_depth_f,
+                                   create_heuristic(xyz_f()))

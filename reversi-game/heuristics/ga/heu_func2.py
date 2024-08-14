@@ -91,9 +91,10 @@ class CountChips(HeuFunctionInterface):
 
     def evaluate_state(self, game):
         stats = self.get_game_stats(game)
+        start_turn = self.get_params()[0]
         return count_chips(stats,
-                           start_turn=self.get_params()[0],
-                           f=lambda turn: ((turn % 10) + 1))
+                           start_turn=start_turn,
+                           f=lambda turn: (turn - start_turn) / 3 + 0.25)
 
     def __str__(self):
         return f'CountChips: start_turn: {self.params[0]}--'

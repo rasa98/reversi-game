@@ -12,14 +12,25 @@ from game_logic import Othello
 from heuristics.critical_fields import danger_fields, safe_fields, corners, corners2
 
 WEIGHT_MATRIX = np.array([
-    [100, -20, 10, 5, 5, 10, -20, 100],
+    [100, -20, 10,  5,  5, 10, -20, 100],
     [-20, -50, -2, -2, -2, -2, -50, -20],
-    [10, -2, -1, -1, -1, -1, -2, 10],
-    [5, -2, -1, 0, 0, -1, -2, 5],
+    [10,   -2, -1, -1, -1, -1,  -2,  10],
+    [5,    -2, -1,  0,  0, -1,  -2,   5],
     [5, -2, -1, 0, 0, -1, -2, 5],
     [10, -2, -1, -1, -1, -1, -2, 10],
     [-20, -50, -2, -2, -2, -2, -50, -20],
     [100, -20, 10, 5, 5, 10, -20, 100]
+])
+
+WEIGHT_MATRIX2 = np.array([
+    [100, -20, -10,  -5,  -5, -10, -20, 100],
+    [-20, -50, -2, -2, -2, -2, -50, -20],
+    [-10,   -2, -1, -1, -1, -1,  -2,  -10],
+    [-5,    -2, -1,  0,  0, -1,  -2,   -5],
+    [-5, -2, -1, 0, 0, -1, -2, -5],
+    [-10, -2, -1, -1, -1, -1, -2, -10],
+    [-20, -50, -2, -2, -2, -2, -50, -20],
+    [100, -20, -10, -5, -5, -10, -20, 100]
 ])
 
 
@@ -126,31 +137,40 @@ def heuristic2(game: Othello):
 
 
 if __name__ == '__main__':
-    import time
+    import matplotlib.pyplot as plt
+    import seaborn as sns
 
-    board = [[1, 1, 1, 1, 1, 0, 0, 1],
-             [2, 1, 0, 2, 2, 0, 0, 2],
-             [0, 2, 1, 0, 0, 0, 2, 2],
-             [2, 2, 0, 0, 0, 0, 0, 2],
-             [0, 0, 1, 1, 1, 0, 2, 2],
-             [2, 1, 0, 2, 1, 2, 1, 0],
-             [0, 0, 0, 1, 1, 2, 1, 2],
-             [1, 2, 2, 2, 2, 0, 2, 1]]
-    board = np.array(board)
+    plt.figure(figsize=(8, 8))
+    sns.heatmap(WEIGHT_MATRIX2, annot=True, fmt="d", cmap="coolwarm", center=0, linewidths=0.5)
+    plt.title('Weight Matrix Heatmap')
+    plt.show()
 
-    c = count_corners(("", 35, board))
-
-    print(c)
-
-    mat_gen_f = lambda: np.random.randint(0, 3, size=(8, 8))
-
-    times = 10000
-    mats = [mat_gen_f() for _ in range(times)]
-
-    start = time.perf_counter()
-
-    for i in range(times):
-        count_white_black(mats[i])
-
-    end = time.perf_counter()
-    print(f'time needed: {end - start} secs')
+    #
+    # import time
+    #
+    # board = [[1, 1, 1, 1, 1, 0, 0, 1],
+    #          [2, 1, 0, 2, 2, 0, 0, 2],
+    #          [0, 2, 1, 0, 0, 0, 2, 2],
+    #          [2, 2, 0, 0, 0, 0, 0, 2],
+    #          [0, 0, 1, 1, 1, 0, 2, 2],
+    #          [2, 1, 0, 2, 1, 2, 1, 0],
+    #          [0, 0, 0, 1, 1, 2, 1, 2],
+    #          [1, 2, 2, 2, 2, 0, 2, 1]]
+    # board = np.array(board)
+    #
+    # c = count_corners(("", 35, board))
+    #
+    # print(c)
+    #
+    # mat_gen_f = lambda: np.random.randint(0, 3, size=(8, 8))
+    #
+    # times = 10000
+    # mats = [mat_gen_f() for _ in range(times)]
+    #
+    # start = time.perf_counter()
+    #
+    # for i in range(times):
+    #     count_white_black(mats[i])
+    #
+    # end = time.perf_counter()
+    # print(f'time needed: {end - start} secs')

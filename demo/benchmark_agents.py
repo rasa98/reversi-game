@@ -33,7 +33,7 @@ from read_all_agents import (alpha_200,
 # -------------------How to test two agents-----------------------------#
 
 #bench_both_sides(xyz_depth_dyn, minmax_ga_depth_dyn, times=20, verbose=2)
-bench_both_sides(xyz_depth_1, minmax_ga_best_depth_1, times=1000, verbose=2)
+bench_both_sides(minmax_human_depth_1, xyz_depth_1, times=200, verbose=2)
 
 # ------------------Showing how to run parallel mcts----------------------#
 
