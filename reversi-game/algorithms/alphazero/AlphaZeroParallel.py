@@ -80,12 +80,7 @@ class AlphaZero:
         a1.set_deterministic(det)
         a2.set_deterministic(det)
 
-        a1_wins, a2_wins = bench_both_sides(
-            a1,
-            a2,
-            times=times,
-            timed=True,
-            verbose=1)
+        a1_wins, a2_wins = bench_both_sides(a1, a2, times=times, verbose=1)
         a1_win_rate = a1_wins / (2 * times)
         return a1_wins, a2_wins, a1_win_rate
 

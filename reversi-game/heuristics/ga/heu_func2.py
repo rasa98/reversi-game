@@ -5,7 +5,7 @@ from heuristics.heu1 import (count_chips,
                              count_corners,
                              count_danger_early_game,
                              count_safer,
-                             max_my_moves)
+                             max_my_moves, weighted_piece_counter)
 
 
 class HeuFunctionInterface(ABC):
@@ -67,34 +67,36 @@ class HeuFunctionInterface(ABC):
 
 class CountChips(HeuFunctionInterface):
 
-    def __init__(self, chip_exp):
-        super().__init__(chip_exp)
+    def __init__(self, start_turn):
+        super().__init__(start_turn)
 
     @classmethod
     def create(cls):
-        chip_exp = random.uniform(1.0, 3.0)
-        return CountChips(chip_exp)
+        start_turn = random.randint(30, 55)
+        return CountChips(start_turn)
 
     def delta(self, idx):
         match idx:
             case 0:
-                return random.uniform(-0.5, 0.5)
+                return random.choice([-3, -2, -1, 1, 2, 3])
             case _:
                 raise IndexError('index out of bounds for heu parameters!')
 
     def bound_param(self, idx, val):
         match idx:
             case 0:
-                return (val - 1) % 2 + 1
+                return (val - 30) % 25 + 30
             case _:
                 raise IndexError('index out of bounds for heu parameters!')
 
     def evaluate_state(self, game):
         stats = self.get_game_stats(game)
-        return count_chips(stats, lambda turn: ((turn % 10) + 1) ** self.get_params()[0])
+        return count_chips(stats,
+                           start_turn=self.get_params()[0],
+                           f=lambda turn: ((turn % 10) + 1))
 
     def __str__(self):
-        return f'chip exp: {self.params[0]}'
+        return f'start_turn: {self.params[0]}'
 
 
 class CountDangerEarlyGame(HeuFunctionInterface):
@@ -102,12 +104,15 @@ class CountDangerEarlyGame(HeuFunctionInterface):
     @classmethod
     def create(cls):
         danger_mult = random.uniform(1.0, 10.0)
-        return CountDangerEarlyGame(danger_mult)
+        end_turn = random.randint(5, 35)
+        return CountDangerEarlyGame(danger_mult, end_turn)
 
     def delta(self, idx):
         match idx:
             case 0:
                 return random.uniform(-2.5, 2.5)
+            case 1:
+                return random.choice([-4, -3, -2, -1, 1, 2, 3, 4])
             case _:
                 raise IndexError('index out of bounds for heu parameters!')
 
@@ -115,27 +120,32 @@ class CountDangerEarlyGame(HeuFunctionInterface):
         match idx:
             case 0:
                 return (val - 1) % 9 + 1
+            case 1:
+                return (val - 5) % 30 + 5
             case _:
                 raise IndexError('index out of bounds for heu parameters!')
 
     def evaluate_state(self, game):
         stats = self.get_game_stats(game)
-        return count_danger_early_game(stats, lambda turn: (25 - turn) * self.get_params()[0])
+        return count_danger_early_game(stats,
+                                       end_turn=self.get_params()[1],
+                                       f=lambda turn: (25 - turn) * self.get_params()[0])
 
     def __str__(self):
-        return f'danger mult: {self.params[0]}'
+        return f'danger mult: {self.params[0]}, end_turn: {self.params[1]}'
 
 
 class CountCorners(HeuFunctionInterface):
-    def __init__(self, corner_divisor, corner_exponent):
+    def __init__(self, corner_divisor, corner_exponent, end_turn):
 
-        super().__init__(corner_divisor, corner_exponent)
+        super().__init__(corner_divisor, corner_exponent, end_turn)
 
     @classmethod
     def create(cls):
         corner_divisor = random.uniform(1.0, 10.0)
         corner_exponent = random.uniform(1.0, 3.0)
-        return CountCorners(corner_divisor, corner_exponent)
+        end_turn = random.randint(15, 60)
+        return CountCorners(corner_divisor, corner_exponent, end_turn)
 
     def delta(self, idx):
         match idx:
@@ -143,6 +153,8 @@ class CountCorners(HeuFunctionInterface):
                 return random.uniform(-2.5, 2.5)
             case 1:
                 return random.uniform(-0.5, 0.5)
+            case 2:
+                return random.choice([-4, -3, -2, -1, 1, 2, 3, 4])
             case _:
                 raise IndexError('index out of bounds for heu parameters!')
 
@@ -152,45 +164,58 @@ class CountCorners(HeuFunctionInterface):
                 return (val - 1) % 9 + 1
             case 1:
                 return (val - 1) % 2 + 1
+            case 2:
+                return (val - 15) % 45 + 15
             case _:
                 raise IndexError('index out of bounds for heu parameters!')
 
     def evaluate_state(self, game):
         stats = self.get_game_stats(game)
         params = self.get_params()
-        return count_corners(stats, lambda x: ((60 - x) / params[0]) ** params[1])
+        return count_corners(stats,
+                             end_turn=params[2],
+                             f=lambda x: ((60 - x) / params[0]) ** params[1])
 
     def __str__(self):
-        return f'corner divisor: {self.params[0]}, corner exponent: {self.params[1]}'
+        return f'corner divisor: {self.params[0]}, corner exponent: {self.params[1]}, end_turn: {self.params[2]}'
 
 
-# class CountSaferEarlyGame(HeuFunctionInterface):
-#
-#     @classmethod
-#     def create(cls):
-#         safer_divisor = random.uniform(1.0, 20.0)
-#         return CountSaferEarlyGame(safer_divisor)
-#
-#     def delta(self, idx):
-#         match idx:
-#             case 0:
-#                 return random.uniform(-4.5, 4.5)
-#             case _:
-#                 raise IndexError('index out of bounds for heu parameters!')
-#
-#     def bound_param(self, idx, val):
-#         match idx:
-#             case 0:
-#                 return (val - 1) % 19 + 1
-#             case _:
-#                 raise IndexError('index out of bounds for heu parameters!')
-#
-#     def evaluate_state(self, game):
-#         stats = self.get_game_stats(game)
-#         return count_safer(stats, lambda turn: (65 - turn) // self.get_params()[0])
-#
-#     def __str__(self):
-#         return f'safer divisor: {self.params[0]}'
+class CountSaferEarlyGame(HeuFunctionInterface):
+    def __init__(self, safer_divisor, end_turn):
+        super().__init__(safer_divisor, end_turn)
+
+    @classmethod
+    def create(cls):
+        safer_divisor = random.uniform(1.0, 20.0)
+        end_turn = random.randint(5, 35)
+        return CountSaferEarlyGame(safer_divisor, end_turn)
+
+    def delta(self, idx):
+        match idx:
+            case 0:
+                return random.uniform(-4.5, 4.5)
+            case 1:
+                return random.choice([-4, -3, -2, -1, 1, 2, 3, 4])
+            case _:
+                raise IndexError('index out of bounds for heu parameters!')
+
+    def bound_param(self, idx, val):
+        match idx:
+            case 0:
+                return (val - 1) % 19 + 1
+            case 1:
+                return (val - 5) % 30 + 5
+            case _:
+                raise IndexError('index out of bounds for heu parameters!')
+
+    def evaluate_state(self, game):
+        stats = self.get_game_stats(game)
+        return count_safer(stats,
+                           end_turn=self.get_params()[1],
+                           f=lambda turn: (25 - turn) // self.get_params()[0])
+
+    def __str__(self):
+        return f'safer divisor: {self.params[0]}, end_turn: {self.params[1]}'
 
 
 class MaximizeMyMoves(HeuFunctionInterface):
@@ -227,3 +252,35 @@ class MaximizeMyMoves(HeuFunctionInterface):
 
     def __str__(self):
         return f'max my score: {self.params[0]}, max ratio div: {self.params[1]}'
+
+
+class WeightedPieceCounter(HeuFunctionInterface):
+    def __init__(self, max_turn):
+        super().__init__(max_turn)
+
+    @classmethod
+    def create(cls):
+        max_turn = random.randint(10, 60)
+        return WeightedPieceCounter(max_turn)
+
+    def delta(self, idx):
+        match idx:
+            case 0:
+                return random.choice([-4, -3, -2, -1, 1, 2, 3, 4])
+            case _:
+                raise IndexError('index out of bounds for heu parameters!')
+
+    def bound_param(self, idx, val):
+        match idx:
+            case 0:
+                return (val - 10) % 50 + 10
+            case _:
+                raise IndexError('index out of bounds for heu parameters!')
+
+    def evaluate_state(self, game):
+        stats = self.get_game_stats(game)
+        params = self.get_params()
+        return weighted_piece_counter(stats, max_turn=params[0])
+
+    def __str__(self):
+        return f'max turn: {self.params[0]}'

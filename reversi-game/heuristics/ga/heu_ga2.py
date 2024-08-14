@@ -7,14 +7,17 @@ import numpy as np
 from heuristics.ga.heu_func2 import (CountChips,
                                      CountDangerEarlyGame,
                                      CountCorners,
-    # CountSaferEarlyGame,
-                                     MaximizeMyMoves)
+                                     CountSaferEarlyGame,
+                                     MaximizeMyMoves,
+                                     WeightedPieceCounter)
 
 HEU_FUNCTION_CLASSES = (CountChips,
                         CountDangerEarlyGame,
                         CountCorners,
-                        # CountSaferEarlyGame,
-                        MaximizeMyMoves)
+                        CountSaferEarlyGame,
+                        MaximizeMyMoves,
+                        WeightedPieceCounter
+                        )
 
 
 def create_heuristic(heu_func_param_dict):

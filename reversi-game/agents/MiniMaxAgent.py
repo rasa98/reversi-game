@@ -17,7 +17,8 @@ from heuristics.ga.heu_func import (CountChips,
 from heuristics.ga.heu_func2 import (CountChips as CountChips2,
                                      CountDangerEarlyGame as CountDangerEarlyGame2,
                                      CountCorners as CountCorners2,
-                                     MaximizeMyMoves as MaximizeMyMoves2)
+                                     MaximizeMyMoves as MaximizeMyMoves2,
+                                     WeightedPieceCounter as WeightedPieceCounter2)
 from heuristics.ga.heu_ga import create_heuristic
 
 from agents.agent_interface import AgentInterface
@@ -73,4 +74,20 @@ minmax_ga_best_depth_1 = load_minimax_agent("minmax GA depth 1",
 minmax_ga_depth_dyn = load_minimax_agent("minmax GA depth dyn",
                                         dynamic_depth_f,
                                         create_heuristic(heu2_f()))
+
+# ----------------------------------------------
+
+xyz_f = lambda: {CountCorners2: CountCorners2(1.345726455834431, 2.1073849836637555),
+                  CountDangerEarlyGame2: CountDangerEarlyGame2(5.214213407375362),
+                  WeightedPieceCounter2: WeightedPieceCounter2(50),
+                  MaximizeMyMoves2: MaximizeMyMoves2(88.59176079991997, 16.676433765717864)
+                  }
+
+xyz_depth_1 = load_minimax_agent("minmax XYZ depth 1",
+                                      fixed_depth_f(1),
+                                      create_heuristic(xyz_f()))
+
+xyz_depth_dyn = load_minimax_agent("minmax XYZ depth dyn",
+                                      dynamic_depth_f,
+                                      create_heuristic(xyz_f()))
 

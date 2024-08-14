@@ -11,6 +11,17 @@ if __name__ == '__main__':
 from game_logic import Othello
 from heuristics.critical_fields import danger_fields, safe_fields, corners, corners2
 
+WEIGHT_MATRIX = np.array([
+    [100, -20, 10, 5, 5, 10, -20, 100],
+    [-20, -50, -2, -2, -2, -2, -50, -20],
+    [10, -2, -1, -1, -1, -1, -2, 10],
+    [5, -2, -1, 0, 0, -1, -2, 5],
+    [5, -2, -1, 0, 0, -1, -2, 5],
+    [10, -2, -1, -1, -1, -1, -2, 10],
+    [-20, -50, -2, -2, -2, -2, -50, -20],
+    [100, -20, 10, 5, 5, 10, -20, 100]
+])
+
 
 @njit(cache=True)
 def count_white_black(board: np.ndarray):
@@ -26,22 +37,22 @@ def count_white_black(board: np.ndarray):
     return white, black
 
 
-def count_chips(stats, f=lambda x: (x // 10) + 1):
+def count_chips(stats, start_turn=50, f=lambda x: (x // 10) + 1):
     # White is maximizing, black is minimizing
     # So if white has more chips it will be positive.
     # The more it has the position is "better" if its near end,
     # but everything can change in a few moves
     ((white_count, black_count), turn, _) = stats
-    if turn >= 50:
+    if turn >= start_turn:
         ratio = f(turn)
         return ratio * (white_count - black_count)
     return 0
 
 
-def count_corners(stats, f=lambda x: ((60 - x) // 3) ** 2):
+def count_corners(stats, end_turn=50, f=lambda x: ((60 - x) // 3) ** 2):
     # who has more => better
     _, turn, board = stats
-    if 5 <= turn <= 50:
+    if 5 <= turn <= end_turn:
         c = corners(board)
         white_corners, black_corners = count_white_black(c)
         ratio = f(turn)
@@ -49,9 +60,9 @@ def count_corners(stats, f=lambda x: ((60 - x) // 3) ** 2):
     return 0
 
 
-def count_danger_early_game(stats, f=lambda x: (25 - x) // 5):
+def count_danger_early_game(stats, end_turn=20, f=lambda x: (25 - x) // 5):
     _, turn, board = stats
-    if turn <= 20:  # np.any(safe_fields(board) == 0):  # if board still has moves in center, then penalize
+    if turn <= end_turn:  # np.any(safe_fields(board) == 0):  # if board still has moves in center, then penalize
         danger_view = danger_fields(board)
         white, black = count_white_black(danger_view)
 
@@ -60,9 +71,9 @@ def count_danger_early_game(stats, f=lambda x: (25 - x) // 5):
     return 0
 
 
-def count_safer(stats, f=lambda x: 1):
+def count_safer(stats, end_turn=20, f=lambda x: 1):
     _, turn, board = stats
-    if turn <= 20:
+    if turn <= end_turn:
         safe_view = safe_fields(board)
         white, black = count_white_black(safe_view)
 
@@ -85,6 +96,17 @@ def max_my_moves(game: Othello, max_score, f_turn=lambda _: 1):
     else:
         res = sign * 3 * max_score
     return ratio * res
+
+
+def weighted_piece_counter(stats, max_turn=50, f=lambda x: (60 - x) / 60):
+    _, turn, board = stats
+    if turn <= max_turn:
+        converted_board = np.where(board == 2, -1, board)
+        weighted_sum = np.sum(converted_board * WEIGHT_MATRIX)
+
+        ratio = f(turn)
+        return ratio * weighted_sum
+    return 0
 
 
 def heuristic(game: Othello):

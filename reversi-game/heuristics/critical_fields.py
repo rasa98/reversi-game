@@ -7,8 +7,8 @@ def corners(board: np.ndarray):
 
 
 def safe_fields(board: np.ndarray):
-    return board[[2, 2, 2, 2, 3, 3, 4, 4, 5, 5, 5, 5],
-                 [2, 3, 4, 5, 2, 5, 2, 5, 2, 3, 4, 5]]
+    return board[[1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 5, 5, 6, 6, 6, 6],
+                 [2, 3, 4, 5, 1, 2, 3, 4, 5, 6, 1, 2, 5, 6, 1, 2, 5, 6, 1, 2, 3, 4, 5, 6, 2, 3, 4, 5]]
 
 
 def danger_fields(board: np.ndarray):

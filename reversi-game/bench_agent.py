@@ -78,10 +78,8 @@ def _bench_both_sides(ai1, ai2, times=200, verbose=1):
     return w_sum_1, w_sum_2
 
 
-def bench_both_sides(ai1, ai2, times=200, timed=True, verbose=0):
+def bench_both_sides(ai1, ai2, times=200, verbose=0):
     f = _bench_both_sides
-    if timed:
-        f = time_function(_bench_both_sides)
     return f(ai1,
              ai2,
              times=times,

@@ -64,12 +64,7 @@ class AlphaZero:
 
     @staticmethod
     def bench_agents(a1, a2, times=10):
-        a1_wins, a2_wins = bench_both_sides(
-            a1,
-            a2,
-            times=times,
-            timed=True,
-            verbose=1)
+        a1_wins, a2_wins = bench_both_sides(a1, a2, times=times, verbose=1)
         a1_win_rate = a1_wins / (2 * times)
         return a1_wins, a2_wins, a1_win_rate
 
