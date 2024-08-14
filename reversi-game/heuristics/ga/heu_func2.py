@@ -101,6 +101,10 @@ class CountChips(HeuFunctionInterface):
 
 class CountDangerEarlyGame(HeuFunctionInterface):
 
+    def __init__(self, danger_mult, end_turn=20):
+
+        super().__init__(danger_mult, end_turn)
+
     @classmethod
     def create(cls):
         danger_mult = random.uniform(1.0, 10.0)
@@ -136,7 +140,7 @@ class CountDangerEarlyGame(HeuFunctionInterface):
 
 
 class CountCorners(HeuFunctionInterface):
-    def __init__(self, corner_divisor, corner_exponent, end_turn):
+    def __init__(self, corner_divisor, corner_exponent, end_turn=50):
 
         super().__init__(corner_divisor, corner_exponent, end_turn)
 
@@ -181,7 +185,7 @@ class CountCorners(HeuFunctionInterface):
 
 
 class CountSaferEarlyGame(HeuFunctionInterface):
-    def __init__(self, safer_divisor, end_turn):
+    def __init__(self, safer_divisor, end_turn=20):
         super().__init__(safer_divisor, end_turn)
 
     @classmethod
