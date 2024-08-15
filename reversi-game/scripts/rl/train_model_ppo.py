@@ -27,9 +27,9 @@ if os.environ['USER'] == 'rasa':
 
 from sb3_contrib.common.maskable.policies import MaskableActorCriticPolicy, MaskableActorCriticCnnPolicy
 from sb3_contrib.ppo_mask import MaskablePPO
-from scripts.rl.env.old_game_env import (BasicEnv,
-                                         SelfPlayCallback,
-                                         ReversiCNN)
+from scripts.rl.env.basic_game_env import (BasicEnv,
+                                           SelfPlayCallback,
+                                           ReversiCNN)
 import stable_baselines3.common.callbacks as callbacks_module
 from sb3_contrib.common.maskable.evaluation import evaluate_policy as masked_evaluate_policy
 

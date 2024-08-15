@@ -23,8 +23,27 @@ import os, math
 from itertools import cycle
 
 
-X_SQUARES = {(1, 1), (6, 6), (1, 6), (6, 1)}
-C_SQUARES = {(0, 2), (0, 5), (7, 2), (7, 5), (2, 0), (2, 7), (5, 0), (5, 7)}
+WEIGHT_MATRIX = np.array([
+    [100, -20, 10,  5,  5, 10, -20, 100],
+    [-20, -50, -2, -2, -2, -2, -50, -20],
+    [10,   -2, -1, -1, -1, -1,  -2,  10],
+    [5,    -2, -1,  0,  0, -1,  -2,   5],
+    [5,    -2, -1,  0,  0, -1,  -2,   5],
+    [10,   -2, -1, -1, -1, -1,  -2,  10],
+    [-20, -50, -2, -2, -2, -2, -50, -20],
+    [100, -20, 10,  5,  5, 10, -20, 100]
+])
+
+WEIGHT_MATRIX_2 = np.array([
+    [100, -20, -10, -5, -5, -10, -20, 100],
+    [-20, -50,  -2, -2, -2,  -2, -50, -20],
+    [-10,  -2,  -1, -1, -1,  -1,  -2, -10],
+    [-5,   -2,  -1,  0,  0,  -1,  -2,  -5],
+    [-5,   -2,  -1,  0,  0,  -1,  -2,  -5],
+    [-10,  -2,  -1, -1, -1,  -1,  -2, -10],
+    [-20, -50,  -2, -2, -2,  -2, -50, -20],
+    [100, -20, -10, -5, -5, -10, -20, 100]
+])
 
 
 class TrainEnv(gym.Env):
@@ -55,6 +74,7 @@ class TrainEnv(gym.Env):
         reward = 0
         done = False
         winner = self.game.get_winner()
+        turn = self.game.turn
         if winner is not None:
             self.episodes += 1
             if self.episodes % 1000 == 0:
@@ -62,22 +82,13 @@ class TrainEnv(gym.Env):
 
             done = True
             if winner == self.game.last_turn:
-                reward = 100
+                reward = 200
             elif winner == 3 - self.game.last_turn:  # other agent turn/figure
-                reward = -100
+                reward = -200
         else:  # if not done, get some other rewards
-            if last_played_move in self.game.CORNERS:
-                reward += 10
-            elif self.game.turn < 20:
-                if last_played_move in X_SQUARES:
-                    reward -= 5
-                elif last_played_move in C_SQUARES:
-                    reward -= 3
-
-
-            ### give solidly big reward if you play move that will make you again the next player
-            if self.game.player_turn == self.game.last_turn:  # oplayer turn is always here the agent_turn
-                reward += 10
+            rew = WEIGHT_MATRIX[last_played_move]
+            ratio = (60 - turn) / 60
+            reward = ratio * rew
         return reward, done
 
     def render(self):  # todo

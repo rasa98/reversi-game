@@ -23,9 +23,9 @@ from stable_baselines3.common.monitor import Monitor
 
 from sb3_contrib.common.maskable.policies import MaskableActorCriticPolicy
 from sb3_contrib.ppo_mask import MaskablePPO
-from scripts.rl.env.old_game_env import (BasicEnv,
-                                         SelfPlayCallback,
-                                         ReversiCNN)
+from scripts.rl.env.basic_game_env import (BasicEnv,
+                                           SelfPlayCallback,
+                                           ReversiCNN)
 
 import stable_baselines3.common.callbacks as callbacks_module
 from sb3_contrib.common.maskable.evaluation import evaluate_policy as masked_evaluate_policy

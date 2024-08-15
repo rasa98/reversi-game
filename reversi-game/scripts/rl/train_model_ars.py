@@ -21,8 +21,7 @@ from sb3_contrib.ars.policies import LinearPolicy, MlpPolicy
 import sb3_contrib.ars.ars as ars
 
 from stable_baselines3.common.monitor import Monitor
-from scripts.rl.env.old_game_env import BasicEnv, SelfPlayCallback
-from scripts.rl.env.selfplay_env import SelfPlayEnv
+from scripts.rl.env.basic_game_env import BasicEnv, SelfPlayCallback
 
 import stable_baselines3.common.callbacks as callbacks_module
 from sb3_contrib.common.maskable.evaluation import evaluate_policy as masked_evaluate_policy
