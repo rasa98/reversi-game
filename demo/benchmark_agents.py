@@ -30,11 +30,16 @@ from read_all_agents import (alpha_200,
                              mcts_agent_500, load_parallel_mcts_agent_by_depth,
                              xyz_depth_1, xyz_depth_dyn)
 
+pmcts_30 = load_parallel_mcts_agent_by_depth(30)
+
 # -------------------How to test two agents-----------------------------#
+
 #bench_both_sides(minmax_human_depth_dyn, minmax_ga_depth_dyn, times=50, verbose=2)
 #bench_both_sides(xyz_depth_dyn, minmax_ga_depth_dyn, times=20, verbose=2)
 
-bench_both_sides(minmax_ga_depth_dyn, best_mlp_ppo, times=100, verbose=2)
+pmcts_30.open_pool(4)
+bench_both_sides(pmcts_30, best_mlp_ppo, times=20, verbose=2)
+pmcts_30.clean_pool()
 # bench_both_sides(minmax_human_depth_1, best_ars, times=100, verbose=2)
 # bench_both_sides(minmax_human_depth_1, ppo_cnn, times=100, verbose=2)
 

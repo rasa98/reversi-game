@@ -8,23 +8,27 @@ from game_modes import ai_vs_ai_cli
 from agents.agent_interface import ai_random
 from collections import Counter
 
+
 # from .model_interface import ModelInterface
 
 
 class Node:
 
-    def __init__(self, game_copy, parent_node=None):
+    def __init__(self, game_copy, move, parent_node=None):
         self.game = game_copy
         self.visited = 0
         self.value = 0
-        self.move_to_child = {}  # TODO refactor to field children and every node has move that brought it to it.
+        self.move = move
+        self.children = []
+        #self.move_to_child = {}  # TODO refactor to field children and every node has move that brought it to it.
         self.parent = parent_node
         self.valid_moves = list(game_copy.valid_moves_to_reverse)
         self.is_final_state = len(self.valid_moves) == 0
 
     def get_all_next_move_counter(self):
         """for debug"""
-        return Counter({move: child.visited for move, child in self.move_to_child.items()})
+        #return Counter({move: child.visited for move, child in self.move_to_child.items()})
+        return Counter({child.move: child.visited for child in self.children})
 
     def explored(self):
         return len(self.valid_moves) == 0
@@ -33,13 +37,16 @@ class Node:
         move = self.valid_moves.pop()
         game_copy = self.game.get_snapshot()
         game_copy.play_move(move)
-        child_node = Node(game_copy, self)
-        self.move_to_child[move] = child_node
+
+        child_node = Node(game_copy, move, self)
+        self.children.append(child_node)
+        #self.move_to_child[move] = child_node
         return child_node
 
     def select_highest_ucb_child(self, c):
         log_visited = math.log(self.visited)
-        max_child = max(self.move_to_child.values(), key=lambda ch: ch.get_uct(c, log_visited))
+        #max_child = max(self.move_to_child.values(), key=lambda ch: ch.get_uct(c, log_visited))
+        max_child = max(self.children, key=lambda ch: ch.get_uct(c, log_visited))
         return max_child
 
     def get_uct(self, c, logged_parent_visits):
@@ -83,8 +90,7 @@ class MCTS:
 
     def set_root_new(self, game):
         """create new root Node."""
-        self.root = Node(game.get_snapshot())
-
+        self.root = Node(game.get_snapshot(), None)
 
     def predict_best_move_OLD(self, game):  # TODO remove
         self.set_root_new(game)
@@ -93,7 +99,6 @@ class MCTS:
         gc.collect()
         return self.best_moves(), None
 
-
     def simulate(self, game):
         self.set_root_new(game)
         self.mcts_search()
@@ -101,13 +106,13 @@ class MCTS:
         gc.collect()
 
         action_probs = np.zeros(game.action_space())
-        for move, child in self.root.move_to_child.items():
-            encoded_move = game.__class__.get_encoded_field(move)
+        for child in self.root.children:
+            encoded_move = game.__class__.get_encoded_field(child.move)
             action_probs[encoded_move] = child.visited
         action_probs /= np.sum(action_probs)
         return action_probs
 
-        #return self.best_moves(), None
+        # return self.best_moves(), None
 
     # def best_move_child_item(self):
     #     return max(self.root.move_to_child.items(), key=lambda item: item[1].visited)
@@ -116,7 +121,8 @@ class MCTS:
         best_items = []
         max_value = -math.inf
 
-        for move, node in self.root.move_to_child.items():
+        for node in self.root.children:
+            move = node.move
             if (current_value := node.visited) > max_value:
                 max_value, best_items = current_value, [(move, node)]
             elif current_value == max_value:
@@ -181,7 +187,6 @@ class MCTS:
         if self.verbose:
             print(f'game turn: {self.root.game.turn}')
             print(f'iterations {iterations} per one cycle: {self.iter_per_cycle()}\n')
-
 
 # time_limit = 1
 # iter_limit = 30  # math.inf
