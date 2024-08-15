@@ -22,17 +22,6 @@ WEIGHT_MATRIX = np.array([
     [100, -20, 10, 5, 5, 10, -20, 100]
 ])
 
-WEIGHT_MATRIX2 = np.array([
-    [100, -20, -10,  -5,  -5, -10, -20, 100],
-    [-20, -50, -2, -2, -2, -2, -50, -20],
-    [-10,   -2, -1, -1, -1, -1,  -2,  -10],
-    [-5,    -2, -1,  0,  0, -1,  -2,   -5],
-    [-5, -2, -1, 0, 0, -1, -2, -5],
-    [-10, -2, -1, -1, -1, -1, -2, -10],
-    [-20, -50, -2, -2, -2, -2, -50, -20],
-    [100, -20, -10, -5, -5, -10, -20, 100]
-])
-
 
 @njit(cache=True)
 def count_white_black(board: np.ndarray):
@@ -141,7 +130,7 @@ if __name__ == '__main__':
     import seaborn as sns
 
     plt.figure(figsize=(8, 8))
-    sns.heatmap(WEIGHT_MATRIX2, annot=True, fmt="d", cmap="coolwarm", center=0, linewidths=0.5)
+    sns.heatmap(WEIGHT_MATRIX, annot=True, fmt="d", cmap="coolwarm", center=0, linewidths=0.5)
     plt.title('Weight Matrix Heatmap')
     plt.show()
 

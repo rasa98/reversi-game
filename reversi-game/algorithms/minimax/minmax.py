@@ -26,12 +26,27 @@ class Minimax:
     def __init__(self, depth_f, heu):
         self.depth = None
         self.depth_f = depth_f
+        self.depth_dist = None
         # self.maximizing_player = maximizing_player
         self.heu = heu
         self.best_estimate = None
         self.best_moves_to_play = []
         self.all_moves = []
         self.maximizer = None
+
+        self.set_depth_distribution()
+
+    def set_depth_distribution(self):
+        if callable(self.depth_f):
+            res = []
+            for turn in range(1, 65):
+                res.append(self.depth_f(turn))
+            self.depth_dist = res
+        elif isinstance(self.depth_f, list):
+            assert len(self.depth_f) >= 60
+            self.depth_dist = self.depth_f
+        else:
+            raise Exception("depth_f was not set to a viable format")
 
     def best_moves(self):
         assert len(self.all_moves) != 0, "need first to simulate move!!!"
@@ -42,7 +57,8 @@ class Minimax:
         self.all_moves = []
         self.maximizer = True if game.player_turn == 1 else False  # player 1 maximizes
 
-        self.depth = self.depth_f(game.turn)  # depth >= 1
+        #self.depth = self.depth_f(game.turn)  # depth >= 1
+        self.depth = self.depth_dist[game.turn - 1]
         self.best_estimate = self._main(self.depth,
                                         float('-inf'),  # alpha
                                         float('inf'),  # beta

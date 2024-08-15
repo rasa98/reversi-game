@@ -27,7 +27,7 @@ export PYTHONPATH=$(pwd)
 start_time=$(date +%s)
 
 # Run your Python script
-python scripts/ga/cluster/ga_tuned_heu2.py
+python scripts/ga/cluster/ga_tuned_heu.py
 
 # Record the end time
 end_time=$(date +%s)

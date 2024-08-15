@@ -20,12 +20,12 @@ from heuristics.heu1 import heuristic, heuristic2
 #                                      CountCorners as CountCorners2,
 #                                      MaximizeMyMoves as MaximizeMyMoves2,
 #                                      WeightedPieceCounter as WeightedPieceCounter2)
-from heuristics.ga.heu_func2 import (CountChips,
-                                     CountSaferEarlyGame,
-                                     CountDangerEarlyGame,
-                                     CountCorners,
-                                     MaximizeMyMoves,
-                                     WeightedPieceCounter)
+from heuristics.ga.heu_func import (CountChips,
+                                    CountSaferEarlyGame,
+                                    CountDangerEarlyGame,
+                                    CountCorners,
+                                    MaximizeMyMoves,
+                                    WeightedPieceCounter)
 from heuristics.ga.heu_ga import create_heuristic
 
 from agents.agent_interface import AgentInterface
@@ -81,9 +81,25 @@ minmax_human_depth_dyn = load_minimax_agent("minmax human depth dynamic",
                                             dynamic_depth_f,
                                             create_heuristic(human_heu_f()))
 
-heu2_f = lambda: {CountCorners: CountCorners(1.345726455834431, 2.1073849836637555),
-                  CountDangerEarlyGame: CountDangerEarlyGame(5.214213407375362),
-                  MaximizeMyMoves: MaximizeMyMoves(88.59176079991997, 16.676433765717864)
+# heu2_f = lambda: {CountCorners: CountCorners(1.345726455834431, 2.1073849836637555),
+#                   CountDangerEarlyGame: CountDangerEarlyGame(5.214213407375362),
+#                   MaximizeMyMoves: MaximizeMyMoves(88.59176079991997, 16.676433765717864)
+#                   }
+
+# params: CountCorners: corner divisor: 1.1905099658695404, corner exponent: 2.680065599276816, end_turn: 57--,
+#         WeightedPieceCounter: max turn: 59--,
+#         CountChips: start_turn: 51--,
+#         CountSaferEarlyGame: safer divisor: 8.493051957847316, end_turn: 16--,
+#         MaximizeMyMoves: max my score: 40.64821906001839, max ratio div: 14.425818594319637--,
+#       --id: 153887,
+#       --score: 301/450
+
+### nakon 280 rundi tournament u geneskim algoritmima
+heu2_f = lambda: {CountCorners: CountCorners(corner_divisor=1.19, corner_exponent=2.68, end_turn=57),
+                  WeightedPieceCounter: WeightedPieceCounter(max_turn=59),
+                  CountChips: CountChips(start_turn=51),
+                  CountSaferEarlyGame: CountSaferEarlyGame(safer_divisor=8.493, end_turn=16),
+                  MaximizeMyMoves: MaximizeMyMoves(max_score=40.648, ratio=14.4258)
                   }
 
 minmax_ga_best_depth_1 = load_minimax_agent("minmax GA depth 1",

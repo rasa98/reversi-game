@@ -10,8 +10,8 @@ if __name__ == '__main__' and os.environ['USER'] != 'student':
     source_dir = os.path.abspath(os.path.join(os.getcwd(), '../../../'))
     sys.path.append(source_dir)
 
-# from heuristics.ga.heu_ga import HeuFuncIndividual
-from heuristics.ga.heu_ga2 import HeuFuncIndividual
+
+from heuristics.ga.heu_ga import HeuFuncIndividual
 from agents.MiniMaxAgent import load_minimax_agent
 from game_modes import ai_vs_ai_cli
 
@@ -68,11 +68,10 @@ def parallel_process_list(players, func, rematch=True):
     match_pairs = generate_all_pairs(players, ROUNDS)
     if rematch:
         match_pairs = add_rematches(match_pairs)
-    # print(f'len of matches pairs: {len(match_pairs)}\n\n')
+    random.shuffle(match_pairs)
 
     chunk_size = len(match_pairs) // CORES
     partitions = [match_pairs[i:i + chunk_size] for i in range(0, len(match_pairs), chunk_size)]
-
 
     results = list(executor.map(func, partitions))
 
@@ -142,7 +141,7 @@ if __name__ == "__main__":
     SELECTION_CROSSOVER = (0.5, 0.75)
     REMATCH = False
     SAVE_FREQ = 10
-    LOG_DIR = 'models_output/ga/2/'
+    LOG_DIR = 'models_output/ga/4/'
 
     os.makedirs(LOG_DIR, exist_ok=True)
 
