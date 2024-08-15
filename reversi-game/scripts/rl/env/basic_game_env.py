@@ -29,10 +29,7 @@ class BasicEnv(gym.Env):
         self.agent_turn = 1
         shape = self.game.board.shape
         self.action_space = Discrete(shape[0] * shape[1])  # sample - [x, y]
-        # self.observation_space = Dict({
-        #                                 'board' : Box(0, 2, shape=shape, dtype=int),
-        #                                 'player': Discrete(2, start=1)
-        #                               })
+
         self.use_cnn = use_cnn
         if use_cnn:
             self.observation_space = Box(low=0, high=255, shape=(3, 8, 8), dtype=np.uint8)
@@ -141,7 +138,6 @@ class BasicEnv(gym.Env):
 
     def action_masks(self):
         valid_moves = self.game.valid_moves()
-
         mask = np.zeros(self.game.board.shape, dtype=bool)
 
         # Set True for each index in the set
