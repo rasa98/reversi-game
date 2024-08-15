@@ -98,12 +98,12 @@ if __name__ == '__main__':
 
     print(f'\nparams: {params}\n')
 
-    # policy_kwargs = {
-    #    'net_arch': {
-    #        'pi': [128, 128] * 4,
-    #        'vf': [64, 64] * 4
-    #    }
-    # }
+    policy_kwargs = {
+       'net_arch': {
+           'pi': [128, 128] * 4,
+           'vf': [64, 64] * 4
+       }
+    }
     # print(f'net architecture - {policy_kwargs}')
 
     if CONTINUE_FROM_MODEL is None:
