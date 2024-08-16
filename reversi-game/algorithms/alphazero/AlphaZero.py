@@ -40,8 +40,8 @@ class AlphaZero:
             temp_action_probs /= np.sum(temp_action_probs)
 
             action = np.random.choice(ALL_FIELDS_SIZE, p=temp_action_probs)
-
             game.play_move(Othello.get_decoded_field(action))
+
             if game.is_game_over():
                 data_to_return = []
                 winner = game.get_winner()

@@ -10,8 +10,7 @@ from agents.ParallelMctsAgent import load_parallel_mcts_model
 from agents.MiniMaxAgent import (minmax_ga_best_depth_1,
                                  minmax_human_depth_1,
                                  minmax_ga_depth_dyn,
-                                 minmax_human_depth_dyn,
-                                 xyz_depth_1, xyz_depth_dyn)
+                                 minmax_human_depth_dyn,)
 from agents.actor_critic_agent import (load_ac_agent)
 from agents.agent_interface import ai_random
 from agents.sb3_agent import load_sb3_agent

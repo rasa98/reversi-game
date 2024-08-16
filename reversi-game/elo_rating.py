@@ -1,9 +1,11 @@
+import json
 import random
 import numpy as np
 from itertools import permutations
 from tqdm import trange
 from game_modes import ai_vs_ai_cli
 import os
+from collections import defaultdict
 
 
 class Player:
@@ -14,8 +16,9 @@ class Player:
 
     def inc(self):
         self.played_matches += 1
-    # def predict_best_move(self, game):
-    #     return self.agent.predict_best_move(game)
+
+    def __repr__(self):
+        return str(self.agent)
 
 
 class EloRating:
@@ -54,6 +57,8 @@ class Tournament:
         self.verbose = verbose
         self.banned = set() if banned is None else banned
 
+        self.stats = defaultdict(lambda: [0, 0, 0])
+
     @staticmethod
     def get_actual_score(winner):
         """from perspective of first player"""
@@ -74,6 +79,7 @@ class Tournament:
                     print(f'{pl1.agent} vs {pl2.agent}')
                 game = ai_vs_ai_cli(pl1.agent, pl2.agent)
                 winner = game.get_winner()
+                self.update_stats(pl1, pl2, winner)
                 actual_score_1 = self.get_actual_score(winner)
                 self.elo.calculate_new_rating(pl1, pl2, actual_score_1)
                 pl1.inc()
@@ -83,11 +89,26 @@ class Tournament:
                 self.players.sort(key=lambda player: player.rating, reverse=True)
                 self.save_simulation(r+1)
 
-    def save_simulation(self, round_num):
+    def update_stats(self, pl1, pl2, winner):
+        if winner == 1:
+            self.stats[(str(pl1), str(pl2))][0] += 1
+        if winner == 2:
+            self.stats[(str(pl1), str(pl2))][2] += 1
+        if winner == 0:
+            self.stats[(str(pl1), str(pl2))][1] += 1
 
+    def save_simulation(self, round_num):
         os.makedirs(self.log_dir, exist_ok=True)
         output_path = os.path.join(self.log_dir, f'{self.log_filename}_{round_num}.txt')
         with open(output_path, 'w') as f:
             f.write(f'Elo ranking after {round_num} rounds:\n')
             for pl in self.players:
                 f.write(f'\tAgent: {pl.agent}: {pl.rating}\n')
+
+            f.write('\nStats:\n')
+            f.write('(player 1, player 2): [win, draw, loss]\n\n')
+            for key, value in self.stats.items():
+                line = f"{key}: {value}\n"
+                f.write(line)
+
+

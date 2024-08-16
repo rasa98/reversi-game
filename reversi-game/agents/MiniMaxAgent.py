@@ -66,7 +66,7 @@ def load_minimax_agent(name, depth_f, heu_f):
 #                                             create_heuristic(human_heu_f()))
 
 human_heu_f = lambda: {CountChips: CountChips(start_turn=50),
-                       CountCorners: CountCorners(corner_divisor=8, corner_exponent=2.5,
+                       CountCorners: CountCorners(corner_divisor=1.166, corner_exponent=2.5,
                                                   end_turn=50),
                        CountSaferEarlyGame: CountSaferEarlyGame(safer_divisor=5, end_turn=20),
                        CountDangerEarlyGame: CountDangerEarlyGame(danger_mult=5, end_turn=20),
@@ -86,20 +86,21 @@ minmax_human_depth_dyn = load_minimax_agent("minmax human depth dynamic",
 #                   MaximizeMyMoves: MaximizeMyMoves(88.59176079991997, 16.676433765717864)
 #                   }
 
-# params: CountCorners: corner divisor: 1.1905099658695404, corner exponent: 2.680065599276816, end_turn: 57--,
-#         WeightedPieceCounter: max turn: 59--,
-#         CountChips: start_turn: 51--,
-#         CountSaferEarlyGame: safer divisor: 8.493051957847316, end_turn: 16--,
-#         MaximizeMyMoves: max my score: 40.64821906001839, max ratio div: 14.425818594319637--,
-#       --id: 153887,
-#       --score: 301/450
 
-### nakon 280 rundi tournament u geneskim algoritmima
-heu2_f = lambda: {CountCorners: CountCorners(corner_divisor=1.19, corner_exponent=2.68, end_turn=57),
+### nakon 1000 rundi tournament u geneskim algoritmima
+# CountCorners: corner divisor: 1.1660590428529272, corner exponent: 2.38034446924993, end_turn: 56--,
+# WeightedPieceCounter: max turn: 59--,
+# CountChips: start_turn: 54--,
+# MaximizeMyMoves: max my score: 44.27376301907929, max ratio div: 15.749362953723114--,
+# CountSaferEarlyGame: safer divisor: 7.606340476247734, end_turn: 26--,
+# id: 549863,
+# score: 298/450
+
+heu2_f = lambda: {CountCorners: CountCorners(corner_divisor=1.166, corner_exponent=2.38, end_turn=56),
+                  CountSaferEarlyGame: CountSaferEarlyGame(safer_divisor=7.606, end_turn=26),
                   WeightedPieceCounter: WeightedPieceCounter(max_turn=59),
-                  CountChips: CountChips(start_turn=51),
-                  CountSaferEarlyGame: CountSaferEarlyGame(safer_divisor=8.493, end_turn=16),
-                  MaximizeMyMoves: MaximizeMyMoves(max_score=40.648, ratio=14.4258)
+                  MaximizeMyMoves: MaximizeMyMoves(max_score=44.27, ratio=15.75),
+                  CountChips: CountChips(start_turn=54)
                   }
 
 minmax_ga_best_depth_1 = load_minimax_agent("minmax GA depth 1",
@@ -110,18 +111,4 @@ minmax_ga_depth_dyn = load_minimax_agent("minmax GA depth dyn",
                                          dynamic_depth_f,
                                          create_heuristic(heu2_f()))
 
-# -----------------------ignore-----------------------
 
-xyz_f = lambda: {CountCorners: CountCorners(1.345726455834431, 2.1073849836637555),
-                 CountDangerEarlyGame: CountDangerEarlyGame(5.214213407375362),
-                 WeightedPieceCounter: WeightedPieceCounter(50),
-                 MaximizeMyMoves: MaximizeMyMoves(88.59176079991997, 16.676433765717864)
-                 }
-
-xyz_depth_1 = load_minimax_agent("minmax XYZ depth 1",
-                                 fixed_depth_f(1),
-                                 create_heuristic(xyz_f()))
-
-xyz_depth_dyn = load_minimax_agent("minmax XYZ depth dyn",
-                                   dynamic_depth_f,
-                                   create_heuristic(xyz_f()))

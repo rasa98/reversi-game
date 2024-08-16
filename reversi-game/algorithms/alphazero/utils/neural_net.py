@@ -22,7 +22,7 @@ class Net(nn.Module):
             nn.Dropout(p=0.2),  # Dropout layer
             nn.Conv2d(2 * num_hidden, 2 * num_hidden, kernel_size=3, padding=1),
             nn.ReLU(),
-            nn.Dropout(p=0.2) , # Dropout layer
+            nn.Dropout(p=0.2),  # Dropout layer
             nn.Conv2d(2 * num_hidden, 2 * num_hidden, kernel_size=3, padding=1),
             nn.ReLU(),
             nn.Dropout(p=0.2)  # Dropout layer

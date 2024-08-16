@@ -20,7 +20,6 @@ class Node:
         self.value = 0
         self.move = move
         self.children = []
-        #self.move_to_child = {}  # TODO refactor to field children and every node has move that brought it to it.
         self.parent = parent_node
         self.valid_moves = list(game_copy.valid_moves_to_reverse)
         self.is_final_state = len(self.valid_moves) == 0
