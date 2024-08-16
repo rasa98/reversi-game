@@ -426,6 +426,11 @@ if __name__ == '__main__':
                         model.__class__,
                         starting_model_filepath,
                         model.policy_class)
+    if TRAIN_ENV != BasicEnv:
+        env.env_method('change_to_latest_agent',
+                       model.__class__,
+                       starting_model_filepath,
+                       model.policy_class)
 
     params = {
         'eval_env': eval_env,
