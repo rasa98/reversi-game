@@ -236,7 +236,7 @@ class OthelloGameGui:
         top_space = 50
         col = pos[0] // self.square_size
         row = (pos[1] - top_space) // self.square_size
-        print(f"You clicked on cell ({row}, {col})\n")
+        print(f"You clicked on cell ({int(row)}, {int(col)})\n")
         return row, col
 
     def main(self):
