@@ -38,7 +38,8 @@ class MaskedPPOWrapper(AgentInterface):
                                        action_masks=action_masks(game),
                                        deterministic=det)
 
-        move = Othello.get_decoded_field(action)  # from [0, 63] -> (0-7, 0-7)
+        (row, col) = Othello.get_decoded_field(action)  # from [0, 63] -> (0-7, 0-7)
+        move = (int(row), int(col))  # some bug it return np.int64 idk who cares
         # print(f'action : {action}, - {action_game}')
         return (move,), None
 
