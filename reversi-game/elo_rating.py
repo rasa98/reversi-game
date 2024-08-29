@@ -107,7 +107,8 @@ class Tournament:
 
             f.write('\nStats:\n')
             f.write('(player 1, player 2): [win, draw, loss]\n\n')
-            for key, value in self.stats.items():
+            sorted_data = sorted(self.stats.items(), key=lambda item: (item[0][0], item[1][0]))
+            for key, value in sorted_data:
                 line = f"{key}: {value}\n"
                 f.write(line)
 

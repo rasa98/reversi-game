@@ -377,7 +377,6 @@ if __name__ == "__main__":
     num_parallel_games = 64
 
     params = {
-
         'hidden_layer': 64,
         'lr': 1e-5,
         'weight_decay': 1e-6,

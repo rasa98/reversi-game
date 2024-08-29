@@ -38,10 +38,12 @@ def load_mcts_model(params=None):
     iter_limit = params.get('max_iter', 100)
     c = params.get('c', 1.41)
     verbose = params.get('verbose', 0)  # 0 means no logging
+    f_iter_per_turn = params.get('f_iter_per_turn', None)
 
     mcts_model = MCTS(max_time=time_limit,
                       max_iter=iter_limit,
                       uct_exploration_const=c,
+                      f_iter_per_turn=f_iter_per_turn,
                       verbose=verbose)
 
     return MctsAgent(f'Mcts {iter_limit}', mcts_model)

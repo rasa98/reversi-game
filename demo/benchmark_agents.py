@@ -1,3 +1,4 @@
+import math
 import os
 import sys
 
@@ -27,17 +28,41 @@ from read_all_agents import (alpha_200,
                              minmax_ga_depth_dyn,
                              minmax_human_depth_1,
                              minmax_human_depth_dyn,
-                             mcts_agent_500, load_parallel_mcts_agent_by_depth,
+                             mcts_agent_500, load_parallel_mcts_agent_by_depth, load_mcts_model
                              )
 
 pmcts_30 = load_parallel_mcts_agent_by_depth(30)
 
+
+# -------------------------------------------------------------------------
+def f(current_turn):
+    if current_turn < 30:
+        # Before turn 30, keep iterations low, e.g., 200
+        return int(1000 + ((current_turn - 0) / 29) * (2000 - 1000))
+    elif 30 <= current_turn <= 37:
+        # Linearly increase from 200 to 800 iterations between turns 30 and 37
+        return int(2000 + ((current_turn - 30) / 7) * (3000 - 2000))
+    elif 38 <= current_turn <= 60:
+        # Linearly increase from 800 to 10000 iterations between turns 38 and 60
+        return int(3000 + ((current_turn - 37) / 23) * (20000 - 3000))
+    else:
+        # After turn 60, keep iterations at 10000
+        return 10000
+
+
+mcts_params = {'max_time': math.inf,
+               'max_iter': math.inf,
+               'f_iter_per_turn': f,
+               'c': 1.41,
+               'verbose': 0}
+mcts = load_mcts_model(params=mcts_params)
+
 # -------------------How to test two agents-----------------------------#
 
-#bench_both_sides(minmax_human_depth_dyn, minmax_ga_depth_dyn, times=50, verbose=2)
-#bench_both_sides(xyz_depth_dyn, minmax_ga_depth_dyn, times=20, verbose=2)
+# bench_both_sides(minmax_human_depth_dyn, minmax_ga_depth_dyn, times=50, verbose=2)
+# bench_both_sides(xyz_depth_dyn, minmax_ga_depth_dyn, times=20, verbose=2)
 
-bench_both_sides(minmax_ga_best_depth_1, mcts_agent_30, times=10, verbose=2)
+bench_both_sides(mcts, alpha_30, times=10, verbose=2)
 
 # bench_both_sides(minmax_human_depth_1, best_ars, times=100, verbose=2)
 # bench_both_sides(minmax_human_depth_1, ppo_cnn, times=100, verbose=2)

@@ -4,6 +4,8 @@ __pycache__/
 *.pt
 *.npz
 *.txt
+plot.py
+plotElo.py
 reversi-game/all_agents.py
 reversi-game/bench_ars_agents.py
 reversi-game/bench_trpo_agents.py

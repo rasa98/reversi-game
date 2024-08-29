@@ -10,7 +10,13 @@ from agents.ParallelMctsAgent import load_parallel_mcts_model
 from agents.MiniMaxAgent import (minmax_ga_best_depth_1,
                                  minmax_human_depth_1,
                                  minmax_ga_depth_dyn,
-                                 minmax_human_depth_dyn,)
+                                 minmax_human_depth_dyn,
+                                 no__mmm_wpc,
+                                 no_mmm,
+                                 no_wpc,
+                                 no__chips__corner,
+                                 no__safe__danger,
+                                 minmax_ga_best_depth_1_2, minmax_ga_best_depth_1_3, mmm_wpc)
 from agents.actor_critic_agent import (load_ac_agent)
 from agents.agent_interface import ai_random
 from agents.sb3_agent import load_sb3_agent
@@ -73,10 +79,10 @@ np.random.seed(seed)
 best_mlp_ppo = load_sb3_agent(f'ppo_mlp', 'models/ppo_mlp')
 
 mcts_agent_30 = load_mcts_agent_by_depth(30)
-mcts_agent_200 = load_mcts_agent_by_depth(200)
+mcts_agent_100 = load_mcts_agent_by_depth(100)
 mcts_agent_500 = load_mcts_agent_by_depth(500)
 
-pmcts_agent_500 = load_parallel_mcts_agent_by_depth(500)
+pmcts_agent_30 = load_parallel_mcts_agent_by_depth(30)
 
 azero_folder = 'models/'  # f'models_output/alpha-zero/FINAL/layer64-LAST-v3/'
 azero_model_location = f'{azero_folder}azero.pt'  # 3
@@ -113,8 +119,19 @@ agents = [cnn_trpo, best_mlp_ppo,
           minmax_ga_depth_dyn,
           minmax_human_depth_dyn, ai_random,
           alpha_30, alpha_200,
-          mcts_agent_30, mcts_agent_200, mcts_agent_500]
+          mcts_agent_30, mcts_agent_100, mcts_agent_500]
 
+minmmax_agents = [ai_random,
+                  minmax_human_depth_1,
+                  minmax_ga_best_depth_1,
+                  no_wpc,
+                  no__mmm_wpc,
+                  no_mmm,
+                  no__safe__danger,
+                  no__chips__corner,
+                  minmax_ga_best_depth_1_2,
+                  minmax_ga_best_depth_1_3,
+                  mmm_wpc]
 
 ### Chnage so deterministic by default is False
 

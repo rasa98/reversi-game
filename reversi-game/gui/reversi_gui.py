@@ -49,10 +49,10 @@ class OthelloGameGui:
 
     def setup_display(self):
         """Set up the display window and font."""
-        self.size = self.width, self.height = 800, 900 # 400, 500  # Increased height for space above the board
+        self.size = self.width, self.height = 800, 900  # 400, 500  # Increased height for space above the board
         self.rows, self.cols = 8, 8
         self.square_size = self.width // self.cols
-        self.padding = 10 # 5
+        self.padding = 10  # 5
         self.disc_radius = (self.square_size - 2 * self.padding) // 2
 
         # Colors

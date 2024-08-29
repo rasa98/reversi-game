@@ -70,7 +70,7 @@ class Node:
 
 class MCTS:
 
-    def __init__(self, max_iter=math.inf, max_time=math.inf, uct_exploration_const=1.42, verbose=0):
+    def __init__(self, max_iter=math.inf, max_time=math.inf, f_iter_per_turn=None, uct_exploration_const=1.42, verbose=0):
         # super().__init__(name)
         self.root = None  # Node(game.get_snapshot())
         self.last_cycle_iteration = 0
@@ -81,6 +81,9 @@ class MCTS:
         self.verbose = verbose
 
         self.uct_exploration_const = uct_exploration_const
+
+        self.turn = None
+        self.f_iter_per_turn = f_iter_per_turn
 
     def iter_per_cycle(self):
         if self.last_cycle_time != 0:
@@ -99,6 +102,7 @@ class MCTS:
         return self.best_moves(), None
 
     def simulate(self, game):
+        self.turn = game.turn
         self.set_root_new(game)
         self.mcts_search()
         # print(f'\nafter simulating: {dict(self.root.get_all_next_move_counter())}')
@@ -166,9 +170,11 @@ class MCTS:
         self.backprop(node, winner)
 
     def mcts_search(self):
-        if self.max_time == math.inf and self.max_iter == math.inf:
+        if self.max_time == math.inf and self.max_iter == math.inf and self.max_iter is None:
             raise ValueError("At least one of max_time or max_iter must be specified.")
 
+        if self.f_iter_per_turn is not None:
+            self.max_iter = self.f_iter_per_turn(self.turn)
         start_time = time.process_time()
         iterations = 0
         while True:

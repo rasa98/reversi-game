@@ -18,7 +18,13 @@ Before running the project, ensure you have the following installed:
   - numba
   - numpy
   - torch
+  - pygame
+  - tqdm
 - download and unzip models folder and put it in reversi-game folder - [Link to g drive](https://drive.google.com/drive/folders/14qqvrT65f06vb5iivH9EdJtylYMtIpWh?usp=sharing)
+
+## Output
+
+Details about experiments and model training - [Link to g drive](https://drive.google.com/drive/folders/1sH2lYvbl43bVch5i1OBtJlyx6n7DsQwo?usp=sharing)
 
 ## Demo
 
