@@ -24,7 +24,7 @@ Before running the project, ensure you have the following installed:
 
 ## Output
 
-Details about experiments and model training - [Link to g drive](https://drive.google.com/drive/folders/1sH2lYvbl43bVch5i1OBtJlyx6n7DsQwo?usp=sharing)
+Details about experiments and model training - [Link to g drive](https://drive.google.com/drive/folders/1mUdSOnpk9KpQX28UFCfgCT2DFelAGUTw?usp=drive_link)
 
 ## Benchmarking Results - Elo Ranking After 100 Rounds
 
