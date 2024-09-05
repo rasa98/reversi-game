@@ -13,6 +13,7 @@ reversi-game/bench_ppo_agents.py
 venv/
 venv2/
 venv310/
+new_venv/
 
 # But don't ignore the requirements.txt file
 !requirements.txt
