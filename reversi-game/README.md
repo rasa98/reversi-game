@@ -12,7 +12,7 @@ After training the models, they were benchmarked, and an Elo ranking system was 
 Before running the project, ensure you have the following installed:
 
 - Python 3.6 or higher
-- Required Python packages (Install them using pip):
+- Required Python packages (pip install -r requirements.txt):
   - stable-baselines3
   - sb3-contrib
   - numba
