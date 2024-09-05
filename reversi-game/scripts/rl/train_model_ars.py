@@ -8,7 +8,7 @@ import numpy as np
 from gymnasium import spaces
 from sb3_contrib.common.vec_env import AsyncEval
 
-if __name__ == '__main__' and os.environ['USER'] != 'student':
+if __name__ == '__main__' and (os.environ.get('USER') or os.environ.get('USERNAME')) != 'student':
     source_dir = os.path.abspath(os.path.join(os.getcwd(), '../../'))
     sys.path.append(source_dir)
     os.chdir('../../')

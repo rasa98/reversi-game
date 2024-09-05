@@ -3,7 +3,7 @@ import multiprocessing as mp
 from stable_baselines3.common.vec_env import SubprocVecEnv, DummyVecEnv, sync_envs_normalization
 import os, sys
 
-if os.environ['USER'] == 'rasa':
+if (os.environ.get('USER') or os.environ.get('USERNAME')) == 'rasa':
     source_dir = os.path.abspath(os.path.join(os.getcwd(), '../../'))
     sys.path.append(source_dir)
 
@@ -52,7 +52,7 @@ if __name__ == '__main__':
 
     mp.set_start_method('forkserver')
 
-    if os.environ['USER'] == 'student':
+    if (os.environ.get('USER') or os.environ.get('USERNAME')) == 'student':
         num_envs = int(os.environ['SLURM_CPUS_ON_NODE']) // 2
     else:
         os.chdir('../../')

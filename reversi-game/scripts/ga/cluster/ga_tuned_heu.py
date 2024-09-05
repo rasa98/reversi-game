@@ -6,7 +6,7 @@ import concurrent.futures
 from collections import defaultdict
 from tqdm import trange
 
-if __name__ == '__main__' and os.environ['USER'] != 'student':
+if __name__ == '__main__' and (os.environ.get('USER') or os.environ.get('USERNAME')) != 'student':
     source_dir = os.path.abspath(os.path.join(os.getcwd(), '../../../'))
     sys.path.append(source_dir)
 
@@ -128,7 +128,7 @@ def run_ga():
 
 
 if __name__ == "__main__":
-    if os.environ['USER'] != 'student':
+    if (os.environ.get('USER') or os.environ.get('USERNAME')) != 'student':
         os.chdir('../../../')
         CORES = 2
     else:

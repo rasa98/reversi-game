@@ -21,7 +21,7 @@ from stable_baselines3.dqn.policies import MlpPolicy, CnnPolicy, MultiInputPolic
 # from sb3_contrib.common.maskable.evaluation import evaluate_policy
 from stable_baselines3.common.monitor import Monitor
 
-if os.environ['USER'] == 'rasa':
+if (os.environ.get('USER') or os.environ.get('USERNAME')) == 'rasa':
     source_dir = os.path.abspath(os.path.join(os.getcwd(), '../../'))
     sys.path.append(source_dir)
 

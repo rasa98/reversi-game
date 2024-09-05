@@ -14,7 +14,7 @@ import sys
 import copy
 import os
 
-if __name__ == '__main__' and os.environ['USER'] != 'student':
+if __name__ == '__main__' and (os.environ.get('USER') or os.environ.get('USERNAME')) != 'student':
     source_dir = os.path.abspath(os.path.join(os.getcwd(), '../../'))
     sys.path.append(source_dir)
 # ---------------------
@@ -289,7 +289,7 @@ def parallel_fun(rank, times, params, model, mcts_params):
     device = torch.device(f'cuda' if torch.cuda.is_available() else 'cpu')
     model = model.to(device)
 
-    if os.environ['USER'] != 'rasa':
+    if (os.environ.get('USER') or os.environ.get('USERNAME')) != 'rasa':
         if str(model.device) not in {'cuda'}:
             raise Exception('Not running on CUDA !!!!')
 
@@ -364,7 +364,7 @@ def self_play_function(params, mcts):
 
 
 if __name__ == "__main__":
-    if os.environ['USER'] != 'student':
+    if (os.environ.get('USER') or os.environ.get('USERNAME')) != 'student':
         print('running on local node')
         print(f'cwd is : {os.getcwd()}')
         os.chdir('../../')
@@ -430,7 +430,7 @@ if __name__ == "__main__":
     mp.set_start_method('forkserver')
 
     lock = None
-    if os.environ['USER'] == 'rasa':
+    if (os.environ.get('USER') or os.environ.get('USERNAME')) == 'rasa':
         lock = mp.Lock()
 
     with mp.Pool(processes=num_cores, initializer=init, initargs=(lock,)) as pool:
