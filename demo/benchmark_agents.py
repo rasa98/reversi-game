@@ -6,17 +6,17 @@ import warnings
 
 warnings.filterwarnings('ignore', category=UserWarning)
 
-relative_proj_dir_path = '../reversi-game/'
-source_dir = os.path.abspath(os.path.join(os.getcwd(), relative_proj_dir_path))
-sys.path.append(source_dir)
-os.chdir(relative_proj_dir_path)
+# relative_proj_dir_path = '../reversi-game/'
+# source_dir = os.path.abspath(os.path.join(os.getcwd(), relative_proj_dir_path))
+# sys.path.append(source_dir)
+# os.chdir(relative_proj_dir_path)
 
-from bench_agent import (benchmark,
+from reversi_game.bench_agent import (benchmark,
                          bench_both_sides,
                          benchmark_both_sides_last_board_state)
 
 # Import any premade agent from 'read_all_agents' module
-from read_all_agents import (alpha_200,
+from reversi_game.read_all_agents import (alpha_200,
                              alpha_30,
                              best_ars,
                              cnn_trpo,
@@ -62,7 +62,7 @@ mcts = load_mcts_model(params=mcts_params)
 # bench_both_sides(minmax_human_depth_dyn, minmax_ga_depth_dyn, times=50, verbose=2)
 # bench_both_sides(xyz_depth_dyn, minmax_ga_depth_dyn, times=20, verbose=2)
 
-bench_both_sides(mcts, alpha_30, times=10, verbose=2)
+bench_both_sides(ai_random, best_mlp_ppo, times=10, verbose=2)
 
 # bench_both_sides(minmax_human_depth_1, best_ars, times=100, verbose=2)
 # bench_both_sides(minmax_human_depth_1, ppo_cnn, times=100, verbose=2)

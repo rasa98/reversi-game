@@ -4,16 +4,16 @@ import sys
 import warnings
 warnings.filterwarnings('ignore', category=UserWarning)
 
-cwd = os.getcwd()
-relative_proj_dir_path = '../reversi-game/'
-source_dir = os.path.abspath(os.path.join(cwd, relative_proj_dir_path))
-sys.path.append(source_dir)
-os.chdir(relative_proj_dir_path)
+# cwd = os.getcwd()
+# relative_proj_dir_path = '../reversi-game/'
+# source_dir = os.path.abspath(os.path.join(cwd, relative_proj_dir_path))
+# sys.path.append(source_dir)
+# os.chdir(relative_proj_dir_path)
 
-from elo_rating import Tournament as Tour
+from reversi_game.elo_rating import Tournament as Tour
 
 # Import any premade agent from 'read_all_agents' module
-from read_all_agents import (agents, minmmax_agents,
+from reversi_game.read_all_agents import (agents, minmmax_agents,
                              best_ars,
                              best_mlp_ppo,
                              minmax_ga_best_depth_1,

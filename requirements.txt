@@ -5,3 +5,4 @@ numpy==1.23.3
 torch==1.13.1
 pygame==2.1.2
 tqdm==4.64.1
+seaborn
