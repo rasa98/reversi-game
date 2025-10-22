@@ -14,6 +14,7 @@ venv/
 venv2/
 venv310/
 new_venv/
+*.egg-info
 
 # But don't ignore the requirements.txt file
 !requirements.txt
