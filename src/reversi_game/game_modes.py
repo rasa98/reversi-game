@@ -1,5 +1,5 @@
 import time
-import random
+import random, string
 
 from reversi_game.game_logic import Othello
 
@@ -7,23 +7,25 @@ from reversi_game.game_logic import Othello
 
 # random.seed(time.time())
 
+def coord_to_label(row, col):
+    return f"{string.ascii_uppercase[row]}{col + 1}"
+
 
 def player_vs_player_cli(name1, name2):
     game = Othello(players=(name1, name2))
     while not game.get_winner():
         print(f"Player turn: {game.white if game.player_turn == 1 else game.black}\n")
         print(game, "\n")
-        print(f"Choose move:\n")
-        moves_dict = dict(zip(range(1, 10 ** 6), list(game.valid_moves())))
-        for i, field in moves_dict.items():
-            print(f"{i} -> {field}")
 
-        move = input()
+        # print(f"Choose move:\n")
+        # moves_dict = dict(zip(range(1, 10 ** 6), list(game.valid_moves())))
+        # for i, field in moves_dict.items():
+        #     print(f"{i} -> {field}")
+        #
+        # move = input()
 
-        if move.isnumeric() and int(move) in moves_dict:
-            num = int(move)
-            if num in moves_dict:
-                game.play_move(moves_dict[num])
+        cli_player_move(game)
+
 
 
 def player_vs_ai_cli(ai, player_turn=1):
@@ -46,7 +48,7 @@ def player_vs_ai_cli(ai, player_turn=1):
 def cli_player_move(game):
     moves_dict = dict(zip(range(1, 10 ** 6), list(game.valid_moves())))
     for i, field in moves_dict.items():
-        print(f"{i} -> {field}")
+        print(f"{i} -> {coord_to_label(*field)}")
     move = input("Choose move:\n")
     if move.isnumeric() and int(move) in moves_dict:
         num = int(move)

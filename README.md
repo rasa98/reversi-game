@@ -11,7 +11,7 @@ After training the models, they were benchmarked, and an Elo ranking system was 
 
 Before running the project, ensure you have the following installed:
 
-- Python 3.11.2, (3.8< version <3.12)
+- Python 3.10
 - Required Python packages (pip install -r requirements.txt):
   - stable-baselines3
   - sb3-contrib

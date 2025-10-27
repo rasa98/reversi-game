@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+env/
+.git/
+.idea/
+my_scripts/
+.gitignore
+.DS_Store
+tests/
+*.egg-info/

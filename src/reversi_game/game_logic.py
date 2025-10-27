@@ -1,3 +1,5 @@
+import string
+
 import numpy as np
 import copy
 from numba import types, njit
@@ -295,11 +297,24 @@ class Othello:
 
     def __repr__(self):
         temp_board = np.copy(self.board)
+        #before i refactor the board logic to use 1 and -1...
+
 
         for move in self.valid_moves_to_reverse.keys():
             x, y = move
-            temp_board[x, y] = 5
-        return str(temp_board)
+            temp_board[x, y] = 8
+
+        symbols = np.array(['.', 'X', 'O', '*'])
+        remap = np.where(temp_board == 8, 3, temp_board)
+        visual = symbols[remap]
+        n = visual.shape[0]
+
+        header = "  " + " ".join(str(i + 1) for i in range(n))
+        rows = [
+            f"{string.ascii_uppercase[r]} " + " ".join(row)
+            for r, row in enumerate(visual)
+        ]
+        return "\n".join([header] + rows)
 
 
 if __name__ == '__main__':

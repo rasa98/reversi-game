@@ -1,17 +1,11 @@
 import random
 import time
-
 import numpy as np
 import pygame
 import sys
 import os
 import platform
 
-# if __name__ == '__main__' and (os.environ.get('USER') or os.environ.get('USERNAME')) != 'student':
-#     source_dir = os.path.abspath(os.path.join(os.getcwd(), '../'))
-#     sys.path.append(source_dir)
-#     print(f'cwd is : {os.getcwd()}')
-#     os.chdir('../reversi_game/')
 from reversi_game.game_logic import Othello
 
 
@@ -25,6 +19,65 @@ def clear_console():
 class HumanPlayer:
     def __init__(self, name):
         self.name = name
+
+
+    def make_move(self, gui):
+        valid_moves = gui.game.valid_moves()
+        while True:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_SPACE:
+                        gui.game._swap_player_turn()
+                        gui.game._calculate_next_valid_moves()
+                        valid_moves = gui.game.valid_moves()
+                        gui.update_display()
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    clicked_field = gui.handle_click(pygame.mouse.get_pos())
+                    if clicked_field in valid_moves:
+                        fields_to_flip = gui.game.valid_moves_to_reverse[clicked_field]
+                        gui.game.play_move(clicked_field)
+                        return clicked_field, fields_to_flip
+
+
+class AiPlayer:
+    def __init__(self, agent):
+        self.name = agent.name
+        self.agent = agent
+
+
+    def make_move(self, gui):
+        start_time = time.perf_counter()
+        field = self.play_ai_turn(gui)
+        end_time = time.perf_counter()
+        ai_think_time = end_time - start_time
+        if gui.verbose:
+            self.print_action_probabilities()
+            print(f'{self.name} chose {field}\n')
+        # print(ai_think_time)
+        delta_time = gui.min_turn_time - ai_think_time
+        if delta_time > 0:
+            time.sleep(delta_time)
+        fields_to_flip = gui.game.valid_moves_to_reverse[field]
+        gui.game.play_move(field)
+        return field, fields_to_flip
+
+    def print_action_probabilities(self):
+        if self.agent.action_probs is not None:
+            array_2d = self.agent.action_probs.reshape(8, 8)
+            array_2d_rounded = np.round(array_2d, 2)
+            print(array_2d_rounded)
+        if self.agent.estimated_value is not None:
+            value = self.agent.estimated_value
+            value_rounded = np.round(value, 2)
+            print(f'win (value) estimate: {value_rounded}')
+
+    def play_ai_turn(self, gui):
+        fields, _ = self.agent.predict_best_move(gui.game)
+        return random.choice(fields)
+
 
 
 human_player = HumanPlayer('You')
@@ -251,67 +304,14 @@ class OthelloGameGui:
 
             self.ai = self.players[self.game.player_turn - 1]
             self.update_display()
-            field, fields_to_flip = self.make_move()
+            field, fields_to_flip = self.ai.make_move(self)
 
             self.last_played_move = field
             self.last_flipped_fields = fields_to_flip
 
         return self.draw_game_over()
 
-    def make_move(self):
-        if isinstance(self.ai, HumanPlayer):
-            return self.make_human_move()
-        return self.make_ai_move()
 
-    def make_ai_move(self):
-        start_time = time.perf_counter()
-        field = self.play_ai_turn()
-        end_time = time.perf_counter()
-        ai_think_time = end_time - start_time
-        if self.verbose:
-            self.print_action_probabilities()
-            print(f'{self.ai.name} chose {field}\n')
-        # print(ai_think_time)
-        delta_time = self.min_turn_time - ai_think_time
-        if delta_time > 0:
-            time.sleep(delta_time)
-        fields_to_flip = self.game.valid_moves_to_reverse[field]
-        self.game.play_move(field)
-        return field, fields_to_flip
-
-    def print_action_probabilities(self):
-        if self.ai.action_probs is not None:
-            array_2d = self.ai.action_probs.reshape(8, 8)
-            array_2d_rounded = np.round(array_2d, 2)
-            print(array_2d_rounded)
-        if self.ai.estimated_value is not None:
-            value = self.ai.estimated_value
-            value_rounded = np.round(value, 2)
-            print(f'win (value) estimate: {value_rounded}')
-
-    def make_human_move(self):
-        valid_moves = self.game.valid_moves()
-        while True:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    pygame.quit()
-                    sys.exit()
-                elif event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_SPACE:
-                        self.game._swap_player_turn()
-                        self.game._calculate_next_valid_moves()
-                        valid_moves = self.game.valid_moves()
-                        self.update_display()
-                elif event.type == pygame.MOUSEBUTTONDOWN:
-                    clicked_field = self.handle_click(pygame.mouse.get_pos())
-                    if clicked_field in valid_moves:
-                        fields_to_flip = self.game.valid_moves_to_reverse[clicked_field]
-                        self.game.play_move(clicked_field)
-                        return clicked_field, fields_to_flip
-
-    def play_ai_turn(self):
-        fields, _ = self.ai.predict_best_move(self.game)
-        return random.choice(fields)
 
 
 def play_human_vs_human(verbose=1):
@@ -325,6 +325,7 @@ def play_human_vs_human(verbose=1):
 
 
 def play_human_vs_ai(ai_agent, human_turn=1, min_turn_time=2, verbose=1):
+    ai_agent = AiPlayer(ai_agent)
     game = OthelloGameGui(min_turn_time=min_turn_time, verbose=verbose)
     if human_turn == 1:
         game.players = [human_player, ai_agent]
@@ -336,6 +337,8 @@ def play_human_vs_ai(ai_agent, human_turn=1, min_turn_time=2, verbose=1):
 
 
 def play_ai_vs_ai(ai1, ai2, min_turn_time=2, verbose=1):
+    ai1 = AiPlayer(ai1)
+    ai2 = AiPlayer(ai2)
     game = OthelloGameGui(min_turn_time=min_turn_time, verbose=verbose)
     game.players = [ai1, ai2]
 
@@ -356,6 +359,7 @@ if __name__ == "__main__":
                                  best_ars,
                                  best_mlp_ppo,
                                  minmax_ga_best_depth_1,
-                                 mcts_agent_500)
+                                 mcts_agent_500,
+                                 ai_random)
 
-    play_ai_vs_ai(alpha_200, mcts_agent_500, min_turn_time=2, verbose=0)
+    play_ai_vs_ai(ai_random, ai_random, min_turn_time=0, verbose=0)
