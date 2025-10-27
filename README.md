@@ -24,6 +24,13 @@ Before running the project, ensure you have the following installed:
 - install the project -> pip install . (Run this command from the folder containing pyproject.toml)
 - download and unzip models folder and put it in project root (same folder contains pyproject.toml) - [Link to g drive](https://drive.google.com/drive/folders/14qqvrT65f06vb5iivH9EdJtylYMtIpWh?usp=sharing). The folder should be named "models".
 
+OR use docker cli:
+1) Get inside the project root in cli (the folder containing Dockerfile)
+2) Build image -> docker build -t reversi_game_image .
+3) Create image -> docker create -it --name reversi_container reversi_game_image
+4) Run the image -> docker start -ai reversi_container
+
+
 
 ## Output
 
