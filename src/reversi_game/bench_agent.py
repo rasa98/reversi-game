@@ -2,7 +2,7 @@ import time
 from collections import Counter
 from tqdm import trange
 
-from reversi_game.game_modes import ai_vs_ai_cli
+from reversi_game.game_modes import ai_vs_ai_train
 
 
 def print_results(player1, player2, d):
@@ -29,7 +29,7 @@ def benchmark(ai1, ai2, times=200, verbose=1):
 
     vals = []
     for _ in my_range(times):
-        game = ai_vs_ai_cli(ai1, ai2)
+        game = ai_vs_ai_train(ai1, ai2)
         winner_str = game.get_winner()
         vals.append(winner_str)
     counter = Counter(vals)
@@ -53,7 +53,7 @@ def benchmark_both_sides_last_board_state(ai1, ai2, times=200, verbose=1):
 
     vals = []
     for _ in my_range(times):
-        game = ai_vs_ai_cli(ai1, ai2)
+        game = ai_vs_ai_train(ai1, ai2)
         board = tuple(game.board.reshape(-1))
         vals.append(board)
     counter = Counter(vals)
@@ -61,7 +61,7 @@ def benchmark_both_sides_last_board_state(ai1, ai2, times=200, verbose=1):
     print(frequency_list)
     vals = []
     for _ in my_range(times):
-        game = ai_vs_ai_cli(ai2, ai1)
+        game = ai_vs_ai_train(ai2, ai1)
         board = tuple(game.board.reshape(-1))
         vals.append(board)
     counter = Counter(vals)

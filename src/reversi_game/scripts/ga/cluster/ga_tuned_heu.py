@@ -7,7 +7,7 @@ from collections import defaultdict
 from tqdm import trange
 from reversi_game.heuristics.ga.heu_ga import HeuFuncIndividual
 from reversi_game.agents.MiniMaxAgent import load_minimax_agent
-from reversi_game.game_modes import ai_vs_ai_cli
+from reversi_game.game_modes import ai_vs_ai_train
 
 
 def generate_all_pairs(ps, rounds):
@@ -44,7 +44,7 @@ def simulate_tournament(matches):
         mm1 = load_minimax_agent('bot 1', lambda _: 1, x.get_heuristic())
         mm2 = load_minimax_agent('bot 2', lambda _: 1, y.get_heuristic())
 
-        game = ai_vs_ai_cli(mm1, mm2)
+        game = ai_vs_ai_train(mm1, mm2)
         winner = game.get_winner()
         if winner != 0:
             winner_idx = winner - 1

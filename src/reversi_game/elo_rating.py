@@ -3,7 +3,7 @@ from itertools import permutations
 from tqdm import trange
 from collections import defaultdict
 
-from reversi_game.game_modes import ai_vs_ai_cli
+from reversi_game.game_modes import ai_vs_ai_train
 
 
 class Player:
@@ -75,7 +75,7 @@ class Tournament:
                     continue
                 if self.verbose:
                     print(f'{pl1.agent} vs {pl2.agent}')
-                game = ai_vs_ai_cli(pl1.agent, pl2.agent)
+                game = ai_vs_ai_train(pl1.agent, pl2.agent)
                 winner = game.get_winner()
                 self.update_stats(pl1, pl2, winner)
                 actual_score_1 = self.get_actual_score(winner)

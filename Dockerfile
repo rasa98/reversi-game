@@ -11,4 +11,4 @@ COPY . .
 
 ENV PYTHONPATH=/app/src
 
-CMD ["python", "-m", "reversi_game.demo.play_gui"]
+CMD ["python", "-m", "reversi_game.main"]

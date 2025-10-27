@@ -6,7 +6,7 @@ import gc
 from collections import Counter
 
 # from reversi_game.game_logic import Othello
-from reversi_game.game_modes import ai_vs_ai_cli
+from reversi_game.game_modes import ai_vs_ai_train
 from reversi_game.agents.agent_interface import ai_random
 
 # from .model_interface import ModelInterface
@@ -64,7 +64,7 @@ class Node:
 
     def simulate_game(self):
         game_copy = self.game.get_snapshot()
-        game = ai_vs_ai_cli(ai_random, ai_random, game_copy)  # 1, 2, or 0
+        game = ai_vs_ai_train(ai_random, ai_random, game_copy)  # 1, 2, or 0
         return game.get_winner()
 
 
